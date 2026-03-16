@@ -109,31 +109,35 @@
     .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none}
     .burger span{width:22px;height:2px;background:var(--n900);border-radius:1px;transition:all .3s}
 
-    /* Hero */
-    .hero{padding:80px 0 96px;position:relative;overflow:hidden}
-    .hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(37,99,235,.06) 0%,transparent 70%);pointer-events:none}
-    .hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(249,115,22,.05) 0%,transparent 70%);pointer-events:none}
-    .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
-    .hero-pill{display:inline-flex;align-items:center;gap:8px;background:var(--blue-50);color:var(--blue-600);padding:8px 18px;border-radius:var(--r-full);font-size:13px;font-weight:600;letter-spacing:.02em;margin-bottom:24px;border:1px solid var(--blue-100)}
+    /* Hero Slider */
+    .hero{position:relative;overflow:hidden;height:clamp(500px,70vh,700px)}
+    .hero-slider{position:absolute;inset:0;z-index:0}
+    .hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1s ease}
+    .hero-slide.active{opacity:1}
+    .hero-slide img{width:100%;height:100%;object-fit:cover;object-position:center}
+    .hero-slide::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(15,23,42,.82) 0%,rgba(15,23,42,.55) 45%,rgba(15,23,42,.15) 100%)}
+    .hero-content{position:relative;z-index:2;height:100%;display:flex;align-items:center}
+    .hero-text{max-width:560px;color:#fff}
+    .hero-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.9);padding:8px 18px;border-radius:var(--r-full);font-size:13px;font-weight:600;letter-spacing:.02em;margin-bottom:24px;border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(8px)}
     .hero-pill-dot{width:8px;height:8px;background:#22C55E;border-radius:50%;animation:pulse 2s infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-    .hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--blue-600),var(--blue-400));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .hero-sub{font-size:18px;color:var(--n500);margin:24px 0 32px;max-width:480px;line-height:1.7}
-    .hero-btns{display:flex;gap:16px;flex-wrap:wrap}
-    .hero-stats{display:flex;gap:40px;margin-top:48px;padding-top:32px;border-top:1px solid var(--n200)}
-    .hstat-num{display:block;font-size:32px;font-weight:800;color:var(--n900);letter-spacing:-0.02em}
-    .hstat-lbl{font-size:14px;color:var(--n400);margin-top:2px}
-    .hero-visual{position:relative;display:flex;align-items:center;justify-content:center}
-    .hero-window-wrap{position:relative;width:100%;max-width:460px}
-    .hero-window-frame{width:100%;filter:drop-shadow(0 20px 60px rgba(0,0,0,.12))}
-    .float-card{position:absolute;background:#fff;border-radius:var(--r-md);padding:14px 18px;box-shadow:var(--sh-lg);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;z-index:2;border:1px solid rgba(0,0,0,.04)}
-    .fc-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-    .fc-green{background:#ECFDF5}.fc-orange{background:var(--orange-50)}.fc-blue{background:var(--blue-50)}
-    .fc-text small{display:block;font-weight:400;color:var(--n400);font-size:12px;margin-top:1px}
-    .fc1{top:8%;right:-10%;animation:floaty 4s ease-in-out infinite}
-    .fc2{bottom:25%;left:-12%;animation:floaty 4s ease-in-out 1.5s infinite}
-    .fc3{bottom:5%;right:0;animation:floaty 4s ease-in-out 3s infinite}
-    @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .hero h1{color:#fff;font-size:clamp(2rem,4.5vw,3.25rem)}
+    .hero h1 em{font-style:normal;color:var(--orange-400)}
+    .hero-sub{font-size:17px;color:rgba(255,255,255,.7);margin:20px 0 28px;max-width:480px;line-height:1.7}
+    .hero-slide-caption{font-size:15px;color:rgba(255,255,255,.55);margin-top:8px;min-height:22px;transition:opacity .4s}
+    .hero-btns{display:flex;gap:16px;flex-wrap:wrap;margin-top:32px}
+    .hero-stats{display:flex;gap:40px;margin-top:40px;padding-top:28px;border-top:1px solid rgba(255,255,255,.15)}
+    .hstat-num{display:block;font-size:32px;font-weight:800;color:#fff;letter-spacing:-0.02em}
+    .hstat-lbl{font-size:14px;color:rgba(255,255,255,.5);margin-top:2px}
+    .slider-nav{position:absolute;bottom:32px;right:clamp(20px,4vw,60px);z-index:3;display:flex;align-items:center;gap:12px}
+    .slider-dots{display:flex;gap:8px}
+    .slider-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3);border:none;cursor:pointer;transition:all .3s var(--ease);padding:0}
+    .slider-dot.active{background:#fff;transform:scale(1.2)}
+    .slider-arrows{display:flex;gap:8px}
+    .slider-arrow{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s var(--ease);backdrop-filter:blur(8px)}
+    .slider-arrow:hover{background:rgba(255,255,255,.25)}
+    .slider-arrow svg{width:18px;height:18px}
+    .slider-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--orange-500);z-index:3;transition:width .1s linear}
 
     /* Trust strip */
     .trust-strip{background:var(--n900);padding:20px 0;overflow:hidden}
@@ -260,12 +264,16 @@
       .footer-grid{grid-template-columns:1fr 1fr}
     }
     @media(max-width:768px){
-      .hero-grid{grid-template-columns:1fr;text-align:center}
+      .hero{height:clamp(480px,80vh,620px)}
+      .hero-text{text-align:center}
       .hero-sub{margin-inline:auto}
       .hero-btns{justify-content:center}
       .hero-stats{justify-content:center}
-      .hero-visual{display:none}
       .hero-pill{margin-inline:auto}
+      .hero-slide::after{background:linear-gradient(180deg,rgba(15,23,42,.75) 0%,rgba(15,23,42,.5) 50%,rgba(15,23,42,.3) 100%)}
+      .hero-slide-caption{display:none}
+      .slider-nav{bottom:16px;right:16px}
+      .slider-arrow{width:36px;height:36px}
       .nav{display:none}
       .burger{display:flex}
       .advantages-grid{grid-template-columns:repeat(2,1fr)}
@@ -306,57 +314,53 @@
   </div>
 </header>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="container">
-    <div class="hero-grid">
-      <div class="hero-left">
-        <div class="hero-pill">
-          <span class="hero-pill-dot"></span>
-          Малоярославец и Калужская область
-        </div>
-        <h1>Ваши окна —<br>наша <em>забота</em></h1>
-        <p class="hero-sub">Продаём, доставляем и устанавливаем пластиковые окна и двери. Профили REHAU, Brusbox, KBE, Montblanc. Гарантия от завода-изготовителя.</p>
-        <div class="hero-btns">
-          <a href="tel:84843990900" class="btn btn-primary btn-lg">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.18 12.18 19.79 19.79 0 011.09 3.6 2 2 0 013.27 1.42h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2z"/></svg>
-            Позвонить
-          </a>
-          <a href="#cta" class="btn btn-accent btn-lg">Рассчитать стоимость →</a>
-        </div>
-        <div class="hero-stats">
-          <div><span class="hstat-num">25</span><span class="hstat-lbl">лет на рынке</span></div>
-          <div><span class="hstat-num">534+</span><span class="hstat-lbl">объектов</span></div>
-          <div><span class="hstat-num">4.8 ★</span><span class="hstat-lbl">рейтинг Яндекс</span></div>
-        </div>
+<!-- HERO SLIDER -->
+<section class="hero" id="hero">
+  <div class="hero-slider">
+    <div class="hero-slide active" data-caption="Остекление балкона под ключ"><img src="img/slides/slide1-balkon-interior.jpg" alt="Остекление балкона — готовый результат" loading="eager"></div>
+    <div class="hero-slide" data-caption="Входные двери и окна с декоративной раскладкой"><img src="img/slides/slide2-door-raskladka.jpg" alt="Входная дверь ПВХ с раскладкой" loading="lazy"></div>
+    <div class="hero-slide" data-caption="Тёплая лоджия с зеркальной плёнкой"><img src="img/slides/slide3-lodzhia-zerkalo.jpg" alt="Лоджия с зеркальным стеклопакетом" loading="lazy"></div>
+    <div class="hero-slide" data-caption="Алюминий Provedal с покраской RAL 7016"><img src="img/slides/slide4-anthracit-provedal.jpg" alt="Алюминиевое остекление Provedal антрацит" loading="lazy"></div>
+    <div class="hero-slide" data-caption="Металлические объёмные наличники — наше преимущество"><img src="img/slides/slide5-nalichniki.jpg" alt="Объёмные наличники на окнах" loading="lazy"></div>
+    <div class="hero-slide" data-caption="Заказная ламинация и немецкие ручки Roto"><img src="img/slides/slide6-laminacia-roto.jpg" alt="Ламинация профиля и фурнитура Roto" loading="lazy"></div>
+    <div class="hero-slide" data-caption="Двухкамерный стеклопакет с зеркальной тонировкой"><img src="img/slides/slide7-door-mahagon.jpg" alt="Двухкамерный стеклопакет крупным планом" loading="lazy"></div>
+    <div class="hero-slide" data-caption="Холодное остекление веранды — алюминий Provedal"><img src="img/slides/slide8-veranda-provedal.jpg" alt="Веранда с остеклением Provedal" loading="lazy"></div>
+  </div>
+  <div class="hero-content container">
+    <div class="hero-text">
+      <div class="hero-pill">
+        <span class="hero-pill-dot"></span>
+        Малоярославец и Калужская область
       </div>
-      <div class="hero-visual">
-        <div class="hero-window-wrap">
-          <svg class="hero-window-frame" viewBox="0 0 440 480" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="20" y="20" width="400" height="440" rx="8" fill="#f0f4f8" stroke="#c8d6e5" stroke-width="3"/>
-            <rect x="35" y="35" width="370" height="410" rx="4" fill="#fff" stroke="#dde6ed" stroke-width="2"/>
-            <rect x="213" y="35" width="14" height="410" fill="#e8eef4" stroke="#c8d6e5" stroke-width="1"/>
-            <rect x="35" y="230" width="370" height="14" fill="#e8eef4" stroke="#c8d6e5" stroke-width="1"/>
-            <rect x="42" y="42" width="170" height="188" rx="2" fill="url(#g1)"/>
-            <rect x="228" y="42" width="170" height="188" rx="2" fill="url(#g2)"/>
-            <rect x="42" y="250" width="170" height="188" rx="2" fill="url(#g3)"/>
-            <rect x="228" y="250" width="170" height="188" rx="2" fill="url(#g4)"/>
-            <rect x="198" y="300" width="8" height="40" rx="4" fill="#a0b4c8"/>
-            <circle cx="202" cy="300" r="5" fill="#8ea4b8"/>
-            <defs>
-              <linearGradient id="g1" x1="42" y1="42" x2="212" y2="230"><stop stop-color="#e8f4fd"/><stop offset="1" stop-color="#d0e8f7"/></linearGradient>
-              <linearGradient id="g2" x1="228" y1="42" x2="398" y2="230"><stop stop-color="#dce8f3"/><stop offset="1" stop-color="#c4d8ec"/></linearGradient>
-              <linearGradient id="g3" x1="42" y1="250" x2="212" y2="438"><stop stop-color="#d4e4f0"/><stop offset="1" stop-color="#c0d4e8"/></linearGradient>
-              <linearGradient id="g4" x1="228" y1="250" x2="398" y2="438"><stop stop-color="#e0ecf5"/><stop offset="1" stop-color="#ccdeed"/></linearGradient>
-            </defs>
-          </svg>
-          <div class="float-card fc1"><div class="fc-icon fc-green">✅</div><div class="fc-text">Замер бесплатно<small>Выезд в день звонка</small></div></div>
-          <div class="float-card fc2"><div class="fc-icon fc-orange">⚡</div><div class="fc-text">Монтаж за 1 день<small>Без пыли и мусора</small></div></div>
-          <div class="float-card fc3"><div class="fc-icon fc-blue">🛡️</div><div class="fc-text">Гарантия от завода<small>Официальный договор</small></div></div>
-        </div>
+      <h1>Ваши окна —<br>наша <em>забота</em></h1>
+      <p class="hero-sub">Продаём, доставляем и устанавливаем пластиковые окна и двери. Профили REHAU, Brusbox, KBE, Montblanc. Гарантия от завода-изготовителя.</p>
+      <div class="hero-slide-caption" id="slideCaption">Остекление балкона под ключ</div>
+      <div class="hero-btns">
+        <a href="tel:84843990900" class="btn btn-accent btn-lg">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.18 12.18 19.79 19.79 0 011.09 3.6 2 2 0 013.27 1.42h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2z"/></svg>
+          Позвонить
+        </a>
+        <a href="#cta" class="btn btn-primary btn-lg" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px);box-shadow:none">Рассчитать стоимость</a>
+      </div>
+      <div class="hero-stats">
+        <div><span class="hstat-num">25</span><span class="hstat-lbl">лет на рынке</span></div>
+        <div><span class="hstat-num">534+</span><span class="hstat-lbl">объектов</span></div>
+        <div><span class="hstat-num">4.8</span><span class="hstat-lbl">рейтинг Яндекс</span></div>
       </div>
     </div>
   </div>
+  <div class="slider-nav">
+    <div class="slider-arrows">
+      <button class="slider-arrow" id="sliderPrev" aria-label="Назад">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button class="slider-arrow" id="sliderNext" aria-label="Вперёд">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="slider-dots" id="sliderDots"></div>
+  </div>
+  <div class="slider-progress" id="sliderProgress"></div>
 </section>
 
 <!-- TRUST STRIP -->
@@ -675,7 +679,7 @@
         </div>
       </div>
       <div class="map-wrap">
-        <iframe src="https://yandex.ru/map-widget/v1/?ll=36.461700%2C55.010700&z=16&pt=36.461700%2C55.010700%2Cpm2rdm" loading="lazy" allowfullscreen></iframe>
+        <iframe src="https://yandex.ru/map-widget/v1/?ll=36.461400%2C55.010100&z=17&pt=36.461400%2C55.010100%2Cpm2rdm" loading="lazy" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -732,18 +736,84 @@
   <svg viewBox="0 0 32 32"><path d="M16 2.003A13.82 13.82 0 002.19 15.83a13.73 13.73 0 001.86 6.926L2 30l5.404-2.012A13.82 13.82 0 0029.813 15.83 13.82 13.82 0 0016 2.003zm8.022 19.09c-.34.952-1.985 1.82-2.736 1.896-.752.076-1.45.34-4.874-1.015-4.128-1.634-6.748-5.876-6.952-6.148-.204-.272-1.666-2.214-1.666-4.224s1.053-2.998 1.428-3.406c.374-.408.817-.51 1.09-.51s.544.003.782.014c.252.012.59-.096.921.703.34.816 1.156 2.828 1.258 3.032.102.204.17.442.034.714-.136.272-.204.442-.408.68-.204.238-.43.532-.612.714-.204.204-.416.425-.178.833.238.408 1.058 1.746 2.27 2.828 1.56 1.392 2.876 1.824 3.284 2.026.408.204.646.17.883-.102.238-.272 1.02-1.19 1.292-1.598.272-.408.544-.34.917-.204.374.136 2.372 1.12 2.778 1.324.408.204.68.306.782.476.102.17.102.986-.238 1.938z"/></svg>
 </a>
 
-<!-- GSAP -->
+<!-- SLIDER + GSAP -->
 <script>
 document.addEventListener('DOMContentLoaded',function(){
-  if(typeof gsap==='undefined')return;
-  gsap.registerPlugin(ScrollTrigger);
-  gsap.utils.toArray('.reveal').forEach(function(el,i){
-    gsap.to(el,{opacity:1,y:0,duration:.7,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 85%',once:true},delay:(i%3)*.1});
+  /* --- Hero Slider --- */
+  var slides=document.querySelectorAll('.hero-slide');
+  var dotsWrap=document.getElementById('sliderDots');
+  var caption=document.getElementById('slideCaption');
+  var progress=document.getElementById('sliderProgress');
+  var cur=0,total=slides.length,interval=5000,timer,progTimer,progStart;
+
+  // Create dots
+  for(var i=0;i<total;i++){
+    var d=document.createElement('button');
+    d.className='slider-dot'+(i===0?' active':'');
+    d.setAttribute('aria-label','Слайд '+(i+1));
+    d.dataset.idx=i;
+    d.addEventListener('click',function(){goTo(+this.dataset.idx)});
+    dotsWrap.appendChild(d);
+  }
+  var dots=dotsWrap.querySelectorAll('.slider-dot');
+
+  function goTo(n){
+    slides[cur].classList.remove('active');
+    dots[cur].classList.remove('active');
+    cur=(n+total)%total;
+    slides[cur].classList.add('active');
+    dots[cur].classList.add('active');
+    if(caption)caption.textContent=slides[cur].dataset.caption||'';
+    resetProgress();
+  }
+
+  document.getElementById('sliderPrev').addEventListener('click',function(){goTo(cur-1)});
+  document.getElementById('sliderNext').addEventListener('click',function(){goTo(cur+1)});
+
+  // Progress bar + autoplay
+  function resetProgress(){
+    clearInterval(timer);
+    progress.style.transition='none';
+    progress.style.width='0%';
+    progStart=Date.now();
+    requestAnimationFrame(function(){
+      progress.style.transition='width '+interval+'ms linear';
+      progress.style.width='100%';
+    });
+    timer=setTimeout(function(){goTo(cur+1)},interval);
+  }
+
+  // Touch/swipe
+  var sx=0;
+  var hero=document.getElementById('hero');
+  hero.addEventListener('touchstart',function(e){sx=e.touches[0].clientX},{passive:true});
+  hero.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-sx;
+    if(Math.abs(dx)>50){dx>0?goTo(cur-1):goTo(cur+1)}
+  },{passive:true});
+
+  // Pause on hover
+  hero.addEventListener('mouseenter',function(){clearInterval(timer);progress.style.transition='none';var w=progress.offsetWidth/hero.offsetWidth*100;progress.style.width=w+'%'});
+  hero.addEventListener('mouseleave',function(){
+    var w=progress.offsetWidth/hero.offsetWidth*100;
+    var remaining=interval*(1-w/100);
+    progress.style.transition='width '+remaining+'ms linear';
+    progress.style.width='100%';
+    timer=setTimeout(function(){goTo(cur+1)},remaining);
   });
-  gsap.from('.hero-left',{opacity:0,x:-40,duration:.8,ease:'power2.out',delay:.2});
-  gsap.from('.hero-visual',{opacity:0,x:40,duration:.8,ease:'power2.out',delay:.4});
-  gsap.from('.trust-item',{opacity:0,y:20,duration:.5,stagger:.08,scrollTrigger:{trigger:'.trust-strip',start:'top 90%',once:true}});
-  gsap.from('.float-card',{opacity:0,scale:.8,duration:.6,stagger:.2,ease:'back.out(1.7)',delay:.8});
+
+  resetProgress();
+
+  /* --- GSAP ScrollTrigger --- */
+  if(typeof gsap!=='undefined'){
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.utils.toArray('.reveal').forEach(function(el,i){
+      gsap.to(el,{opacity:1,y:0,duration:.7,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 85%',once:true},delay:(i%3)*.1});
+    });
+    gsap.from('.hero-text',{opacity:0,x:-40,duration:.8,ease:'power2.out',delay:.2});
+    gsap.from('.slider-nav',{opacity:0,y:20,duration:.6,ease:'power2.out',delay:.6});
+    gsap.from('.trust-item',{opacity:0,y:20,duration:.5,stagger:.08,scrollTrigger:{trigger:'.trust-strip',start:'top 90%',once:true}});
+  }
 });
 </script>
 </body>
