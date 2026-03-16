@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>География заказов — Сервис Центр Окна и Двери</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --blue: #1A5CB8;
+            --blue-light: #2563EB;
+            --orange: #E8521A;
+            --orange-light: #F97316;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0f1a;
+            color: #fff;
+        }
+
+        /* Header bar */
+        .map-header {
+            background: linear-gradient(135deg, var(--blue) 0%, #0f2b5e 100%);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-bottom: 3px solid var(--orange);
+        }
+
+        .map-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .map-header h1 span {
+            color: var(--orange-light);
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--orange-light);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        /* Map container */
+        #map {
+            width: 100%;
+            height: calc(100vh - 100px);
+            min-height: 500px;
+        }
+
+        /* Custom cluster icons */
+        .marker-cluster-small {
+            background-color: rgba(26, 92, 184, 0.3);
+        }
+        .marker-cluster-small div {
+            background-color: rgba(26, 92, 184, 0.7);
+            color: #fff;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .marker-cluster-medium {
+            background-color: rgba(232, 82, 26, 0.3);
+        }
+        .marker-cluster-medium div {
+            background-color: rgba(232, 82, 26, 0.7);
+            color: #fff;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .marker-cluster-large {
+            background-color: rgba(232, 82, 26, 0.4);
+        }
+        .marker-cluster-large div {
+            background-color: rgba(232, 82, 26, 0.85);
+            color: #fff;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom popup */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 16px;
+            font-size: 14px;
+        }
+
+        .popup-contract {
+            font-weight: 700;
+            color: var(--blue);
+            font-size: 16px;
+        }
+
+        /* Legend */
+        .map-legend {
+            position: absolute;
+            bottom: 32px;
+            left: 16px;
+            z-index: 1000;
+            background: rgba(10, 15, 26, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            max-width: 260px;
+        }
+
+        .map-legend h3 {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--orange-light);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Counter animation */
+        .counter-animate {
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .map-header {
+                padding: 16px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .map-header h1 {
+                font-size: 1.2rem;
+            }
+            .stats-bar {
+                gap: 20px;
+            }
+            .stat-number {
+                font-size: 1.5rem;
+            }
+            #map {
+                height: calc(100vh - 140px);
+            }
+            .map-legend {
+                bottom: 16px;
+                left: 8px;
+                right: 8px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="map-header">
+    <h1>География наших заказов <span>за 25 лет</span></h1>
+    <div class="stats-bar">
+        <div class="stat">
+            <div class="stat-number" id="contractCount">0</div>
+            <div class="stat-label">Выполненных заказов</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number" id="cityCount">0</div>
+            <div class="stat-label">Населённых пунктов</div>
+        </div>
+        <div class="stat">
+            <div class="stat-number">25+</div>
+            <div class="stat-label">Лет работы</div>
+        </div>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<div class="map-legend">
+    <h3>Обозначения</h3>
+    <div class="legend-item">
+        <div class="legend-dot" style="background: #1A5CB8;"></div>
+        <span>Выполненный заказ</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-dot" style="background: #E8521A; width: 20px; height: 20px; font-size: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">5+</div>
+        <span>Группа заказов (нажмите для раскрытия)</span>
+    </div>
+    <p style="margin-top: 8px; opacity: 0.6; font-size: 0.7rem;">Каждая точка — реальный договор с номером</p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script>
+    // Initialize map centered on Maloyaroslavets
+    const map = L.map('map', {
+        center: [54.9956, 36.4578],
+        zoom: 12,
+        zoomControl: true,
+        maxZoom: 18,
+        minZoom: 5
+    });
+
+    // OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Custom marker icon
+    const markerIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="width:8px;height:8px;background:#1A5CB8;border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+    });
+
+    // Cluster group
+    const markers = L.markerClusterGroup({
+        maxClusterRadius: 40,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 17,
+        iconCreateFunction: function(cluster) {
+            const count = cluster.getChildCount();
+            let size, className;
+            if (count < 10) {
+                size = 30; className = 'marker-cluster-small';
+            } else if (count < 50) {
+                size = 40; className = 'marker-cluster-medium';
+            } else {
+                size = 50; className = 'marker-cluster-large';
+            }
+            return L.divIcon({
+                html: '<div style="width:' + (size-10) + 'px;height:' + (size-10) + 'px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:' + (count > 99 ? '11' : '12') + 'px;">' + count + '</div>',
+                className: className,
+                iconSize: L.point(size, size)
+            });
+        }
+    });
+
+    // Load markers from JSON
+    fetch('markers.json')
+        .then(r => r.json())
+        .then(data => {
+            const uniqueCities = new Set();
+
+            data.forEach(item => {
+                const marker = L.marker([item.lat, item.lng], { icon: markerIcon });
+                marker.bindPopup(
+                    '<div class="popup-contract">Договор №' + item.num + '</div>'
+                );
+                markers.addLayer(marker);
+                uniqueCities.add(item.loc);
+            });
+
+            map.addLayer(markers);
+
+            // Animate counters
+            animateCounter('contractCount', data.length);
+            animateCounter('cityCount', uniqueCities.size);
+        })
+        .catch(err => {
+            console.error('Error loading markers:', err);
+            // Fallback: try inline data
+        });
+
+    function animateCounter(id, target) {
+        const el = document.getElementById(id);
+        const duration = 2000;
+        const start = performance.now();
+
+        function update(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.floor(eased * target).toLocaleString('ru-RU');
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+</script>
+
+</body>
+</html>
