@@ -136,6 +136,12 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <div class="form-row"><label>Цветная ручка</label><input type="number" class="cp" data-key="handle_color" step="50" placeholder="0"></div>
             <div class="form-row"><label>Сэндвич (разница от стекла)</label><input type="number" class="cp" data-key="sandwich_delta" step="50" placeholder="0"></div>
           </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Отделка и работы (для калькулятора клиента)</summary>
+            <div class="form-row"><label>Откосы + подоконник</label><input type="number" class="cp" data-key="finish_inner" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Отлив</label><input type="number" class="cp" data-key="finish_outer" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Установка</label><input type="number" class="cp" data-key="install" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Доставка</label><input type="number" class="cp" data-key="delivery" step="100" placeholder="0"></div>
+          </details>
         </div>
         <div class="control-section">
           <h3>Наценка для клиента</h3>
@@ -160,44 +166,51 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
   </div>
 
   <div id="tab-calculator" class="tab-content">
-    <div class="layout">
-      <div class="canvas-wrap">
-        <canvas id="canvas2" width="760" height="680"></canvas>
-        <input id="dimInput2" class="dim-input hidden" type="number" step="10" min="100" max="5000">
+    <div style="max-width:700px;margin:0 auto">
+      <div class="control-section">
+        <h3>Тип окна</h3>
+        <div id="typeCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px"></div>
       </div>
-      <div class="controls">
-        <div class="control-section">
-          <h3>Конфигурация</h3>
-          <div class="info-box" id="configInfo2"></div>
-          <div class="form-row"><label>Профиль</label>
-            <select id="profile2">
-              <option value="Brusbox 60">Brusbox 60 (3 кам, 60мм)</option>
-              <option value="KBE 58">KBE 58 (3 кам, 58мм)</option>
-              <option value="Montblanc 60">Montblanc 60 (3 кам, 60мм)</option>
-              <option value="Rehau 60" selected>Rehau 60 (3 кам, 60мм)</option>
-              <option value="Rehau 70">Rehau 70 (5 кам, 70мм)</option>
-            </select></div>
-          <div class="form-row"><label>Стеклопакет</label>
-            <select id="glazing2">
-              <option value="4м1-16-4м1">4м1-16-4м1 (однокамерный)</option>
-              <option value="4м1-10-4м1-10-4м1">4м1-10-4м1-10-4м1 (двухкамерный)</option>
-              <option value="4м1-16-4м1(i)">4м1-16-4м1(i) (энергосбер.)</option>
-              <option value="4м1-10-4м1-10-4м1(i)">4м1-10-4м1-10-4м1(i) (двухкам. энерго)</option>
-            </select></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px" class="control-section">
+          <h3>Размеры (мм)</h3>
+          <div class="form-row"><label>Ширина</label><input type="number" id="cWidth" value="1400" step="10" min="400" max="3000"></div>
+          <div class="form-row"><label>Высота</label><input type="number" id="cHeight" value="1400" step="10" min="400" max="2500"></div>
         </div>
-        <div class="control-section">
-          <h3>Ламинация</h3>
-          <div class="form-row"><label>Внутренняя</label><select id="lamInner2"></select></div>
-          <div class="form-row"><label>Внешняя</label><select id="lamOuter2"></select></div>
+        <div style="flex:1;min-width:200px" class="control-section">
+          <h3>Профиль</h3>
+          <div class="form-row"><select id="cProfile">
+            <option value="Brusbox 60">Brusbox 60 (3 кам, 60мм)</option>
+            <option value="KBE 58">KBE 58 (3 кам, 58мм)</option>
+            <option value="Montblanc 60">Montblanc 60 (3 кам, 60мм)</option>
+            <option value="Rehau 60" selected>Rehau 60 (3 кам, 60мм)</option>
+            <option value="Rehau 70">Rehau 70 (5 кам, 70мм)</option>
+          </select></div>
+          <h3 style="margin-top:10px">Стеклопакет</h3>
+          <div class="form-row"><select id="cGlazing">
+            <option value="single">Однокамерный</option>
+            <option value="double" selected>Двухкамерный</option>
+          </select></div>
         </div>
-        <div class="control-section">
-          <h3>Стоимость</h3>
-          <div class="price-display">
-            <div class="final" id="finalPrice">-- руб.</div>
-            <div class="breakdown" id="priceBreakdown">Добавьте точки цен во вкладке "Обучение"</div>
-          </div>
-        </div>
-        <button class="btn btn-secondary btn-sm btn-block" onclick="resetDesigner(2)">Сбросить конструкцию</button>
+      </div>
+      <div class="control-section">
+        <h3>Отделка</h3>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="cFinishInner"> Внутренняя (откосы + подоконник)</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="cFinishOuter"> Наружная (отлив)</label>
+      </div>
+      <div class="control-section">
+        <h3>Работы</h3>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="cInstall"> Установка</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="cDelivery"> Доставка</label>
+      </div>
+      <button class="btn btn-block" onclick="calcClientPrice()" style="background:#E8521A;color:#fff;font-size:16px;padding:14px 16px;margin:12px 0">Рассчитать стоимость</button>
+      <div id="clientResult" class="price-display" style="display:none">
+        <div class="final" id="clientTotal">—</div>
+        <div class="breakdown" id="clientBreakdown"></div>
       </div>
     </div>
   </div>
@@ -922,15 +935,111 @@ function estimatePrice(d){
   price+=secs.filter(s=>s.filling==='sandwich-24'||s.filling==='sandwich-32').length*(data.sandwich_delta||0);
   return price;
 }
-function updateCalcPrice(){
-  const est=estimatePrice(designer2),
-    mT=document.getElementById('markupType').value,mV=parseFloat(document.getElementById('markupValue').value)||0;
-  const fE=document.getElementById('finalPrice'),bE=document.getElementById('priceBreakdown');
-  if(!est){fE.textContent='-- руб.';bE.innerHTML='Добавьте точки цен в "Обучение"';return;}
-  const markup=mV>0?(mT==='percent'?Math.round(est*mV/100):mV):0;
-  const fn=est+markup;
-  fE.textContent=fn.toLocaleString()+' руб.';
-  bE.innerHTML=markup>0?`<div>Производство: ${est.toLocaleString()} р.</div><div>Наценка: +${markup.toLocaleString()} р.</div>`:'';
+// ========== CLIENT CALCULATOR ==========
+const WIN_TYPES=[
+  {id:'fixed',name:'Глухое',icon:'▢',desc:'Без створок'},
+  {id:'single',name:'Одностворчатое',icon:'◫',desc:'1 створка п/о'},
+  {id:'double',name:'Двустворчатое',icon:'◫◫',desc:'Глухое + п/о'},
+  {id:'triple',name:'Трёхстворчатое',icon:'◫◫◫',desc:'П/о + глух + п/о'},
+  {id:'balcony',name:'Балконный блок',icon:'◨+◫',desc:'Дверь + окно'},
+];
+let selectedType='double';
+
+function buildTypeCards(){
+  const el=document.getElementById('typeCards');
+  el.innerHTML=WIN_TYPES.map(t=>`<div class="type-card${t.id===selectedType?' active':''}" data-type="${t.id}" onclick="selectType('${t.id}')" style="border:2px solid ${t.id===selectedType?'#E8521A':'#ddd'};border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .2s">
+    <div style="font-size:22px;margin-bottom:4px">${t.icon}</div>
+    <div style="font-size:12px;font-weight:600">${t.name}</div>
+    <div style="font-size:10px;color:#888">${t.desc}</div>
+  </div>`).join('');
+}
+function selectType(id){
+  selectedType=id;
+  buildTypeCards();
+  // Set default sizes
+  const defaults={fixed:[600,600],single:[600,1400],double:[1400,1400],triple:[2000,1400],balcony:[2050,2100]};
+  const d=defaults[id]||[1400,1400];
+  document.getElementById('cWidth').value=d[0];
+  document.getElementById('cHeight').value=d[1];
+}
+
+function calcClientPrice(){
+  const data=JSON.parse(localStorage.getItem('okna_components')||'{}');
+  const type=selectedType;
+  const w=parseInt(document.getElementById('cWidth').value)||1400;
+  const h=parseInt(document.getElementById('cHeight').value)||1400;
+  const profile=document.getElementById('cProfile').value;
+  const glazing=document.getElementById('cGlazing').value;
+  const finInner=document.getElementById('cFinishInner').checked;
+  const finOuter=document.getElementById('cFinishOuter').checked;
+  const install=document.getElementById('cInstall').checked;
+  const delivery=document.getElementById('cDelivery').checked;
+
+  // Build price from components
+  const area=w*h/1e6;
+  const glazKey=glazing==='single'?'4м1-16-4м1':'4м1-10-4м1-10-4м1';
+  const baseKey='base_'+profile+'_'+glazKey;
+  const basePm2=data[baseKey]||0;
+
+  const lines=[];
+  let total=0;
+
+  if(!basePm2){
+    document.getElementById('clientResult').style.display='';
+    document.getElementById('clientTotal').textContent='Цена не задана';
+    document.getElementById('clientBreakdown').innerHTML='<div>Заполните цены во вкладке "Обучение"</div>';
+    return;
+  }
+
+  // Base window price
+  let winPrice=Math.round(basePm2*area);
+
+  // Sashes based on type
+  const sashTypes={fixed:0,single:1,double:1,triple:2,balcony:1};
+  const sashCount=sashTypes[type]||0;
+  winPrice+=sashCount*(data.sash_tiltturn||0);
+
+  // Mullions
+  const mullionCounts={fixed:0,single:0,double:1,triple:2,balcony:1};
+  winPrice+=(mullionCounts[type]||0)*(data.mullion||0);
+
+  // Markup
+  const mT=document.getElementById('markupType').value;
+  const mV=parseFloat(document.getElementById('markupValue').value)||0;
+  if(mV>0){
+    const markup=mT==='percent'?Math.round(winPrice*mV/100):mV;
+    winPrice+=markup;
+  }
+
+  lines.push({label:'Окно ('+profile+')',value:winPrice});
+  total+=winPrice;
+
+  // Finishing
+  if(finInner){
+    const fp=data.finish_inner||0;
+    if(fp){lines.push({label:'Откосы + подоконник',value:fp});total+=fp;}
+  }
+  if(finOuter){
+    const fp=data.finish_outer||0;
+    if(fp){lines.push({label:'Отлив',value:fp});total+=fp;}
+  }
+
+  // Services
+  if(install){
+    const ip=data.install||0;
+    if(ip){lines.push({label:'Установка',value:ip});total+=ip;}
+  }
+  if(delivery){
+    const dp=data.delivery||0;
+    if(dp){lines.push({label:'Доставка',value:dp});total+=dp;}
+  }
+
+  const res=document.getElementById('clientResult');
+  res.style.display='';
+  document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
+  document.getElementById('clientBreakdown').innerHTML=lines.map(l=>
+    `<div>${l.label}: ${l.value.toLocaleString()} р.</div>`
+  ).join('');
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
 function calcPrices(){
@@ -959,11 +1068,12 @@ function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')
 
 // ========== RESET ==========
 function resetDesigner(n){
-  const d=n===1?designer1:designer2;
-  d.reset();
-  document.getElementById('glazing'+n).value='4м1-16-4м1';
-  document.getElementById('lamInner'+n).value='#f0f0ec';
-  document.getElementById('lamOuter'+n).value='#f0f0ec';
+  if(n===1){
+    designer1.reset();
+    document.getElementById('glazing1').value='4м1-16-4м1';
+    document.getElementById('lamInner1').value='#f0f0ec';
+    document.getElementById('lamOuter1').value='#f0f0ec';
+  }
 }
 
 // ========== POPULATE SELECTS ==========
@@ -978,27 +1088,21 @@ function populateSelects(){
 }
 
 // ========== INIT ==========
-let designer1,designer2;
+let designer1;
 window.addEventListener('DOMContentLoaded',()=>{
   populateSelects();
   designer1=new WindowDesigner('canvas1','dimInput1','configInfo1');
-  designer2=new WindowDesigner('canvas2','dimInput2','configInfo2');
 
   // Profile & glazing
   document.getElementById('profile1').addEventListener('change',e=>{designer1.profile=e.target.value;designer1.updateConfigInfo();});
   document.getElementById('glazing1').addEventListener('change',e=>{designer1.glazingFormula=e.target.value;designer1.render();});
-  document.getElementById('profile2').addEventListener('change',e=>{designer2.profile=e.target.value;designer2.updateConfigInfo();updateCalcPrice();});
-  document.getElementById('glazing2').addEventListener('change',e=>{designer2.glazingFormula=e.target.value;designer2.render();updateCalcPrice();});
 
   // Lamination
-  ['1','2'].forEach(n=>{
-    const d=n==='1'?designer1:designer2;
-    document.getElementById('lamInner'+n).addEventListener('change',e=>{d.lamInner=e.target.value;d.render();});
-    document.getElementById('lamOuter'+n).addEventListener('change',e=>{d.lamOuter=e.target.value;d.render();});
-  });
+  document.getElementById('lamInner1').addEventListener('change',e=>{designer1.lamInner=e.target.value;designer1.render();});
+  document.getElementById('lamOuter1').addEventListener('change',e=>{designer1.lamOuter=e.target.value;designer1.render();});
 
-  designer2.onConfigChange=updateCalcPrice;
   buildBasePriceTable();
+  buildTypeCards();
   loadSettings(); loadComponentPrices();
   // Auto-save component prices on any input change
   document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
