@@ -137,10 +137,11 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <div class="form-row"><label>Сэндвич (разница от стекла)</label><input type="number" class="cp" data-key="sandwich_delta" step="50" placeholder="0"></div>
           </details>
           <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Отделка и работы (для калькулятора клиента)</summary>
-            <div class="form-row"><label>Откосы + подоконник</label><input type="number" class="cp" data-key="finish_inner" step="100" placeholder="0"></div>
-            <div class="form-row"><label>Отлив</label><input type="number" class="cp" data-key="finish_outer" step="100" placeholder="0"></div>
-            <div class="form-row"><label>Установка</label><input type="number" class="cp" data-key="install" step="100" placeholder="0"></div>
-            <div class="form-row"><label>Доставка</label><input type="number" class="cp" data-key="delivery" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Откосы (руб./п.м.) — 2 высоты + 1 ширина</label><input type="number" class="cp" data-key="slopes_pm" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Подоконник (руб./п.м.) — 1 ширина</label><input type="number" class="cp" data-key="sill_pm" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Отлив (руб./п.м.) — 1 ширина</label><input type="number" class="cp" data-key="drip_pm" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Установка (руб./м²)</label><input type="number" class="cp" data-key="install_pm2" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Доставка (руб. фикс.)</label><input type="number" class="cp" data-key="delivery" step="100" placeholder="0"></div>
           </details>
         </div>
         <div class="control-section">
@@ -196,9 +197,11 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
       <div class="control-section">
         <h3>Отделка</h3>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cFinishInner"> Внутренняя (откосы + подоконник)</label>
+          <input type="checkbox" id="cSlopes"> Откосы</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cFinishOuter"> Наружная (отлив)</label>
+          <input type="checkbox" id="cSill"> Подоконник</label>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="cDrip"> Отлив</label>
       </div>
       <div class="control-section">
         <h3>Работы</h3>
@@ -970,8 +973,9 @@ function calcClientPrice(){
   const h=parseInt(document.getElementById('cHeight').value)||1400;
   const profile=document.getElementById('cProfile').value;
   const glazing=document.getElementById('cGlazing').value;
-  const finInner=document.getElementById('cFinishInner').checked;
-  const finOuter=document.getElementById('cFinishOuter').checked;
+  const slopes=document.getElementById('cSlopes').checked;
+  const sill=document.getElementById('cSill').checked;
+  const drip=document.getElementById('cDrip').checked;
   const install=document.getElementById('cInstall').checked;
   const delivery=document.getElementById('cDelivery').checked;
 
@@ -1014,20 +1018,26 @@ function calcClientPrice(){
   lines.push({label:'Окно ('+profile+')',value:winPrice});
   total+=winPrice;
 
-  // Finishing
-  if(finInner){
-    const fp=data.finish_inner||0;
-    if(fp){lines.push({label:'Откосы + подоконник',value:fp});total+=fp;}
+  // Finishing — calculated by dimensions
+  const wM=w/1000, hM=h/1000; // meters
+  if(slopes){
+    const slopesLen=2*hM+wM; // 2 heights + 1 width
+    const sp=Math.round((data.slopes_pm||0)*slopesLen);
+    if(sp){lines.push({label:'Откосы ('+slopesLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
-  if(finOuter){
-    const fp=data.finish_outer||0;
-    if(fp){lines.push({label:'Отлив',value:fp});total+=fp;}
+  if(sill){
+    const sp=Math.round((data.sill_pm||0)*wM);
+    if(sp){lines.push({label:'Подоконник ('+wM.toFixed(1)+' п.м.)',value:sp});total+=sp;}
+  }
+  if(drip){
+    const dp=Math.round((data.drip_pm||0)*wM);
+    if(dp){lines.push({label:'Отлив ('+wM.toFixed(1)+' п.м.)',value:dp});total+=dp;}
   }
 
   // Services
   if(install){
-    const ip=data.install||0;
-    if(ip){lines.push({label:'Установка',value:ip});total+=ip;}
+    const ip=Math.round((data.install_pm2||0)*area);
+    if(ip){lines.push({label:'Установка ('+area.toFixed(2)+' м²)',value:ip});total+=ip;}
   }
   if(delivery){
     const dp=data.delivery||0;
