@@ -1289,9 +1289,10 @@ function calcClientPrice(){
   // Markup
   const mT=document.getElementById('markupType').value;
   const mV=parseFloat(document.getElementById('markupValue').value)||0;
+  let profitAmount=0;
   if(mV>0){
-    const markup=mT==='percent'?Math.round(winPrice*mV/100):mV;
-    winPrice+=markup;
+    profitAmount=mT==='percent'?Math.round(winPrice*mV/100):mV;
+    winPrice+=profitAmount;
   }
 
   total+=winPrice;
@@ -1337,9 +1338,7 @@ function calcClientPrice(){
     if(dp){lines.push({label:'Доставка',value:dp});total+=dp;}
   }
 
-  // Profit = markup amount
-  const prodTotal=total-(mV>0?(mT==='percent'?Math.round((winPrice/(1+mV/100))*mV/100):mV):0);
-  const profit=total-prodTotal;
+  const profit=profitAmount;
 
   const res=document.getElementById('clientResult');
   res.style.display='';
