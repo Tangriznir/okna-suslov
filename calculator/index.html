@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор окон — Сервис Центр Окна и Двери</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f2f5;color:#333}
+.app{max-width:1440px;margin:0 auto;padding:20px}
+.tabs{display:flex;gap:2px}
+.tab{padding:12px 24px;border:none;background:#e0e0e0;cursor:pointer;border-radius:8px 8px 0 0;font-size:15px;transition:all .2s}
+.tab:hover{background:#d0d0d0}
+.tab.active{background:#fff;font-weight:600;box-shadow:0 -2px 4px rgba(0,0,0,.05)}
+.tab-content{display:none;background:#fff;border-radius:0 8px 8px 8px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.tab-content.active{display:block}
+.layout{display:flex;gap:24px;align-items:flex-start}
+.canvas-wrap{flex:1;position:relative;min-width:0}
+.controls{width:340px;flex-shrink:0;max-height:85vh;overflow-y:auto}
+canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
+.ctx-menu{position:fixed;background:#fff;border:1px solid #d0d0d0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:4px 0;z-index:1000;min-width:240px}
+.ctx-menu.hidden{display:none}
+.ctx-menu-item{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:14px;transition:background .15s}
+.ctx-menu-item:hover{background:#f0f4ff}
+.ctx-menu-item .icon{width:20px;text-align:center;font-size:14px;color:#555}
+.ctx-menu-divider{height:1px;background:#e8e8e8;margin:4px 0}
+.ctx-menu-header{padding:6px 16px;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:.5px}
+.dim-input{position:absolute;background:#ff8c00;color:#fff;border:2px solid #e07000;border-radius:4px;padding:4px 8px;font-size:14px;font-weight:700;text-align:center;width:80px;z-index:100;outline:none}
+.dim-input.hidden{display:none}
+.dim-input:focus{box-shadow:0 0 0 3px rgba(255,140,0,.3)}
+.sash-dialog{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:1001;min-width:360px}
+.sash-dialog.hidden{display:none}
+.sash-dialog h4{margin-bottom:16px;font-size:18px}
+.sash-dialog .form-group{margin-bottom:14px}
+.sash-dialog .form-group>label:first-child{display:block;font-weight:600;margin-bottom:6px;font-size:13px;color:#666}
+.radio-group{display:flex;flex-direction:column;gap:6px}
+.radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px}
+.sash-dialog select{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+.dialog-actions{display:flex;gap:8px;margin-top:20px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:1000}
+.overlay.hidden{display:none}
+.control-section{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #eee}
+.control-section:last-child{border-bottom:none}
+.control-section h3{font-size:14px;margin-bottom:10px;color:#333}
+.form-row{margin-bottom:8px}
+.form-row label{display:block;font-size:11px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.form-row select,.form-row input[type="number"]{width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
+.form-row .inline{display:flex;gap:8px;align-items:center}
+.form-row .inline select,.form-row .inline input{flex:1}
+.btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.btn-primary{background:#1a5cb8;color:#fff}
+.btn-primary:hover{background:#154a96}
+.btn-secondary{background:#e8e8e8;color:#333}
+.btn-secondary:hover{background:#d8d8d8}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-block{display:block;width:100%}
+.info-box{background:#f8f9fa;border-radius:8px;padding:10px;margin-bottom:10px}
+.info-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #eee}
+.info-row:last-child{border-bottom:none}
+.info-row .label{color:#888}
+.info-row .value{font-weight:600}
+.price-list{max-height:200px;overflow-y:auto;margin-top:8px}
+.price-item{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border:1px solid #eee;border-radius:6px;margin-bottom:3px;font-size:11px}
+.price-item .desc{flex:1}
+.price-item .price{font-weight:700;color:#1a5cb8;white-space:nowrap;margin-left:8px}
+.price-item .del{cursor:pointer;color:#999;margin-left:8px}
+.price-item .del:hover{color:#dc3545}
+.price-display{background:linear-gradient(135deg,#1a5cb8,#2d7de0);border-radius:12px;padding:20px;color:#fff;margin-bottom:16px}
+.price-display .final{font-size:28px;font-weight:700}
+.price-display .breakdown{margin-top:10px;font-size:12px;opacity:.8}
+.price-display .breakdown div{padding:2px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" data-tab="training">Обучение</button>
+    <button class="tab" data-tab="calculator">Калькулятор</button>
+  </div>
+
+  <div id="tab-training" class="tab-content active">
+    <div class="layout">
+      <div class="canvas-wrap">
+        <canvas id="canvas1" width="760" height="680"></canvas>
+        <input id="dimInput1" class="dim-input hidden" type="number" step="10" min="100" max="5000">
+      </div>
+      <div class="controls">
+        <div class="control-section">
+          <h3>Конфигурация</h3>
+          <div class="info-box" id="configInfo1"></div>
+          <div class="form-row"><label>Профиль</label>
+            <select id="profile1">
+              <option value="Brusbox 60">Brusbox 60 (3 кам, 60мм)</option>
+              <option value="KBE 58">KBE 58 (3 кам, 58мм)</option>
+              <option value="Montblanc 60">Montblanc 60 (3 кам, 60мм)</option>
+              <option value="Rehau 60" selected>Rehau 60 (3 кам, 60мм)</option>
+              <option value="Rehau 70">Rehau 70 (5 кам, 70мм)</option>
+            </select></div>
+          <div class="form-row"><label>Стеклопакет</label>
+            <select id="glazing1">
+              <option value="4м1-16-4м1">4м1-16-4м1 (однокамерный)</option>
+              <option value="4м1-10-4м1-10-4м1">4м1-10-4м1-10-4м1 (двухкамерный)</option>
+              <option value="4м1-16-4м1(i)">4м1-16-4м1(i) (энергосбер.)</option>
+              <option value="4м1-10-4м1-10-4м1(i)">4м1-10-4м1-10-4м1(i) (двухкам. энерго)</option>
+            </select></div>
+        </div>
+        <div class="control-section">
+          <h3>Ламинация</h3>
+          <div class="form-row"><label>Внутренняя</label><select id="lamInner1"></select></div>
+          <div class="form-row"><label>Внешняя</label><select id="lamOuter1"></select></div>
+        </div>
+        <div class="control-section">
+          <h3>Обучение цен</h3>
+          <div class="form-row"><label>Цена от производителя (руб.)</label>
+            <input type="number" id="priceInput" placeholder="Введите цену..." step="100"></div>
+          <button class="btn btn-primary btn-block btn-sm" onclick="savePrice()" style="margin-top:6px">Сохранить точку цены</button>
+          <div class="price-list" id="priceList"></div>
+        </div>
+        <div class="control-section">
+          <h3>Настройки наценки</h3>
+          <div class="form-row"><label>Скидка производителя (%)</label>
+            <input type="number" id="discountInput" value="57" min="0" max="99" onchange="saveSettings()"></div>
+          <div class="form-row"><label>Наценка для клиента</label>
+            <div class="inline">
+              <input type="number" id="markupValue" value="30" min="0" onchange="saveSettings()">
+              <select id="markupType" onchange="saveSettings()"><option value="percent">%</option><option value="fixed">руб./окно</option></select>
+            </div></div>
+        </div>
+        <button class="btn btn-secondary btn-sm btn-block" onclick="resetDesigner(1)">Сбросить конструкцию</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-calculator" class="tab-content">
+    <div class="layout">
+      <div class="canvas-wrap">
+        <canvas id="canvas2" width="760" height="680"></canvas>
+        <input id="dimInput2" class="dim-input hidden" type="number" step="10" min="100" max="5000">
+      </div>
+      <div class="controls">
+        <div class="control-section">
+          <h3>Конфигурация</h3>
+          <div class="info-box" id="configInfo2"></div>
+          <div class="form-row"><label>Профиль</label>
+            <select id="profile2">
+              <option value="Brusbox 60">Brusbox 60 (3 кам, 60мм)</option>
+              <option value="KBE 58">KBE 58 (3 кам, 58мм)</option>
+              <option value="Montblanc 60">Montblanc 60 (3 кам, 60мм)</option>
+              <option value="Rehau 60" selected>Rehau 60 (3 кам, 60мм)</option>
+              <option value="Rehau 70">Rehau 70 (5 кам, 70мм)</option>
+            </select></div>
+          <div class="form-row"><label>Стеклопакет</label>
+            <select id="glazing2">
+              <option value="4м1-16-4м1">4м1-16-4м1 (однокамерный)</option>
+              <option value="4м1-10-4м1-10-4м1">4м1-10-4м1-10-4м1 (двухкамерный)</option>
+              <option value="4м1-16-4м1(i)">4м1-16-4м1(i) (энергосбер.)</option>
+              <option value="4м1-10-4м1-10-4м1(i)">4м1-10-4м1-10-4м1(i) (двухкам. энерго)</option>
+            </select></div>
+        </div>
+        <div class="control-section">
+          <h3>Ламинация</h3>
+          <div class="form-row"><label>Внутренняя</label><select id="lamInner2"></select></div>
+          <div class="form-row"><label>Внешняя</label><select id="lamOuter2"></select></div>
+        </div>
+        <div class="control-section">
+          <h3>Стоимость</h3>
+          <div class="price-display">
+            <div class="final" id="finalPrice">-- руб.</div>
+            <div class="breakdown" id="priceBreakdown">Добавьте точки цен во вкладке "Обучение"</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm btn-block" onclick="resetDesigner(2)">Сбросить конструкцию</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="ctxMenu" class="ctx-menu hidden"></div>
+<div id="overlay" class="overlay hidden" onclick="closeSashDialog()"></div>
+<div id="sashDialog" class="sash-dialog hidden">
+  <h4>Настройка створки</h4>
+  <div class="form-group"><label>Направление открывания</label>
+    <div class="radio-group">
+      <label><input type="radio" name="sashDir" value="left" checked> Левое (ручка справа)</label>
+      <label><input type="radio" name="sashDir" value="right"> Правое (ручка слева)</label>
+    </div></div>
+  <div class="form-group"><label>Тип</label>
+    <div class="radio-group">
+      <label><input type="radio" name="sashType" value="swing"> Поворотная</label>
+      <label><input type="radio" name="sashType" value="tilt-turn" checked> Поворотно-откидная</label>
+      <label><input type="radio" name="sashType" value="tilt"> Фрамуга</label>
+    </div></div>
+  <div class="form-group"><label>Фурнитура</label>
+    <select id="sashHardware">
+      <option value="Roto">Roto</option><option value="Vorne" selected>Vorne</option>
+      <option value="Verta">Verta</option><option value="Futuruss">Futuruss</option>
+    </select></div>
+  <div class="form-group"><label>Цвет ручки</label>
+    <select id="sashHandleColor"></select></div>
+  <div class="dialog-actions">
+    <button class="btn btn-primary" onclick="applySash()">Применить</button>
+    <button class="btn btn-secondary" onclick="closeSashDialog()">Отмена</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const FW = 45, MW = 50, SFW = 44, SASH_OVR = 5; // sash overlap onto frame
+
+const HANDLE_COLORS = [
+  {id:'white',name:'Белая',fill:'#f5f5f5',stroke:'#bbb'},
+  {id:'brown',name:'Коричневая',fill:'#5c3a1e',stroke:'#3a200e'},
+  {id:'gold',name:'Золотая',fill:'#daa520',stroke:'#b8860b'},
+  {id:'bronze',name:'Бронзовая',fill:'#cd7f32',stroke:'#a06020'},
+  {id:'titan',name:'Титан',fill:'#878681',stroke:'#6b6b60'},
+  {id:'silver',name:'Серебро',fill:'#c0c0c0',stroke:'#909090'},
+];
+
+const LAMS = [
+  {name:'Белая основа',color:'#f0f0ec'},
+  {name:'Золотой дуб',color:'#c8963c'},
+  {name:'Махагон',color:'#6b2226'},
+  {name:'Светлый дуб',color:'#d4a76a'},
+  {name:'Морёный дуб ST-F',color:'#4a3728'},
+  {name:'Орех V',color:'#6b4226'},
+  {name:'Тёмный дуб FL-F1',color:'#3d2b1f'},
+  {name:'Натуральный дуб FL-G',color:'#b08040'},
+  {name:'Чёрная вишня',color:'#3b1015'},
+  {name:'Сапели (заказ)',color:'#7b3f00'},
+  {name:'Дуб ST-G (заказ)',color:'#8b7355'},
+  {name:'Рустикальный дуб 1',color:'#8b6914'},
+  {name:'Шоколадно-коричневый 8875',color:'#5c3317'},
+  {name:'Чёрно-коричневый 8518',color:'#2c1608'},
+  {name:'Горная сосна (заказ)',color:'#7b6b4e'},
+  {name:'Коричневый каштан 8099 (заказ)',color:'#6b4423'},
+];
+
+function glassCol(f){
+  if(f.includes('(i)')&&f.includes('10-4м1-10'))return'#7888d8';
+  if(f.includes('(i)'))return'#9898e0';
+  if(f.includes('10-4м1-10'))return'#5cc8c8';
+  return'#80e8e8';
+}
+function glassBrd(f){
+  if(f.includes('(i)'))return'#6868b0';
+  if(f.includes('10-4м1-10'))return'#3ca0a0';
+  return'#4cb8b8';
+}
+function dk(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgb(${Math.round(r*(1-a))},${Math.round(g*(1-a))},${Math.round(b*(1-a))})`;}
+
+// ============================================================
+// WINDOW DESIGNER
+// ============================================================
+let activeDesigner = null;
+
+class WindowDesigner {
+  constructor(canvasId, dimInputId, configInfoId) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    this.dimInput = document.getElementById(dimInputId);
+    this.configInfoEl = document.getElementById(configInfoId);
+    this.width = 1000; this.height = 1000;
+    this.root = {type:'leaf',sash:null,mosquito:null};
+    this.sections = [];
+    this.margin = {top:50,right:90,bottom:100,left:80};
+    this.scale=1; this.ox=0; this.oy=0;
+    this.selectedPanes = [];
+    this.selectedMullion = null; // split node reference
+    this.editingDim = null;
+    this.dimRegions = []; this.paneRegions = []; this.mullionRegions = [];
+    this.profile = 'Rehau 60';
+    this.glazingFormula = '4м1-16-4м1';
+    this.lamInner = '#f0f0ec'; this.lamOuter = '#f0f0ec';
+    this.onConfigChange = null; this.onReset = null;
+    this._computeScale(); this._setupEvents();
+    this.computeLayout(); this.render(); this.updateConfigInfo();
+  }
+
+  mx(mm){return this.ox+mm*this.scale;} my(mm){return this.oy+mm*this.scale;} ms(mm){return mm*this.scale;}
+  _computeScale(){
+    const dw=this.canvas.width-this.margin.left-this.margin.right;
+    const dh=this.canvas.height-this.margin.top-this.margin.bottom;
+    this.scale=Math.min(dw/this.width,dh/this.height);
+    this.ox=this.margin.left+(dw-this.width*this.scale)/2;
+    this.oy=this.margin.top+(dh-this.height*this.scale)/2;
+  }
+
+  // Frame color from inner lamination
+  _fc(){return this.lamInner;} _fb(){return dk(this.lamInner,.25);} _fm(){return dk(this.lamInner,.15);}
+
+  // Layout
+  computeLayout(){
+    this.sections=[];
+    this._cn(this.root,{x:FW,y:FW,w:this.width-2*FW,h:this.height-2*FW});
+  }
+  _cn(n,a){
+    if(n.type==='leaf'){n.bounds={...a};this.sections.push(n);return;}
+    const{direction:d,position:p}=n,mw=MW;
+    if(d==='v'){
+      n.mullionBounds={x:p-mw/2,y:a.y,w:mw,h:a.h};
+      this._cn(n.children[0],{x:a.x,y:a.y,w:p-mw/2-a.x,h:a.h});
+      this._cn(n.children[1],{x:p+mw/2,y:a.y,w:(a.x+a.w)-(p+mw/2),h:a.h});
+    }else{
+      n.mullionBounds={x:a.x,y:p-mw/2,w:a.w,h:mw};
+      this._cn(n.children[0],{x:a.x,y:a.y,w:a.w,h:p-mw/2-a.y});
+      this._cn(n.children[1],{x:a.x,y:p+mw/2,w:a.w,h:(a.y+a.h)-(p+mw/2)});
+    }
+  }
+
+  // ========== RENDERING ==========
+  render(){
+    const c=this.ctx; c.clearRect(0,0,this.canvas.width,this.canvas.height);
+    this.paneRegions=[]; this.dimRegions=[]; this.mullionRegions=[];
+    // 1. Glass
+    for(const s of this.sections) this._drawGlass(s);
+    // 2. Outer frame
+    this._drawFrame();
+    // 3. Mullions
+    this._drawMullions(this.root);
+    // 4. Sash (with overlap onto frame, drawn on top)
+    for(const s of this.sections) if(s.sash) this._drawSash(s);
+    // 5. Mosquito grids
+    for(const s of this.sections) if(s.mosquito&&s.sash) this._drawMosqGrid(s);
+    // 6. Selection hatches
+    for(const s of this.selectedPanes) this._drawHatch(s.bounds);
+    if(this.selectedMullion) this._drawHatch(this.selectedMullion.mullionBounds);
+    // 7. Labels
+    for(const s of this.sections) this._drawLabel(s);
+    // 8. Mosquito badge
+    for(const s of this.sections) if(s.mosquito) this._drawMosBadge(s);
+    // 9. Sill
+    this._drawSill();
+    // 10. Dims
+    this._drawDims();
+  }
+
+  _drawFP(pts){
+    const c=this.ctx; c.beginPath();
+    c.moveTo(this.mx(pts[0][0]),this.my(pts[0][1]));
+    for(let i=1;i<pts.length;i++) c.lineTo(this.mx(pts[i][0]),this.my(pts[i][1]));
+    c.closePath(); c.fillStyle=this._fc(); c.fill(); c.strokeStyle=this._fb(); c.lineWidth=1; c.stroke();
+  }
+  _drawFrame(){
+    const w=this.width,h=this.height,f=FW;
+    this._drawFP([[0,0],[w,0],[w-f,f],[f,f]]);
+    this._drawFP([[w,0],[w,h],[w-f,h-f],[w-f,f]]);
+    this._drawFP([[w,h],[0,h],[f,h-f],[w-f,h-f]]);
+    this._drawFP([[0,h],[0,0],[f,f],[f,h-f]]);
+    const c=this.ctx; c.strokeStyle=this._fm(); c.lineWidth=1;
+    [[0,0,f,f],[w,0,w-f,f],[w,h,w-f,h-f],[0,h,f,h-f]].forEach(([a,b,d,e])=>{
+      c.beginPath();c.moveTo(this.mx(a),this.my(b));c.lineTo(this.mx(d),this.my(e));c.stroke();
+    });
+  }
+  _drawGlass(s){
+    const{x,y,w,h}=s.bounds;
+    const px=this.mx(x),py=this.my(y),pw=this.ms(w),ph=this.ms(h);
+    this.ctx.fillStyle=glassCol(this.glazingFormula);
+    this.ctx.fillRect(px,py,pw,ph);
+    this.ctx.strokeStyle=glassBrd(this.glazingFormula); this.ctx.lineWidth=.5;
+    this.ctx.strokeRect(px,py,pw,ph);
+    this.paneRegions.push({x:px,y:py,w:pw,h:ph,section:s});
+  }
+  _drawMullions(n){
+    if(n.type!=='split')return;
+    const b=n.mullionBounds,c=this.ctx;
+    const px=this.mx(b.x),py=this.my(b.y),pw=this.ms(b.w),ph=this.ms(b.h);
+    c.fillStyle=this._fc(); c.fillRect(px,py,pw,ph);
+    c.strokeStyle=this._fb(); c.lineWidth=1; c.strokeRect(px,py,pw,ph);
+    this.mullionRegions.push({x:px,y:py,w:pw,h:ph,splitNode:n});
+    n.children.forEach(ch=>this._drawMullions(ch));
+  }
+
+  _drawSash(s){
+    const{x,y,w,h}=s.bounds, sash=s.sash, c=this.ctx, o=SASH_OVR;
+    // Sash outer with overlap onto frame
+    const sx=x-o,sy=y-o,sw=w+2*o,sh=h+2*o;
+    this._drawFP([[sx,sy],[sx+sw,sy],[sx+sw-SFW,sy+SFW],[sx+SFW,sy+SFW]]);
+    this._drawFP([[sx+sw,sy],[sx+sw,sy+sh],[sx+sw-SFW,sy+sh-SFW],[sx+sw-SFW,sy+SFW]]);
+    this._drawFP([[sx+sw,sy+sh],[sx,sy+sh],[sx+SFW,sy+sh-SFW],[sx+sw-SFW,sy+sh-SFW]]);
+    this._drawFP([[sx,sy+sh],[sx,sy],[sx+SFW,sy+SFW],[sx+SFW,sy+sh-SFW]]);
+    c.strokeStyle=this._fm(); c.lineWidth=1;
+    [[sx,sy,sx+SFW,sy+SFW],[sx+sw,sy,sx+sw-SFW,sy+SFW],
+     [sx+sw,sy+sh,sx+sw-SFW,sy+sh-SFW],[sx,sy+sh,sx+SFW,sy+sh-SFW]].forEach(([a,b,d,e])=>{
+      c.beginPath();c.moveTo(this.mx(a),this.my(b));c.lineTo(this.mx(d),this.my(e));c.stroke();
+    });
+
+    // Inner glass corners (within sash frame)
+    const ix=sx+SFW,iy=sy+SFW,iw=sw-2*SFW,ih=sh-2*SFW;
+    const tl=[ix,iy],tr=[ix+iw,iy],bl=[ix,iy+ih],br=[ix+iw,iy+ih];
+    // Left opening = handle RIGHT, Right opening = handle LEFT
+    let hp;
+    // Handle on sash frame profile axis (middle of sash profile strip)
+    if(sash.direction==='left') hp=[sx+sw-SFW/2,sy+sh/2]; else hp=[sx+SFW/2,sy+sh/2];
+    const tc=[ix+iw/2,iy];
+    c.strokeStyle='#1a3a6a'; c.lineWidth=1.5;
+    if(sash.type==='swing'||sash.type==='tilt-turn'){
+      if(sash.direction==='left'){this._ln(tl,hp);this._ln(bl,hp);}
+      else{this._ln(tr,hp);this._ln(br,hp);}
+    }
+    if(sash.type==='tilt-turn'||sash.type==='tilt'){this._ln(bl,tc);this._ln(br,tc);}
+    // Handle
+    this._drawHandle(hp[0],hp[1],sash.direction,sash.handleColor||'white');
+    // Hardware label
+    c.fillStyle='#1a3a6a'; c.font='bold 11px Arial'; c.textAlign='center'; c.textBaseline='bottom';
+    c.fillText(sash.hardware,this.mx(x+w/2),this.my(y+h/2)-5);
+  }
+
+  _drawHandle(mmX,mmY,sashDir,hcId){
+    const c=this.ctx, hx=this.mx(mmX), hy=this.my(mmY), s=v=>this.ms(v);
+    const hc=HANDLE_COLORS.find(h=>h.id===hcId)||HANDLE_COLORS[0];
+    c.fillStyle=hc.fill; c.strokeStyle=hc.stroke; c.lineWidth=1;
+    // Simple vertical bar on sash frame axis — sizes in mm
+    const pw=s(12), ph=s(80);
+    c.fillRect(hx-pw/2,hy-ph/2,pw,ph); c.strokeRect(hx-pw/2,hy-ph/2,pw,ph);
+  }
+
+  _ln(a,b){const c=this.ctx;c.beginPath();c.moveTo(this.mx(a[0]),this.my(a[1]));c.lineTo(this.mx(b[0]),this.my(b[1]));c.stroke();}
+
+  _drawHatch(bounds){
+    const{x,y,w,h}=bounds;
+    const px=this.mx(x),py=this.my(y),pw=this.ms(w),ph=this.ms(h),c=this.ctx;
+    c.save(); c.beginPath(); c.rect(px,py,pw,ph); c.clip();
+    c.strokeStyle='#777'; c.lineWidth=.8;
+    for(let i=-ph;i<pw+ph;i+=12){c.beginPath();c.moveTo(px+i,py+ph);c.lineTo(px+i+ph,py);c.stroke();}
+    c.restore();
+  }
+
+  _drawMosqGrid(s){
+    const{x,y,w,h}=s.bounds, o=SASH_OVR;
+    const gx=x-o+SFW,gy=y-o+SFW,gw=w+2*o-2*SFW,gh=h+2*o-2*SFW;
+    const px=this.mx(gx),py=this.my(gy),pw=this.ms(gw),ph=this.ms(gh),c=this.ctx;
+    c.save(); c.beginPath(); c.rect(px,py,pw,ph); c.clip();
+    c.strokeStyle='rgba(80,80,80,.12)'; c.lineWidth=.5;
+    const sp=6;
+    for(let i=0;i<pw;i+=sp){c.beginPath();c.moveTo(px+i,py);c.lineTo(px+i,py+ph);c.stroke();}
+    for(let i=0;i<ph;i+=sp){c.beginPath();c.moveTo(px,py+i);c.lineTo(px+pw,py+i);c.stroke();}
+    c.restore();
+  }
+
+  _drawLabel(s){
+    const{x,y,w,h}=s.bounds,cx=this.mx(x+w/2),cy=this.my(y+h/2),c=this.ctx;
+    let gw=Math.round(w),gh=Math.round(h);
+    if(s.sash){gw=Math.round(w-2*SFW+2*SASH_OVR);gh=Math.round(h-2*SFW+2*SASH_OVR);}
+    const oY=s.sash?10:0;
+    c.fillStyle='#333'; c.font='13px Arial'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText(`${gw} x ${gh}`,cx,cy-8+oY);
+    c.fillText(this.glazingFormula,cx,cy+8+oY);
+  }
+
+  _drawMosBadge(s){
+    const{x,y,w}=s.bounds,lbl={simple:'М/С',anticat:'М/С АК',antipollen:'М/С АП'}[s.mosquito]||'';
+    if(!lbl)return; const c=this.ctx;
+    const tw=c.measureText?c.measureText(lbl).width+10:40;
+    const px=this.mx(x+w/2)-tw/2, py=this.my(y)+8;
+    c.fillStyle='rgba(255,255,255,.9)'; c.fillRect(px,py,tw,16);
+    c.strokeStyle='#e8521a'; c.lineWidth=1; c.strokeRect(px,py,tw,16);
+    c.fillStyle='#e8521a'; c.font='bold 9px Arial'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText(lbl,px+tw/2,py+8);
+    // Small orange square
+    c.fillStyle='#e8521a'; c.fillRect(px+tw+3,py+2,10,10);
+  }
+
+  _drawSill(){
+    const c=this.ctx,cx=this.mx(this.width/2),cy=this.my(this.height-FW/2);
+    c.fillStyle='#fff'; c.strokeStyle='#999'; c.lineWidth=1;
+    c.fillRect(cx-14,cy-7,28,14); c.strokeRect(cx-14,cy-7,28,14);
+    c.fillStyle='#333'; c.font='9px Arial'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText('П/П',cx,cy);
+    c.fillStyle='#e8521a'; c.fillRect(cx+17,cy-4,8,8);
+  }
+
+  // ========== DIMENSIONS ==========
+  _drawDims(){
+    const fL=this.mx(0),fR=this.mx(this.width),fT=this.my(0),fB=this.my(this.height);
+    const vS=[],hS=[]; this._gs(this.root,'v',vS); this._gs(this.root,'h',hS);
+    vS.sort((a,b)=>a.position-b.position); hS.sort((a,b)=>a.position-b.position);
+    // Horizontal
+    if(vS.length){
+      const subY=fB+25,totY=fB+60;
+      const pts=[fL,...vS.map(s=>this.mx(s.position)),fR];
+      pts.forEach(x=>this._extV(x,fB+3,totY+5));
+      for(let i=0;i<pts.length-1;i++){
+        const val=i===0?Math.round(vS[0].position):i>=vS.length?Math.round(this.width-vS[vS.length-1].position):Math.round(vS[i].position-vS[i-1].position);
+        this._hD(pts[i],pts[i+1],subY,val);
+        this._addDR((pts[i]+pts[i+1])/2,subY,'vsub-'+i,val);
+      }
+      this._hD(fL,fR,totY,this.width);
+      this._addDR((fL+fR)/2,totY,'width',this.width);
+    }else{
+      const tY=fB+30; [fL,fR].forEach(x=>this._extV(x,fB+3,tY+5));
+      this._hD(fL,fR,tY,this.width); this._addDR((fL+fR)/2,tY,'width',this.width);
+    }
+    // Vertical
+    if(hS.length){
+      const subX=fR+25,totX=fR+60;
+      const pts=[fT,...hS.map(s=>this.my(s.position)),fB];
+      pts.forEach(y=>this._extH(y,fR+3,totX+5));
+      for(let i=0;i<pts.length-1;i++){
+        const val=i===0?Math.round(hS[0].position):i>=hS.length?Math.round(this.height-hS[hS.length-1].position):Math.round(hS[i].position-hS[i-1].position);
+        this._vD(pts[i],pts[i+1],subX,val);
+        this._addDR(subX,(pts[i]+pts[i+1])/2,'hsub-'+i,val);
+      }
+      this._vD(fT,fB,totX,this.height); this._addDR(totX,(fT+fB)/2,'height',this.height);
+    }else{
+      const tX=fR+30; [fT,fB].forEach(y=>this._extH(y,fR+3,tX+5));
+      this._vD(fT,fB,tX,this.height); this._addDR(tX,(fT+fB)/2,'height',this.height);
+    }
+  }
+  _gs(n,d,r){if(n.type!=='split')return;if(n.direction===d)r.push(n);n.children.forEach(c=>this._gs(c,d,r));}
+  _addDR(cx,cy,t,v){this.dimRegions.push({x:cx-30,y:cy-12,w:60,h:24,cx,cy,type:t,value:v});}
+  _hD(x1,x2,y,v){
+    const c=this.ctx; c.strokeStyle='#333'; c.fillStyle='#333'; c.lineWidth=1;
+    c.beginPath();c.moveTo(x1,y);c.lineTo(x2,y);c.stroke();
+    this._ar(x1,y,'l');this._ar(x2,y,'r');
+    const t=''+v; c.font='bold 13px Arial'; c.textAlign='center'; c.textBaseline='middle';
+    const tw=c.measureText(t).width+8,tx=(x1+x2)/2;
+    c.fillStyle='#fff';c.fillRect(tx-tw/2,y-9,tw,18); c.fillStyle='#333';c.fillText(t,tx,y);
+  }
+  _vD(y1,y2,x,v){
+    const c=this.ctx; c.strokeStyle='#333'; c.fillStyle='#333'; c.lineWidth=1;
+    c.beginPath();c.moveTo(x,y1);c.lineTo(x,y2);c.stroke();
+    this._ar(x,y1,'u');this._ar(x,y2,'d');
+    const t=''+v; c.font='bold 13px Arial'; const tw=c.measureText(t).width+8,ty=(y1+y2)/2;
+    c.save();c.translate(x,ty);c.rotate(-Math.PI/2);
+    c.fillStyle='#fff';c.fillRect(-tw/2,-9,tw,18);c.fillStyle='#333';c.textAlign='center';c.textBaseline='middle';
+    c.fillText(t,0,0);c.restore();
+  }
+  _ar(x,y,d){const c=this.ctx,l=8,h=3;c.fillStyle='#333';c.beginPath();
+    if(d==='l'){c.moveTo(x,y);c.lineTo(x+l,y-h);c.lineTo(x+l,y+h);}
+    else if(d==='r'){c.moveTo(x,y);c.lineTo(x-l,y-h);c.lineTo(x-l,y+h);}
+    else if(d==='u'){c.moveTo(x,y);c.lineTo(x-h,y+l);c.lineTo(x+h,y+l);}
+    else{c.moveTo(x,y);c.lineTo(x-h,y-l);c.lineTo(x+h,y-l);}
+    c.closePath();c.fill();}
+  _extV(x,y1,y2){const c=this.ctx;c.strokeStyle='#333';c.lineWidth=.5;c.beginPath();c.moveTo(x,y1);c.lineTo(x,y2);c.stroke();}
+  _extH(y,x1,x2){const c=this.ctx;c.strokeStyle='#333';c.lineWidth=.5;c.beginPath();c.moveTo(x1,y);c.lineTo(x2,y);c.stroke();}
+
+  // ========== HIT TESTING ==========
+  _hitDim(mx,my){for(const d of this.dimRegions)if(mx>=d.x&&mx<=d.x+d.w&&my>=d.y&&my<=d.y+d.h)return d;return null;}
+  _hitPane(mx,my){
+    let best=null,bestA=Infinity;
+    for(const r of this.paneRegions){if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h){const a=r.w*r.h;if(a<bestA){best=r.section;bestA=a;}}}
+    return best;
+  }
+  _hitMullion(mx,my){
+    for(const r of this.mullionRegions)if(mx>=r.x&&mx<=r.x+r.w&&my>=r.y&&my<=r.y+r.h)return r.splitNode;
+    return null;
+  }
+
+  // ========== EVENTS ==========
+  _setupEvents(){
+    this.canvas.addEventListener('mousedown',e=>this._onClick(e));
+    this.canvas.addEventListener('contextmenu',e=>this._onCtx(e));
+    this.canvas.addEventListener('mousemove',e=>{
+      const p=this._mp(e);
+      this.canvas.style.cursor=(this._hitDim(p.x,p.y)||this._hitPane(p.x,p.y)||this._hitMullion(p.x,p.y))?'pointer':'default';
+    });
+    this.dimInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){this._applyDim(parseInt(this.dimInput.value));this._hideDim();}
+      else if(e.key==='Escape')this._hideDim();
+    });
+    this.dimInput.addEventListener('blur',()=>{if(this.editingDim){this._applyDim(parseInt(this.dimInput.value));this._hideDim();}});
+  }
+  _mp(e){const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*this.canvas.width/r.width,y:(e.clientY-r.top)*this.canvas.height/r.height};}
+
+  _onClick(e){
+    if(e.button!==0)return;
+    activeDesigner=this;
+    const p=this._mp(e);
+    // Dim
+    const dim=this._hitDim(p.x,p.y);
+    if(dim){this._showDim(dim);return;}
+    // Mullion
+    const mul=this._hitMullion(p.x,p.y);
+    if(mul){
+      this.selectedPanes=[];
+      this.selectedMullion=(this.selectedMullion===mul)?null:mul;
+      this.render(); return;
+    }
+    // Pane
+    const pane=this._hitPane(p.x,p.y);
+    if(pane){
+      this.selectedMullion=null;
+      if(e.shiftKey){
+        const idx=this.selectedPanes.indexOf(pane);
+        if(idx>=0)this.selectedPanes.splice(idx,1);else this.selectedPanes.push(pane);
+      }else{
+        this.selectedPanes=(this.selectedPanes.length===1&&this.selectedPanes[0]===pane)?[]:[pane];
+      }
+      this.render(); return;
+    }
+    // Outside — deselect all
+    this.selectedPanes=[]; this.selectedMullion=null; this.render();
+  }
+
+  _onCtx(e){
+    e.preventDefault();
+    const items=[];
+    // Single pane
+    if(this.selectedPanes.length===1){
+      const pane=this.selectedPanes[0];
+      items.push({icon:'┃',label:'Вертикальный импост',action:()=>this.addMullion(pane,'v')});
+      items.push({icon:'━',label:'Горизонтальный импост',action:()=>this.addMullion(pane,'h')});
+      items.push({divider:true});
+      items.push({icon:'◫',label:'Створка...',action:()=>openSashDialog(this)});
+      if(pane.sash){
+        items.push({icon:'x',label:'Убрать створку',action:()=>this.removeSash(pane)});
+        items.push({divider:true});
+        items.push({header:'Москитная сетка'});
+        const mq=pane.mosquito;
+        items.push({icon:mq===null?'*':'',label:'Нет',action:()=>{pane.mosquito=null;this.render();this._notify();}});
+        items.push({icon:mq==='simple'?'*':'',label:'Простая',action:()=>{pane.mosquito='simple';this.render();this._notify();}});
+        items.push({icon:mq==='anticat'?'*':'',label:'Антикошка',action:()=>{pane.mosquito='anticat';this.render();this._notify();}});
+        items.push({icon:mq==='antipollen'?'*':'',label:'Антипыльца',action:()=>{pane.mosquito='antipollen';this.render();this._notify();}});
+      }
+    }
+    // Multiple panes
+    else if(this.selectedPanes.length>1){
+      items.push({header:'Выравнивание'});
+      items.push({icon:'↔',label:'По свету (горизонт.)',action:()=>this.align('light','v')});
+      items.push({icon:'↕',label:'По свету (вертик.)',action:()=>this.align('light','h')});
+      items.push({divider:true});
+      items.push({icon:'⇔',label:'По геометрии (горизонт.)',action:()=>this.align('geometry','v')});
+      items.push({icon:'⇕',label:'По геометрии (вертик.)',action:()=>this.align('geometry','h')});
+    }
+    // Mullion selected
+    else if(this.selectedMullion){
+      items.push({icon:'x',label:'Удалить импост (Delete)',action:()=>this.removeMullion(this.selectedMullion)});
+    }
+    if(!items.length)return;
+    showCtxMenu(e.clientX,e.clientY,items);
+  }
+
+  _notify(){this.updateConfigInfo();if(this.onConfigChange)this.onConfigChange();}
+
+  // Dim editing
+  _showDim(d){this.editingDim=d;const i=this.dimInput;i.style.left=(d.cx-40)+'px';i.style.top=(d.cy-14)+'px';i.value=d.value;i.classList.remove('hidden');setTimeout(()=>{i.focus();i.select();},0);}
+  _hideDim(){this.editingDim=null;this.dimInput.classList.add('hidden');}
+  _applyDim(val){
+    if(!this.editingDim||isNaN(val))return;
+    val=Math.max(200,Math.min(5000,val));
+    const t=this.editingDim.type, minM=FW+MW+50;
+    if(t==='width'){this.width=val;this._clamp(this.root,'v',FW,val-FW);}
+    else if(t==='height'){this.height=val;this._clamp(this.root,'h',FW,val-FW);}
+    else if(t.startsWith('vsub-')){
+      const idx=parseInt(t.split('-')[1]);
+      const sp=[];this._gs(this.root,'v',sp);sp.sort((a,b)=>a.position-b.position);
+      if(idx<sp.length){const prev=idx===0?0:sp[idx-1].position;sp[idx].position=Math.max(minM,Math.min(prev+val,this.width-minM));}
+      else if(idx===sp.length&&sp.length){sp[sp.length-1].position=Math.max(minM,Math.min(this.width-val,this.width-minM));}
+    }
+    else if(t.startsWith('hsub-')){
+      const idx=parseInt(t.split('-')[1]);
+      const sp=[];this._gs(this.root,'h',sp);sp.sort((a,b)=>a.position-b.position);
+      if(idx<sp.length){const prev=idx===0?0:sp[idx-1].position;sp[idx].position=Math.max(minM,Math.min(prev+val,this.height-minM));}
+      else if(idx===sp.length&&sp.length){sp[sp.length-1].position=Math.max(minM,Math.min(this.height-val,this.height-minM));}
+    }
+    this._computeScale();this.computeLayout();this.render();this._notify();
+  }
+  _clamp(n,d,mn,mx){if(n.type!=='split')return;if(n.direction===d)n.position=Math.max(mn+MW,Math.min(n.position,mx-MW));n.children.forEach(c=>this._clamp(c,d,mn,mx));}
+
+  // Tree ops
+  addMullion(pane,dir){
+    const pos=dir==='v'?pane.bounds.x+pane.bounds.w/2:pane.bounds.y+pane.bounds.h/2;
+    const nn={type:'split',direction:dir,position:pos,children:[{type:'leaf',sash:null,mosquito:null},{type:'leaf',sash:null,mosquito:null}]};
+    this._rep(pane,nn); this.selectedPanes=[];this.selectedMullion=null;
+    this.computeLayout();this._computeScale();this.render();this._notify();
+  }
+  addSash(pane,opts){pane.sash={...opts};this.selectedPanes=[];this.render();this._notify();}
+  removeSash(pane){pane.sash=null;pane.mosquito=null;this.selectedPanes=[];this.render();this._notify();}
+  removeMullion(splitNode){
+    const nl={type:'leaf',sash:null,mosquito:null};
+    this._rep(splitNode,nl);this.selectedMullion=null;
+    this.computeLayout();this._computeScale();this.render();this._notify();
+  }
+  _rep(old,nn){if(this.root===old){this.root=nn;return;}this._repIn(this.root,old,nn);}
+  _repIn(p,old,nn){if(p.type!=='split')return false;for(let i=0;i<p.children.length;i++){if(p.children[i]===old){p.children[i]=nn;return true;}if(this._repIn(p.children[i],old,nn))return true;}return false;}
+
+  reset(){
+    this.width=1000;this.height=1000;
+    this.root={type:'leaf',sash:null,mosquito:null};
+    this.selectedPanes=[];this.selectedMullion=null;
+    this.glazingFormula='4м1-16-4м1';
+    this.lamInner='#f0f0ec';this.lamOuter='#f0f0ec';
+    this._computeScale();this.computeLayout();this.render();this._notify();
+    if(this.onReset)this.onReset();
+  }
+
+  // Alignment
+  align(type,dir){
+    const sp=[];this._gs(this.root,dir,sp);if(!sp.length)return;
+    sp.sort((a,b)=>a.position-b.position);
+    const total=dir==='v'?this.width:this.height;
+    const nM=sp.length,nP=nM+1;
+    if(type==='geometry'){for(let i=0;i<nM;i++)sp[i].position=total*(i+1)/(nM+1);}
+    else{
+      const panes=[];this._po(this.root,dir,panes);
+      const avail=total-2*FW-nM*MW;
+      const nS=panes.filter(p=>p.sash).length;
+      const vis=Math.max(50,(avail-nS*2*SFW)/nP);
+      let pos=FW;
+      for(let i=0;i<nP;i++){
+        pos+=panes[i]&&panes[i].sash?vis+2*SFW:vis;
+        if(i<nM){sp[i].position=pos+MW/2;pos+=MW;}
+      }
+    }
+    this.selectedPanes=[];this.computeLayout();this.render();this._notify();
+  }
+  _po(n,d,r){if(n.type==='leaf'){r.push(n);return;}this._po(n.children[0],d,r);this._po(n.children[1],d,r);}
+
+  // Config info
+  updateConfigInfo(){
+    const area=(this.width*this.height/1e6).toFixed(2);
+    this.configInfoEl.innerHTML=`
+      <div class="info-row"><span class="label">Размеры</span><span class="value">${this.width} x ${this.height}</span></div>
+      <div class="info-row"><span class="label">Площадь</span><span class="value">${area} м2</span></div>
+      <div class="info-row"><span class="label">Профиль</span><span class="value">${this.profile}</span></div>
+      <div class="info-row"><span class="label">Тип</span><span class="value">${this.getDesc()}</span></div>`;
+  }
+  getDesc(){
+    const sc=this.sections.filter(s=>s.sash).length,tot=this.sections.length;
+    if(tot===1&&sc===0)return'Глухое';
+    if(tot===1&&sc===1)return'1 створка ('+this._sd(this.sections[0].sash)+')';
+    let d=tot+' секц.';
+    const ss=this.sections.filter(s=>s.sash);
+    if(ss.length)d+=', '+ss.map(s=>this._sd(s.sash)).join(', ');
+    return d;
+  }
+  _sd(s){const t={'swing':'пов.','tilt-turn':'п/о','tilt':'фрам.'};const dr={'left':'лев.','right':'прав.'};return(t[s.type]||'')+' '+(dr[s.direction]||'');}
+  getConfigHash(){return this.profile+'|'+this.glazingFormula+'|'+this.sections.length+'p|'+this.sections.map(s=>s.sash?s.sash.type+'-'+s.sash.direction:'fixed').join('|');}
+}
+
+// ========== Delete key for mullion ==========
+document.addEventListener('keydown',e=>{
+  if(e.key==='Delete'&&activeDesigner&&activeDesigner.selectedMullion){
+    activeDesigner.removeMullion(activeDesigner.selectedMullion);
+  }
+});
+
+// ========== CONTEXT MENU ==========
+function showCtxMenu(x,y,items){
+  const m=document.getElementById('ctxMenu');m.innerHTML='';
+  items.forEach(item=>{
+    if(item.divider){const d=document.createElement('div');d.className='ctx-menu-divider';m.appendChild(d);}
+    else if(item.header){const h=document.createElement('div');h.className='ctx-menu-header';h.textContent=item.header;m.appendChild(h);}
+    else{const el=document.createElement('div');el.className='ctx-menu-item';
+      el.innerHTML='<span class="icon">'+(item.icon||'')+'</span><span>'+item.label+'</span>';
+      el.addEventListener('click',()=>{hideCtxMenu();item.action();});m.appendChild(el);}
+  });
+  m.style.left=x+'px';m.style.top=y+'px';m.classList.remove('hidden');
+}
+function hideCtxMenu(){document.getElementById('ctxMenu').classList.add('hidden');}
+document.addEventListener('mousedown',e=>{if(!e.target.closest('.ctx-menu'))hideCtxMenu();});
+
+// ========== SASH DIALOG ==========
+let _sashD=null;
+function openSashDialog(d){
+  _sashD=d;
+  const pane=d.selectedPanes[0];
+  if(pane&&pane.sash){
+    document.querySelector('input[name="sashDir"][value="'+pane.sash.direction+'"]').checked=true;
+    document.querySelector('input[name="sashType"][value="'+pane.sash.type+'"]').checked=true;
+    document.getElementById('sashHardware').value=pane.sash.hardware;
+    document.getElementById('sashHandleColor').value=pane.sash.handleColor||'white';
+  }
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('sashDialog').classList.remove('hidden');
+}
+function closeSashDialog(){document.getElementById('overlay').classList.add('hidden');document.getElementById('sashDialog').classList.add('hidden');_sashD=null;}
+function applySash(){
+  if(!_sashD||!_sashD.selectedPanes.length)return;
+  _sashD.addSash(_sashD.selectedPanes[0],{
+    direction:document.querySelector('input[name="sashDir"]:checked').value,
+    type:document.querySelector('input[name="sashType"]:checked').value,
+    hardware:document.getElementById('sashHardware').value,
+    handleColor:document.getElementById('sashHandleColor').value
+  });
+  closeSashDialog();
+}
+
+// ========== TABS ==========
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');document.getElementById('tab-'+tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab==='calculator')updateCalcPrice();
+  });
+});
+
+// ========== PRICING ==========
+function savePrice(){
+  const price=parseInt(document.getElementById('priceInput').value);
+  if(!price||price<=0){alert('Введите цену');return;}
+  const d=designer1;
+  const pt={id:Date.now(),profile:d.profile,glazing:d.glazingFormula,width:d.width,height:d.height,
+    area:parseFloat((d.width*d.height/1e6).toFixed(3)),configDesc:d.getDesc(),configHash:d.getConfigHash(),
+    price,date:new Date().toISOString().split('T')[0]};
+  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
+  pts.push(pt);localStorage.setItem('okna_prices',JSON.stringify(pts));
+  document.getElementById('priceInput').value='';renderPriceList();
+}
+function deletePrice(id){let p=JSON.parse(localStorage.getItem('okna_prices')||'[]');p=p.filter(x=>x.id!==id);localStorage.setItem('okna_prices',JSON.stringify(p));renderPriceList();}
+function renderPriceList(){
+  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]'),el=document.getElementById('priceList');
+  if(!pts.length){el.innerHTML='<div style="color:#999;font-size:12px;padding:8px;">Нет точек</div>';return;}
+  el.innerHTML=pts.slice().reverse().map(p=>`<div class="price-item"><div class="desc"><b>${p.width}x${p.height}</b> ${p.configDesc}<br><span style="color:#888">${p.profile}/${p.glazing}</span></div><div class="price">${p.price.toLocaleString()} р.</div><div class="del" onclick="deletePrice(${p.id})">x</div></div>`).join('');
+}
+function estimatePrice(d){
+  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');if(!pts.length)return null;
+  const tA=d.width*d.height/1e6,tH=d.getConfigHash();
+  const ex=pts.filter(p=>p.configHash===tH);
+  if(ex.length>=2){const n=ex.length,sx=ex.reduce((s,p)=>s+p.area,0),sy=ex.reduce((s,p)=>s+p.price,0),sxy=ex.reduce((s,p)=>s+p.area*p.price,0),sxx=ex.reduce((s,p)=>s+p.area*p.area,0),det=n*sxx-sx*sx;if(Math.abs(det)>.001){const a=(n*sxy-sx*sy)/det,b=(sy-a*sx)/n;return Math.round(Math.max(0,a*tA+b));}}
+  if(ex.length===1)return Math.round(ex[0].price/ex[0].area*tA);
+  const pr=pts.filter(p=>p.profile===d.profile&&p.glazing===d.glazingFormula);
+  if(pr.length){return Math.round(pr.reduce((s,p)=>s+p.price/p.area,0)/pr.length*tA);}
+  return Math.round(pts.reduce((s,p)=>s+p.price/p.area,0)/pts.length*tA);
+}
+function updateCalcPrice(){
+  const est=estimatePrice(designer2),disc=parseFloat(document.getElementById('discountInput').value)||0,
+    mT=document.getElementById('markupType').value,mV=parseFloat(document.getElementById('markupValue').value)||0;
+  const fE=document.getElementById('finalPrice'),bE=document.getElementById('priceBreakdown');
+  if(!est){fE.textContent='-- руб.';bE.innerHTML='Добавьте точки цен в "Обучение"';return;}
+  const dc=Math.round(est*(100-disc)/100),fn=mT==='percent'?Math.round(dc*(100+mV)/100):dc+mV;
+  fE.textContent=fn.toLocaleString()+' руб.';
+  bE.innerHTML=`<div>Базовая: ${est.toLocaleString()} р.</div><div>Скидка ${disc}%: ${dc.toLocaleString()} р.</div><div>Наценка: <b>${fn.toLocaleString()} р.</b></div>`;
+}
+function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({discount:parseFloat(document.getElementById('discountInput').value)||0,markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
+function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')||'{}');if(s.discount!==undefined)document.getElementById('discountInput').value=s.discount;if(s.markupType)document.getElementById('markupType').value=s.markupType;if(s.markupValue!==undefined)document.getElementById('markupValue').value=s.markupValue;}
+
+// ========== RESET ==========
+function resetDesigner(n){
+  const d=n===1?designer1:designer2;
+  d.reset();
+  document.getElementById('glazing'+n).value='4м1-16-4м1';
+  document.getElementById('lamInner'+n).value='#f0f0ec';
+  document.getElementById('lamOuter'+n).value='#f0f0ec';
+}
+
+// ========== POPULATE SELECTS ==========
+function populateSelects(){
+  // Lamination
+  document.querySelectorAll('[id^="lamInner"],[id^="lamOuter"]').forEach(sel=>{
+    sel.innerHTML=LAMS.map(l=>`<option value="${l.color}">${l.name}</option>`).join('');
+  });
+  // Handle colors in sash dialog
+  const hsel=document.getElementById('sashHandleColor');
+  hsel.innerHTML=HANDLE_COLORS.map(h=>`<option value="${h.id}">${h.name}</option>`).join('');
+}
+
+// ========== INIT ==========
+let designer1,designer2;
+window.addEventListener('DOMContentLoaded',()=>{
+  populateSelects();
+  designer1=new WindowDesigner('canvas1','dimInput1','configInfo1');
+  designer2=new WindowDesigner('canvas2','dimInput2','configInfo2');
+
+  // Profile & glazing
+  document.getElementById('profile1').addEventListener('change',e=>{designer1.profile=e.target.value;designer1.updateConfigInfo();});
+  document.getElementById('glazing1').addEventListener('change',e=>{designer1.glazingFormula=e.target.value;designer1.render();});
+  document.getElementById('profile2').addEventListener('change',e=>{designer2.profile=e.target.value;designer2.updateConfigInfo();updateCalcPrice();});
+  document.getElementById('glazing2').addEventListener('change',e=>{designer2.glazingFormula=e.target.value;designer2.render();updateCalcPrice();});
+
+  // Lamination
+  ['1','2'].forEach(n=>{
+    const d=n==='1'?designer1:designer2;
+    document.getElementById('lamInner'+n).addEventListener('change',e=>{d.lamInner=e.target.value;d.render();});
+    document.getElementById('lamOuter'+n).addEventListener('change',e=>{d.lamOuter=e.target.value;d.render();});
+  });
+
+  designer2.onConfigChange=updateCalcPrice;
+  loadSettings(); renderPriceList();
+});
+</script>
+</body>
+</html>
