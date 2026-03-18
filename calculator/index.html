@@ -1234,7 +1234,8 @@ function drawPreview(){
 }
 
 function calcClientPrice(){
-  const data=JSON.parse(localStorage.getItem('okna_components')||'{}');
+  const localData=JSON.parse(localStorage.getItem('okna_components')||'{}');
+  const data=sheetPrices||localData; // Таблица приоритетнее
   const type=selectedType;
   let w,h;
   if(type==='balcony'){
@@ -1292,9 +1293,9 @@ function calcClientPrice(){
 
   let winPrice=basePrice+sashCost+mullionCost+netCost;
 
-  // Markup
-  const mT=document.getElementById('markupType').value;
-  const mV=parseFloat(document.getElementById('markupValue').value)||0;
+  // Markup — from Google Sheet or admin settings
+  const mT=sheetPrices?'percent':document.getElementById('markupType').value;
+  const mV=sheetPrices?(data.markup_percent||0):(parseFloat(document.getElementById('markupValue').value)||0);
   let profitAmount=0;
   if(mV>0){
     profitAmount=mT==='percent'?Math.round(winPrice*mV/100):mV;
@@ -1390,6 +1391,33 @@ function calcClientPrice(){
   }).catch(()=>{});
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
+
+// ========== GOOGLE SHEETS PRICES ==========
+const SHEET_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRz-SO0rLEgvdcJx5MbILqQ9oacz3g8GYlFlFZYP5rvL7acplung7SJYBcRLXVuFVwxpV1gxIo2ARsw/pub?gid=0&single=true&output=csv';
+let sheetPrices=null;
+
+function loadSheetPrices(){
+  fetch(SHEET_CSV_URL).then(r=>r.text()).then(csv=>{
+    sheetPrices={};
+    // Map short names to formula keys
+    const keyMap={
+      'base_Brusbox 60_однокам':'base_Brusbox 60_4м1-16-4м1',
+      'base_Brusbox 60_двухкам':'base_Brusbox 60_4м1-10-4м1-10-4м1',
+      'base_Brusbox 60_энерго':'base_Brusbox 60_4м1-16-4м1(i)'
+    };
+    csv.split('\n').slice(1).forEach(line=>{
+      const parts=line.split(',');
+      if(parts.length>=2){
+        const rawKey=parts[0].trim(), val=parseFloat(parts[1]);
+        if(rawKey&&!isNaN(val)){
+          const mappedKey=keyMap[rawKey]||rawKey;
+          sheetPrices[mappedKey]=val;
+        }
+      }
+    });
+    console.log('Цены из таблицы загружены:',sheetPrices);
+  }).catch(e=>console.warn('Не удалось загрузить цены из Google Sheets:',e));
+}
 function calcPrices(){
   const est=estimatePrice(designer1);
   const box=document.getElementById('calcResult');
@@ -1454,6 +1482,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildTypeCards();
   drawPreview();
   loadSettings(); loadComponentPrices();
+  loadSheetPrices();
   // Auto-save component prices on any input change
   document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
 });
