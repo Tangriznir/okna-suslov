@@ -830,13 +830,55 @@ document.querySelectorAll('.tab').forEach(tab=>{
 });
 
 // ========== PRICING ==========
+// ========== FEATURE EXTRACTION ==========
+// Extracts numerical feature vector from designer config for regression
+function extractFeatures(d){
+  const f=[];
+  // 1. Area m²
+  f.push(d.width*d.height/1e6);
+  // 2-6. Profile one-hot: Brusbox60, KBE58, Montblanc60, Rehau60, Rehau70
+  const profs=['Brusbox 60','KBE 58','Montblanc 60','Rehau 60','Rehau 70'];
+  profs.forEach(p=>f.push(d.profile===p?1:0));
+  // 7-10. Glazing one-hot
+  const glazs=['4м1-16-4м1','4м1-10-4м1-10-4м1','4м1-16-4м1(i)','4м1-10-4м1-10-4м1(i)'];
+  glazs.forEach(g=>f.push(d.glazingFormula===g?1:0));
+  // 11-13. Sash counts by type (excluding direction — doesn't affect price)
+  const secs=d.sections||[];
+  f.push(secs.filter(s=>s.sash&&s.sash.type==='swing').length);
+  f.push(secs.filter(s=>s.sash&&s.sash.type==='tilt-turn').length);
+  f.push(secs.filter(s=>s.sash&&s.sash.type==='tilt').length);
+  // 14-17. Hardware counts
+  const hws=['Roto','Vorne','Verta','Futuruss'];
+  hws.forEach(h=>f.push(secs.filter(s=>s.sash&&s.sash.hardware===h).length));
+  // 18. Inner lamination (0=white, 1=colored)
+  f.push(d.lamInner!=='#f0f0ec'?1:0);
+  // 19. Outer lamination
+  f.push(d.lamOuter!=='#f0f0ec'?1:0);
+  // 20. Sandwich panel count
+  f.push(secs.filter(s=>s.filling==='sandwich-24'||s.filling==='sandwich-32').length);
+  // 21. Number of mullions (splits)
+  let mullions=0; function countM(n){if(n.type==='split'){mullions++;n.children.forEach(countM);}} countM(d.root);
+  f.push(mullions);
+  // 22. Mosquito net count
+  f.push(secs.filter(s=>s.mosquito).length);
+  // 23. Handle color non-white count
+  f.push(secs.filter(s=>s.sash&&s.sash.handleColor&&s.sash.handleColor!=='white').length);
+  return f;
+}
+const FEATURE_NAMES=['Площадь м²','Brusbox 60','KBE 58','Montblanc 60','Rehau 60','Rehau 70',
+  'Однокамерный','Двухкамерный','Энергосбер.','Двухкам.энерго',
+  'Поворотная','Поворотно-откидная','Фрамуга',
+  'Roto','Vorne','Verta','Futuruss',
+  'Ламинация внутр.','Ламинация наруж.',
+  'Сэндвич','Импосты','Москитная сетка','Цветная ручка'];
+
 function savePrice(){
   const price=parseInt(document.getElementById('priceInput').value);
   if(!price||price<=0){alert('Введите цену');return;}
   const d=designer1;
   const pt={id:Date.now(),profile:d.profile,glazing:d.glazingFormula,width:d.width,height:d.height,
-    area:parseFloat((d.width*d.height/1e6).toFixed(3)),configDesc:d.getDesc(),configHash:d.getConfigHash(),
-    price,date:new Date().toISOString().split('T')[0]};
+    area:parseFloat((d.width*d.height/1e6).toFixed(3)),configDesc:d.getDesc(),
+    features:extractFeatures(d),price,date:new Date().toISOString().split('T')[0]};
   const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
   pts.push(pt);localStorage.setItem('okna_prices',JSON.stringify(pts));
   document.getElementById('priceInput').value='';renderPriceList();
@@ -847,15 +889,55 @@ function renderPriceList(){
   if(!pts.length){el.innerHTML='<div style="color:#999;font-size:12px;padding:8px;">Нет точек</div>';return;}
   el.innerHTML=pts.slice().reverse().map(p=>`<div class="price-item"><div class="desc"><b>${p.width}x${p.height}</b> ${p.configDesc}<br><span style="color:#888">${p.profile}/${p.glazing}</span></div><div class="price">${p.price.toLocaleString()} р.</div><div class="del" onclick="deletePrice(${p.id})">x</div></div>`).join('');
 }
+
+// ========== RIDGE REGRESSION ==========
+// Solves: price ≈ w0 + w1*f1 + w2*f2 + ... using all training points
+// Ridge (L2 regularization) prevents overfitting with few data points
 function estimatePrice(d){
-  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');if(!pts.length)return null;
-  const tA=d.width*d.height/1e6,tH=d.getConfigHash();
-  const ex=pts.filter(p=>p.configHash===tH);
-  if(ex.length>=2){const n=ex.length,sx=ex.reduce((s,p)=>s+p.area,0),sy=ex.reduce((s,p)=>s+p.price,0),sxy=ex.reduce((s,p)=>s+p.area*p.price,0),sxx=ex.reduce((s,p)=>s+p.area*p.area,0),det=n*sxx-sx*sx;if(Math.abs(det)>.001){const a=(n*sxy-sx*sy)/det,b=(sy-a*sx)/n;return Math.round(Math.max(0,a*tA+b));}}
-  if(ex.length===1)return Math.round(ex[0].price/ex[0].area*tA);
-  const pr=pts.filter(p=>p.profile===d.profile&&p.glazing===d.glazingFormula);
-  if(pr.length){return Math.round(pr.reduce((s,p)=>s+p.price/p.area,0)/pr.length*tA);}
-  return Math.round(pts.reduce((s,p)=>s+p.price/p.area,0)/pts.length*tA);
+  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
+  if(!pts.length)return null;
+  const target=extractFeatures(d);
+  // Fallback: if only 1 point, scale by area ratio
+  if(pts.length===1){
+    const p=pts[0];
+    return Math.round(p.price*(target[0]/p.area));
+  }
+  // Build feature matrix X (with bias column) and target vector y
+  const n=pts.length, nf=target.length;
+  // Re-extract features for old points that don't have them
+  const X=pts.map(p=>p.features||[p.area,...new Array(nf-1).fill(0)]);
+  const y=pts.map(p=>p.price);
+  // Add bias (intercept) column
+  const Xb=X.map(row=>[1,...row]);
+  const m=nf+1; // features + bias
+  // Ridge regression: w = (X^T X + λI)^(-1) X^T y
+  const lambda=10; // regularization strength
+  // Compute X^T X
+  const XtX=Array.from({length:m},()=>new Array(m).fill(0));
+  const Xty=new Array(m).fill(0);
+  for(let i=0;i<n;i++){
+    for(let j=0;j<m;j++){
+      Xty[j]+=Xb[i][j]*y[i];
+      for(let k=0;k<m;k++) XtX[j][k]+=Xb[i][j]*Xb[i][k];
+    }
+  }
+  // Add ridge penalty (not to bias term)
+  for(let j=1;j<m;j++) XtX[j][j]+=lambda;
+  // Solve via Gaussian elimination
+  const A=XtX.map((row,i)=>[...row,Xty[i]]);
+  for(let col=0;col<m;col++){
+    let mx=col;for(let r=col+1;r<m;r++)if(Math.abs(A[r][col])>Math.abs(A[mx][col]))mx=r;
+    [A[col],A[mx]]=[A[mx],A[col]];
+    if(Math.abs(A[col][col])<1e-10)continue;
+    const piv=A[col][col];
+    for(let j=col;j<=m;j++)A[col][j]/=piv;
+    for(let r=0;r<m;r++){if(r===col)continue;const f=A[r][col];for(let j=col;j<=m;j++)A[r][j]-=f*A[col][j];}
+  }
+  const w=A.map(row=>row[m]);
+  // Predict
+  const xb=[1,...target];
+  let pred=0;for(let j=0;j<m;j++)pred+=w[j]*xb[j];
+  return Math.round(Math.max(0,pred));
 }
 function updateCalcPrice(){
   const est=estimatePrice(designer2),disc=parseFloat(document.getElementById('discountInput').value)||0,
