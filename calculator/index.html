@@ -362,12 +362,15 @@ class WindowDesigner {
       c.fillStyle='#f8f8f8'; c.fillRect(px,py,pw,ph);
       c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(px,py,pw,ph);
     }else if(fl==='sandwich-24'||fl==='sandwich-32'){
-      // Sandwich panel — white fill with thickness label
+      // Sandwich panel — white fill, "S" + dimensions
       c.fillStyle='#fff'; c.fillRect(px,py,pw,ph);
       c.strokeStyle='#bbb'; c.lineWidth=1; c.strokeRect(px,py,pw,ph);
-      c.fillStyle='#666'; c.font='bold '+Math.max(11,Math.min(16,pw/8))+'px sans-serif';
-      c.textAlign='center'; c.textBaseline='middle';
-      c.fillText(fl==='sandwich-24'?'Сэндвич 24мм':'Сэндвич 32мм',px+pw/2,py+ph/2);
+      const fs=Math.max(12,Math.min(20,pw/6));
+      c.fillStyle='#555'; c.textAlign='center'; c.textBaseline='middle';
+      c.font='bold '+fs+'px sans-serif';
+      c.fillText('S',px+pw/2,py+ph/2-fs*0.7);
+      c.font=(fs*0.7)+'px sans-serif';
+      c.fillText(Math.round(w)+'×'+Math.round(h),px+pw/2,py+ph/2+fs*0.5);
     }else{
       // Glass pane (default)
       c.fillStyle=glassCol(this.glazingFormula);
