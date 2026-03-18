@@ -172,14 +172,14 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         <div style="flex:1;min-width:200px" class="control-section">
           <h3>Размеры (мм)</h3>
           <div id="dimsNormal">
-            <div class="form-row"><label>Ширина</label><input type="number" id="cWidth" value="1400" step="10" min="400" max="3000" oninput="drawPreview()"></div>
-            <div class="form-row"><label>Высота</label><input type="number" id="cHeight" value="1400" step="10" min="400" max="2500" oninput="drawPreview()"></div>
+            <div class="form-row"><label>Ширина</label><input type="number" id="cWidth" value="1400" step="10" min="400" max="3000" onchange="drawPreview()"></div>
+            <div class="form-row"><label>Высота</label><input type="number" id="cHeight" value="1400" step="10" min="400" max="2500" onchange="drawPreview()"></div>
           </div>
           <div id="dimsBalcony" style="display:none">
-            <div class="form-row"><label>Ширина окна</label><input type="number" id="cBwinW" value="1400" step="10" min="400" max="3000" oninput="drawPreview()"></div>
-            <div class="form-row"><label>Высота окна</label><input type="number" id="cBwinH" value="1400" step="10" min="400" max="2500" oninput="drawPreview()"></div>
-            <div class="form-row"><label>Ширина двери</label><input type="number" id="cBdoorW" value="700" step="10" min="400" max="1200" oninput="drawPreview()"></div>
-            <div class="form-row"><label>Высота двери</label><input type="number" id="cBdoorH" value="2100" step="10" min="1800" max="2500" oninput="drawPreview()"></div>
+            <div class="form-row"><label>Ширина окна</label><input type="number" id="cBwinW" value="1400" step="10" min="400" max="3000" onchange="drawPreview()"></div>
+            <div class="form-row"><label>Высота окна</label><input type="number" id="cBwinH" value="1400" step="10" min="400" max="2500" onchange="drawPreview()"></div>
+            <div class="form-row"><label>Ширина двери</label><input type="number" id="cBdoorW" value="700" step="10" min="400" max="1200" onchange="drawPreview()"></div>
+            <div class="form-row"><label>Высота двери</label><input type="number" id="cBdoorH" value="2100" step="10" min="1800" max="2500" onchange="drawPreview()"></div>
           </div>
         </div>
         <div style="flex:1;min-width:200px" class="control-section">
@@ -974,12 +974,9 @@ function typeIcon(t){
   const p=t.parts, w=60, h=50, door=t.hasDoor, f=4, m=3;
   let svg=`<svg width="${w+(door?24:0)}" height="${h}" viewBox="0 0 ${w+(door?24:0)} ${h}" style="display:block;margin:0 auto">`;
   if(door){
-    // Door with sash lines
+    // Door
     svg+=`<rect x="0" y="0" width="20" height="${h}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
     svg+=`<rect x="${f}" y="${f}" width="${20-2*f}" height="${h-2*f}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
-    // Door sash lines (swing left = triangle to right edge)
-    svg+=`<line x1="${f}" y1="${f}" x2="${20-f}" y2="${h/2}" stroke="#1a3a6a" stroke-width="0.7"/>`;
-    svg+=`<line x1="${f}" y1="${h-f}" x2="${20-f}" y2="${h/2}" stroke="#1a3a6a" stroke-width="0.7"/>`;
     // Window (top-aligned)
     const wh=h-10;
     svg+=`<rect x="22" y="0" width="${w-2}" height="${wh}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
