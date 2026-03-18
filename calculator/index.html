@@ -106,19 +106,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <div id="basePriceTable" style="font-size:12px"></div>
           </details>
           <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Створки (доплата за шт.)</summary>
-            <div class="form-row"><label>Поворотная</label><input type="number" class="cp" data-key="sash_swing" step="100" placeholder="0"></div>
             <div class="form-row"><label>Поворотно-откидная</label><input type="number" class="cp" data-key="sash_tiltturn" step="100" placeholder="0"></div>
-            <div class="form-row"><label>Фрамуга</label><input type="number" class="cp" data-key="sash_tilt" step="100" placeholder="0"></div>
-          </details>
-          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Фурнитура (доплата за шт.)</summary>
-            <div class="form-row"><label>Roto (доплата к базе)</label><input type="number" class="cp" data-key="hw_Roto" step="50" placeholder="0"></div>
-            <div class="form-row"><label>Vorne (база)</label><input type="number" class="cp" data-key="hw_Vorne" value="0" disabled></div>
-            <div class="form-row"><label>Verta</label><input type="number" class="cp" data-key="hw_Verta" step="50" placeholder="0"></div>
-            <div class="form-row"><label>Futuruss</label><input type="number" class="cp" data-key="hw_Futuruss" step="50" placeholder="0"></div>
-          </details>
-          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Ламинация (доплата)</summary>
-            <div class="form-row"><label>Внутренняя</label><input type="number" class="cp" data-key="lam_inner" step="100" placeholder="0"></div>
-            <div class="form-row"><label>Наружная</label><input type="number" class="cp" data-key="lam_outer" step="100" placeholder="0"></div>
           </details>
           <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Прочее (доплата за шт.)</summary>
             <div class="form-row"><label>Импост</label><input type="number" class="cp" data-key="mullion" step="50" placeholder="0"></div>
@@ -199,6 +187,11 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
           <input type="checkbox" id="cDrip"> Отлив</label>
       </div>
       <div class="control-section">
+        <h3>Москитная сетка</h3>
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
+          <input type="checkbox" id="cMosquito" onchange="drawPreview()"> Москитная сетка</label>
+      </div>
+      <div class="control-section">
         <h3>Работы</h3>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
           <input type="checkbox" id="cInstall"> Установка</label>
@@ -223,17 +216,8 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
       <label><input type="radio" name="sashDir" value="left" checked> Левое (ручка справа)</label>
       <label><input type="radio" name="sashDir" value="right"> Правое (ручка слева)</label>
     </div></div>
-  <div class="form-group"><label>Тип</label>
-    <div class="radio-group">
-      <label><input type="radio" name="sashType" value="swing"> Поворотная</label>
-      <label><input type="radio" name="sashType" value="tilt-turn" checked> Поворотно-откидная</label>
-      <label><input type="radio" name="sashType" value="tilt"> Фрамуга</label>
-    </div></div>
-  <div class="form-group"><label>Фурнитура</label>
-    <select id="sashHardware">
-      <option value="Roto">Roto</option><option value="Vorne" selected>Vorne</option>
-      <option value="Verta">Verta</option><option value="Futuruss">Futuruss</option>
-    </select></div>
+  <input type="hidden" name="sashType" value="tilt-turn">
+  <input type="hidden" id="sashHardware" value="Vorne">
   <div class="form-group"><label>Цвет ручки</label>
     <select id="sashHandleColor"></select></div>
   <div class="dialog-actions">
@@ -1064,6 +1048,14 @@ function svgGlass(x,y,w,h){
 function svgMullion(x,y,w,h){
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f0f0ec" stroke="#c0c0c0" stroke-width="0.5"/>`;
 }
+function svgMosquito(x,y,w,h){
+  const sp=4; // grid spacing
+  let s=`<g stroke="#888" stroke-width="0.3" opacity="0.25">`;
+  for(let i=sp;i<w;i+=sp) s+=`<line x1="${x+i}" y1="${y}" x2="${x+i}" y2="${y+h}"/>`;
+  for(let i=sp;i<h;i+=sp) s+=`<line x1="${x}" y1="${y+i}" x2="${x+w}" y2="${y+i}"/>`;
+  s+=`</g>`;
+  return s;
+}
 // Draw sash frame (mitered like admin) + opening lines + handle
 function svgSash(gx,gy,gw,gh,sash,fw){
   if(!sash)return '';
@@ -1156,6 +1148,16 @@ function drawPreview(){
       const px=wx0+fw+i*(paneW+mw);
       svg+=svgSash(px,fw,paneW,innerH,bsl.win[i],fw);
     }
+    // Mosquito nets on window sashes only (not door)
+    const hasMosq=document.getElementById('cMosquito').checked;
+    if(hasMosq){
+      for(let i=0;i<parts;i++){
+        if(bsl.win[i]){
+          const px=wx0+fw+i*(paneW+mw);
+          svg+=svgMosquito(px,fw,paneW,innerH);
+        }
+      }
+    }
     // Dimensions
     svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
     svg+=`<text x="${wx0+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
@@ -1185,6 +1187,13 @@ function drawPreview(){
     for(let i=0;i<parts;i++){
       svg+=svgSash(fw+i*(paneW+mw),fw,paneW,innerH,sashes[i],fw);
     }
+    // Mosquito nets on sash panes only
+    const hasMosq=document.getElementById('cMosquito').checked;
+    if(hasMosq){
+      for(let i=0;i<parts;i++){
+        if(sashes[i]) svg+=svgMosquito(fw+i*(paneW+mw),fw,paneW,innerH);
+      }
+    }
     // Dimensions outside
     svg+=`<text x="${sw/2}" y="${sh+16}" text-anchor="middle" font-size="10" fill="#888">${w}</text>`;
     svg+=`<text x="-8" y="${sh/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(-90,-8,${sh/2})">${h}</text>`;
@@ -1212,6 +1221,7 @@ function calcClientPrice(){
   const slopes=document.getElementById('cSlopes').checked;
   const sill=document.getElementById('cSill').checked;
   const drip=document.getElementById('cDrip').checked;
+  const mosquito=document.getElementById('cMosquito').checked;
   const install=document.getElementById('cInstall').checked;
   const delivery=document.getElementById('cDelivery').checked;
 
@@ -1241,6 +1251,18 @@ function calcClientPrice(){
   const wt=WIN_TYPES.find(x=>x.id===type);
   const mullionCount=wt?(wt.parts-1):0;
   winPrice+=mullionCount*(data.mullion||0);
+
+  // Mosquito nets: one per sash (on balcony — only on window sashes, not door)
+  if(mosquito){
+    let netCount=0;
+    if(type==='balcony'){
+      const bsl=getBalconySashLayout(selectedSashes, wt.parts);
+      netCount=bsl.win.filter(s=>s).length;
+    }else{
+      netCount=selectedSashes;
+    }
+    winPrice+=netCount*(data.mosquito||0);
+  }
 
   // Markup
   const mT=document.getElementById('markupType').value;
