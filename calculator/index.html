@@ -165,7 +165,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
       </div>
       <div id="sashSelector" style="display:none" class="control-section">
         <h3>Количество створок</h3>
-        <div class="form-row"><select id="cSashes" onchange="selectedSashes=parseInt(this.value)"><option value="1">1 шт.</option></select></div>
+        <div class="form-row"><select id="cSashes" onchange="selectedSashes=parseInt(this.value);drawPreview()"><option value="1">1 шт.</option></select></div>
       </div>
       <div id="winPreview" style="text-align:center;margin:12px 0"></div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -938,20 +938,48 @@ function estimatePrice(d){
 }
 // ========== CLIENT CALCULATOR ==========
 const WIN_TYPES=[
-  {id:'fixed',name:'Глухое',parts:1,minSash:0,maxSash:0,defW:600,defH:1400},
+  {id:'single',name:'Одинарное',parts:1,minSash:0,maxSash:1,defW:600,defH:1400},
   {id:'double',name:'Из двух частей',parts:2,minSash:0,maxSash:2,defW:1400,defH:1400},
   {id:'triple',name:'Из трёх частей',parts:3,minSash:0,maxSash:3,defW:2000,defH:1400},
   {id:'balcony',name:'Балконный блок',parts:2,minSash:1,maxSash:3,defW:1400,defH:1400,hasDoor:true},
 ];
 let selectedType='double', selectedSashes=1;
 
+// Sash layout per type: returns array of sash configs per pane index
+// Each entry: null (fixed) or {type, direction}
+function getSashLayout(type, count, parts){
+  const r=new Array(parts).fill(null);
+  if(type==='single'){
+    if(count>=1) r[0]={type:'tilt-turn',dir:'left'};
+  }else if(type==='double'){
+    if(count>=1) r[0]={type:'tilt-turn',dir:'left'};
+    if(count>=2) r[1]={type:'tilt-turn',dir:'right'};
+  }else if(type==='triple'){
+    if(count===1) r[1]={type:'tilt-turn',dir:'right'};
+    if(count>=2){r[0]={type:'tilt-turn',dir:'right'};r[2]={type:'tilt-turn',dir:'right'};}
+    if(count>=3) r[1]={type:'tilt-turn',dir:'right'};
+  }
+  // balcony: handled separately (door + window panes)
+  return r;
+}
+function getBalconySashLayout(count, winParts){
+  const door={type:'swing',dir:'left'}; // always
+  const win=new Array(winParts).fill(null);
+  if(count>=2) win[0]={type:'tilt-turn',dir:'left'};
+  if(count>=3) win[1]={type:'tilt-turn',dir:'right'};
+  return {door, win};
+}
+
 function typeIcon(t){
   const p=t.parts, w=60, h=50, door=t.hasDoor, f=4, m=3;
   let svg=`<svg width="${w+(door?24:0)}" height="${h}" viewBox="0 0 ${w+(door?24:0)} ${h}" style="display:block;margin:0 auto">`;
   if(door){
-    // Door
+    // Door with sash lines
     svg+=`<rect x="0" y="0" width="20" height="${h}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
     svg+=`<rect x="${f}" y="${f}" width="${20-2*f}" height="${h-2*f}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
+    // Door sash lines (swing left = triangle to right edge)
+    svg+=`<line x1="${f}" y1="${f}" x2="${20-f}" y2="${h/2}" stroke="#1a3a6a" stroke-width="0.7"/>`;
+    svg+=`<line x1="${f}" y1="${h-f}" x2="${20-f}" y2="${h/2}" stroke="#1a3a6a" stroke-width="0.7"/>`;
     // Window (top-aligned)
     const wh=h-10;
     svg+=`<rect x="22" y="0" width="${w-2}" height="${wh}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
@@ -1035,6 +1063,43 @@ function svgGlass(x,y,w,h){
 function svgMullion(x,y,w,h){
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f0f0ec" stroke="#c0c0c0" stroke-width="0.5"/>`;
 }
+// Draw sash frame (inner frame with overlap) + opening lines + handle
+function svgSash(gx,gy,gw,gh,sash,fw){
+  if(!sash)return '';
+  let s='';
+  const sf=3, ov=1; // sash frame width, overlap
+  const sx=gx-ov, sy=gy-ov, sw=gw+2*ov, sh=gh+2*ov;
+  // Sash frame (4 sides)
+  s+=`<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="none" stroke="#c0c0c0" stroke-width="1.5"/>`;
+  s+=`<rect x="${sx+sf}" y="${sy+sf}" width="${sw-2*sf}" height="${sh-2*sf}" fill="none" stroke="#d8d8d8" stroke-width="0.5"/>`;
+  // Glass corners
+  const ix=sx+sf,iy=sy+sf,iw=sw-2*sf,ih=sh-2*sf;
+  const tl=[ix,iy],tr=[ix+iw,iy],bl=[ix,iy+ih],br=[ix+iw,iy+ih];
+  const tc=[ix+iw/2,iy]; // top center
+  // Handle position: on sash frame axis
+  let hp;
+  if(sash.dir==='left') hp=[sx+sw-sf/2,sy+sh/2]; else hp=[sx+sf/2,sy+sh/2];
+  // Opening lines
+  s+=`<g stroke="#1a3a6a" stroke-width="1" fill="none">`;
+  if(sash.type==='swing'||sash.type==='tilt-turn'){
+    if(sash.dir==='left'){
+      s+=`<line x1="${tl[0]}" y1="${tl[1]}" x2="${hp[0]}" y2="${hp[1]}"/>`;
+      s+=`<line x1="${bl[0]}" y1="${bl[1]}" x2="${hp[0]}" y2="${hp[1]}"/>`;
+    }else{
+      s+=`<line x1="${tr[0]}" y1="${tr[1]}" x2="${hp[0]}" y2="${hp[1]}"/>`;
+      s+=`<line x1="${br[0]}" y1="${br[1]}" x2="${hp[0]}" y2="${hp[1]}"/>`;
+    }
+  }
+  if(sash.type==='tilt-turn'||sash.type==='tilt'){
+    s+=`<line x1="${bl[0]}" y1="${bl[1]}" x2="${tc[0]}" y2="${tc[1]}"/>`;
+    s+=`<line x1="${br[0]}" y1="${br[1]}" x2="${tc[0]}" y2="${tc[1]}"/>`;
+  }
+  s+=`</g>`;
+  // Handle — vertical bar
+  const hLen=Math.min(sh*0.35,20), hW=2.5;
+  s+=`<rect x="${hp[0]-hW/2}" y="${hp[1]-hLen/2}" width="${hW}" height="${hLen}" fill="#555" stroke="#333" stroke-width="0.3"/>`;
+  return s;
+}
 
 function drawPreview(){
   const el=document.getElementById('winPreview');
@@ -1053,27 +1118,31 @@ function drawPreview(){
     const dwPx=Math.round(dW*sc), dhPx=Math.round(dH*sc);
     const wwPx=Math.round(wW*sc), whPx=Math.round(wH*sc);
     const sw=dwPx+wwPx, sh=dhPx;
-    // Window aligns to TOP of door
+    const bsl=getBalconySashLayout(selectedSashes, tp.parts);
     let svg=`<svg width="${sw+60}" height="${sh+40}" viewBox="-30 -5 ${sw+60} ${sh+40}">`;
     // Door frame
     svg+=svgFrame(0,0,dwPx,dhPx,fw);
-    svg+=svgGlass(fw,fw,dwPx-2*fw,dhPx-2*fw);
+    const dGx=fw, dGy=fw, dGw=dwPx-2*fw, dGh=dhPx-2*fw;
+    svg+=svgGlass(dGx,dGy,dGw,dGh);
+    svg+=svgSash(dGx,dGy,dGw,dGh,bsl.door,fw);
     // Mullion between door and window
     svg+=svgMullion(dwPx-1,0,mw,Math.max(dhPx,whPx));
     // Window frame (top-aligned with door)
-    svg+=svgFrame(dwPx+mw-2,0,wwPx,whPx,fw);
+    const wx0=dwPx+mw-2;
+    svg+=svgFrame(wx0,0,wwPx,whPx,fw);
     // Window panes
     const parts=tp.parts;
     const innerW=wwPx-2*fw, innerH=whPx-2*fw;
     const paneW=(innerW-(parts-1)*mw)/parts;
     for(let i=0;i<parts;i++){
-      const px=dwPx+mw-2+fw+i*(paneW+mw);
+      const px=wx0+fw+i*(paneW+mw);
       svg+=svgGlass(px,fw,paneW,innerH);
+      svg+=svgSash(px,fw,paneW,innerH,bsl.win[i],fw);
       if(i<parts-1) svg+=svgMullion(px+paneW,fw,mw,innerH);
     }
     // Dimensions
     svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
-    svg+=`<text x="${dwPx+mw+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
+    svg+=`<text x="${wx0+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
     svg+=`<text x="-8" y="${dhPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(-90,-8,${dhPx/2})">${dH}</text>`;
     svg+=`<text x="${sw+mw+8}" y="${whPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(90,${sw+mw+8},${whPx/2})">${wH}</text>`;
     svg+='</svg>';
@@ -1084,6 +1153,7 @@ function drawPreview(){
     const sc=Math.min(maxW/w,maxH/h);
     const sw=Math.round(w*sc), sh=Math.round(h*sc);
     const parts=tp.parts;
+    const sashes=getSashLayout(type,selectedSashes,parts);
     let svg=`<svg width="${sw+60}" height="${sh+30}" viewBox="-30 -5 ${sw+60} ${sh+30}">`;
     // Outer frame
     svg+=svgFrame(0,0,sw,sh,fw);
@@ -1093,10 +1163,9 @@ function drawPreview(){
     for(let i=0;i<parts;i++){
       const px=fw+i*(paneW+mw);
       svg+=svgGlass(px,fw,paneW,innerH);
+      svg+=svgSash(px,fw,paneW,innerH,sashes[i],fw);
       if(i<parts-1) svg+=svgMullion(px+paneW,fw,mw,innerH);
     }
-    // Glass label
-    svg+=`<text x="${sw/2}" y="${sh/2+1}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#2a8a8a">${Math.round(innerW/sc)} × ${Math.round(innerH/sc)}</text>`;
     // Dimensions outside
     svg+=`<text x="${sw/2}" y="${sh+16}" text-anchor="middle" font-size="10" fill="#888">${w}</text>`;
     svg+=`<text x="-8" y="${sh/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(-90,-8,${sh/2})">${h}</text>`;
