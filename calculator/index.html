@@ -1064,24 +1064,33 @@ function svgGlass(x,y,w,h){
 function svgMullion(x,y,w,h){
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f0f0ec" stroke="#c0c0c0" stroke-width="0.5"/>`;
 }
-// Draw sash frame (inner frame with overlap) + opening lines + handle
+// Draw sash frame (mitered like admin) + opening lines + handle
 function svgSash(gx,gy,gw,gh,sash,fw){
   if(!sash)return '';
   let s='';
-  const sf=3, ov=1; // sash frame width, overlap
+  const sf=5, ov=2; // sash frame width, overlap onto main frame
   const sx=gx-ov, sy=gy-ov, sw=gw+2*ov, sh=gh+2*ov;
-  // Sash frame (4 sides)
-  s+=`<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" fill="none" stroke="#c0c0c0" stroke-width="1.5"/>`;
-  s+=`<rect x="${sx+sf}" y="${sy+sf}" width="${sw-2*sf}" height="${sh-2*sf}" fill="none" stroke="#d8d8d8" stroke-width="0.5"/>`;
-  // Glass corners
+  const fc='#f0f0ec', sc='#c0c0c0', mc='#d8d8d8';
+  // Sash frame — 4 trapezoids with mitered corners (like svgFrame)
+  s+=`<polygon points="${sx},${sy} ${sx+sw},${sy} ${sx+sw-sf},${sy+sf} ${sx+sf},${sy+sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  s+=`<polygon points="${sx+sw},${sy} ${sx+sw},${sy+sh} ${sx+sw-sf},${sy+sh-sf} ${sx+sw-sf},${sy+sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  s+=`<polygon points="${sx+sw},${sy+sh} ${sx},${sy+sh} ${sx+sf},${sy+sh-sf} ${sx+sw-sf},${sy+sh-sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  s+=`<polygon points="${sx},${sy+sh} ${sx},${sy} ${sx+sf},${sy+sf} ${sx+sf},${sy+sh-sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Miter lines (diagonal welding seams)
+  s+=`<line x1="${sx}" y1="${sy}" x2="${sx+sf}" y2="${sy+sf}" stroke="${mc}" stroke-width="0.6"/>`;
+  s+=`<line x1="${sx+sw}" y1="${sy}" x2="${sx+sw-sf}" y2="${sy+sf}" stroke="${mc}" stroke-width="0.6"/>`;
+  s+=`<line x1="${sx+sw}" y1="${sy+sh}" x2="${sx+sw-sf}" y2="${sy+sh-sf}" stroke="${mc}" stroke-width="0.6"/>`;
+  s+=`<line x1="${sx}" y1="${sy+sh}" x2="${sx+sf}" y2="${sy+sh-sf}" stroke="${mc}" stroke-width="0.6"/>`;
+  // Glass corners (inside sash frame)
   const ix=sx+sf,iy=sy+sf,iw=sw-2*sf,ih=sh-2*sf;
   const tl=[ix,iy],tr=[ix+iw,iy],bl=[ix,iy+ih],br=[ix+iw,iy+ih];
   const tc=[ix+iw/2,iy]; // top center
-  // Handle position: on sash frame axis
+  // Handle position: on sash frame axis (middle of profile strip)
+  // Left opening = handle on RIGHT side, Right opening = handle on LEFT
   let hp;
   if(sash.dir==='left') hp=[sx+sw-sf/2,sy+sh/2]; else hp=[sx+sf/2,sy+sh/2];
   // Opening lines
-  s+=`<g stroke="#1a3a6a" stroke-width="1" fill="none">`;
+  s+=`<g stroke="#1a3a6a" stroke-width="0.8" fill="none">`;
   if(sash.type==='swing'||sash.type==='tilt-turn'){
     if(sash.dir==='left'){
       s+=`<line x1="${tl[0]}" y1="${tl[1]}" x2="${hp[0]}" y2="${hp[1]}"/>`;
@@ -1096,9 +1105,9 @@ function svgSash(gx,gy,gw,gh,sash,fw){
     s+=`<line x1="${br[0]}" y1="${br[1]}" x2="${tc[0]}" y2="${tc[1]}"/>`;
   }
   s+=`</g>`;
-  // Handle — vertical bar
-  const hLen=Math.min(sh*0.35,20), hW=2.5;
-  s+=`<rect x="${hp[0]-hW/2}" y="${hp[1]-hLen/2}" width="${hW}" height="${hLen}" fill="#555" stroke="#333" stroke-width="0.3"/>`;
+  // Handle — vertical bar on sash frame axis
+  const hLen=Math.min(sh*0.3,18), hW=2;
+  s+=`<rect x="${hp[0]-hW/2}" y="${hp[1]-hLen/2}" width="${hW}" height="${hLen}" fill="#555" stroke="#333" stroke-width="0.3" rx="0.5"/>`;
   return s;
 }
 
