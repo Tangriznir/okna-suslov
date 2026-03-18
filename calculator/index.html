@@ -117,10 +117,8 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
           <div class="price-list" id="priceList"></div>
         </div>
         <div class="control-section">
-          <h3>Настройки наценки</h3>
-          <div class="form-row"><label>Скидка производителя (%)</label>
-            <input type="number" id="discountInput" value="57" min="0" max="99" onchange="saveSettings()"></div>
-          <div class="form-row"><label>Наценка для клиента</label>
+          <h3>Наценка для клиента</h3>
+          <div class="form-row">
             <div class="inline">
               <input type="number" id="markupValue" value="30" min="0" onchange="saveSettings()">
               <select id="markupType" onchange="saveSettings()"><option value="percent">%</option><option value="fixed">руб./окно</option></select>
@@ -128,9 +126,11 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         </div>
         <div class="control-section">
           <button class="btn btn-block" onclick="calcPrices()" style="background:#E8521A;color:#fff;font-size:15px;padding:12px 16px;margin-bottom:12px">Рассчитать</button>
-          <div class="info-box">
+          <div class="info-box" id="calcResult" style="display:none">
             <div class="info-row"><span class="label">Цена производства</span><span class="value" id="prodPrice">—</span></div>
-            <div class="info-row"><span class="label">Цена для клиента</span><span class="value" id="clientPrice">—</span></div>
+            <div class="info-row" id="markupRow" style="display:none"><span class="label">Наценка</span><span class="value" id="markupDisplay" style="color:#E8521A">—</span></div>
+            <div class="info-row" id="clientRow" style="display:none"><span class="label">Цена для клиента</span><span class="value" id="clientPrice" style="font-size:15px">—</span></div>
+            <div class="info-row" id="profitRow" style="display:none"><span class="label">Прибыль</span><span class="value" id="profitValue" style="color:#2a9d2a">—</span></div>
           </div>
         </div>
         <button class="btn btn-secondary btn-sm btn-block" onclick="resetDesigner(1)">Сбросить конструкцию</button>
@@ -940,27 +940,39 @@ function estimatePrice(d){
   return Math.round(Math.max(0,pred));
 }
 function updateCalcPrice(){
-  const est=estimatePrice(designer2),disc=parseFloat(document.getElementById('discountInput').value)||0,
+  const est=estimatePrice(designer2),
     mT=document.getElementById('markupType').value,mV=parseFloat(document.getElementById('markupValue').value)||0;
   const fE=document.getElementById('finalPrice'),bE=document.getElementById('priceBreakdown');
   if(!est){fE.textContent='-- руб.';bE.innerHTML='Добавьте точки цен в "Обучение"';return;}
-  const dc=Math.round(est*(100-disc)/100),fn=mT==='percent'?Math.round(dc*(100+mV)/100):dc+mV;
+  const markup=mV>0?(mT==='percent'?Math.round(est*mV/100):mV):0;
+  const fn=est+markup;
   fE.textContent=fn.toLocaleString()+' руб.';
-  bE.innerHTML=`<div>Базовая: ${est.toLocaleString()} р.</div><div>Скидка ${disc}%: ${dc.toLocaleString()} р.</div><div>Наценка: <b>${fn.toLocaleString()} р.</b></div>`;
+  bE.innerHTML=markup>0?`<div>Производство: ${est.toLocaleString()} р.</div><div>Наценка: +${markup.toLocaleString()} р.</div>`:'';
 }
-function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({discount:parseFloat(document.getElementById('discountInput').value)||0,markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
+function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
 function calcPrices(){
-  const pp=document.getElementById('prodPrice'),cp=document.getElementById('clientPrice');
   const est=estimatePrice(designer1);
-  if(!est){pp.textContent='нет данных';cp.textContent='нет данных';return;}
-  const disc=parseFloat(document.getElementById('discountInput').value)||0,
-    mT=document.getElementById('markupType').value,mV=parseFloat(document.getElementById('markupValue').value)||0;
-  const prod=Math.round(est*(100-disc)/100);
-  const client=mT==='percent'?Math.round(prod*(100+mV)/100):prod+mV;
-  pp.textContent=prod.toLocaleString()+' руб.';
-  cp.textContent=client.toLocaleString()+' руб.';
+  const box=document.getElementById('calcResult');
+  box.style.display='';
+  const pp=document.getElementById('prodPrice');
+  if(!est){pp.textContent='нет данных';
+    ['markupRow','clientRow','profitRow'].forEach(id=>document.getElementById(id).style.display='none');return;}
+  pp.textContent=est.toLocaleString()+' руб.';
+  const mT=document.getElementById('markupType').value,mV=parseFloat(document.getElementById('markupValue').value)||0;
+  if(mV>0){
+    const markup=mT==='percent'?Math.round(est*mV/100):mV;
+    const client=est+markup;
+    document.getElementById('markupRow').style.display='';
+    document.getElementById('clientRow').style.display='';
+    document.getElementById('profitRow').style.display='';
+    document.getElementById('markupDisplay').textContent='+'+markup.toLocaleString()+' руб.';
+    document.getElementById('clientPrice').textContent=client.toLocaleString()+' руб.';
+    document.getElementById('profitValue').textContent=markup.toLocaleString()+' руб.';
+  }else{
+    ['markupRow','clientRow','profitRow'].forEach(id=>document.getElementById(id).style.display='none');
+  }
 }
-function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')||'{}');if(s.discount!==undefined)document.getElementById('discountInput').value=s.discount;if(s.markupType)document.getElementById('markupType').value=s.markupType;if(s.markupValue!==undefined)document.getElementById('markupValue').value=s.markupValue;}
+function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')||'{}');if(s.markupType)document.getElementById('markupType').value=s.markupType;if(s.markupValue!==undefined)document.getElementById('markupValue').value=s.markupValue;}
 
 // ========== RESET ==========
 function resetDesigner(n){
