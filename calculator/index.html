@@ -1416,6 +1416,13 @@ function loadSheetPrices(){
       }
     });
     console.log('Цены из таблицы загружены:',sheetPrices);
+    // If loaded from sheet, hide admin tab and show calculator
+    if(Object.keys(sheetPrices).length>0 && !location.protocol.startsWith('file')){
+      document.querySelector('.tabs').style.display='none';
+      document.getElementById('tab-training').classList.remove('active');
+      document.getElementById('tab-training').style.display='none';
+      document.getElementById('tab-calculator').classList.add('active');
+    }
   }).catch(e=>console.warn('Не удалось загрузить цены из Google Sheets:',e));
 }
 function calcPrices(){
