@@ -357,7 +357,11 @@ class WindowDesigner {
     const{x,y,w,h}=s.bounds;
     const px=this.mx(x),py=this.my(y),pw=this.ms(w),ph=this.ms(h);
     const c=this.ctx, fl=s.filling;
-    if(fl){
+    if(fl==='empty'){
+      // Empty — no filling, just outline
+      c.fillStyle='#f8f8f8'; c.fillRect(px,py,pw,ph);
+      c.strokeStyle='#ccc'; c.lineWidth=1; c.strokeRect(px,py,pw,ph);
+    }else if(fl==='sandwich-24'||fl==='sandwich-32'){
       // Sandwich panel — white fill with thickness label
       c.fillStyle='#fff'; c.fillRect(px,py,pw,ph);
       c.strokeStyle='#bbb'; c.lineWidth=1; c.strokeRect(px,py,pw,ph);
@@ -365,6 +369,7 @@ class WindowDesigner {
       c.textAlign='center'; c.textBaseline='middle';
       c.fillText(fl==='sandwich-24'?'Сэндвич 24мм':'Сэндвич 32мм',px+pw/2,py+ph/2);
     }else{
+      // Glass pane (default)
       c.fillStyle=glassCol(this.glazingFormula);
       c.fillRect(px,py,pw,ph);
       c.strokeStyle=glassBrd(this.glazingFormula); c.lineWidth=.5;
@@ -748,10 +753,14 @@ class WindowDesigner {
   getConfigHash(){return this.profile+'|'+this.glazingFormula+'|'+this.sections.length+'p|'+this.sections.map(s=>s.sash?s.sash.type+'-'+s.sash.direction:'fixed').join('|');}
 }
 
-// ========== Delete key for mullion ==========
+// ========== Delete key for mullion and filling ==========
 document.addEventListener('keydown',e=>{
-  if(e.key==='Delete'&&activeDesigner&&activeDesigner.selectedMullion){
+  if(e.key!=='Delete'||!activeDesigner)return;
+  if(activeDesigner.selectedMullion){
     activeDesigner.removeMullion(activeDesigner.selectedMullion);
+  }else if(activeDesigner.selectedPanes.length){
+    activeDesigner.selectedPanes.forEach(p=>{p.filling='empty';});
+    activeDesigner.render(); activeDesigner._notify();
   }
 });
 
