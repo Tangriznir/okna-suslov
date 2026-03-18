@@ -1235,7 +1235,7 @@ function drawPreview(){
 
 function calcClientPrice(){
   const localData=JSON.parse(localStorage.getItem('okna_components')||'{}');
-  const data=sheetPrices||localData; // Таблица приоритетнее
+  const data=sheetPrices||localData;
   const type=selectedType;
   let w,h;
   if(type==='balcony'){
