@@ -1272,19 +1272,25 @@ function calcClientPrice(){
   }
 
   // Base window price
-  let winPrice=Math.round(basePm2*area);
+  const basePrice=Math.round(basePm2*area);
+  lines.push({label:'Окно ('+basePm2+' × '+area.toFixed(2)+' м²)',value:basePrice});
 
   // Sashes from user selection
-  winPrice+=selectedSashes*(data.sash_tiltturn||0);
+  const sashCost=selectedSashes*(data.sash_tiltturn||0);
+  if(sashCost) lines.push({label:'Створки п/о ×'+selectedSashes,value:sashCost});
 
-  // Mullions: parts - 1 (двухчастное=1 импост, трёхчастное=2)
+  // Mullions: parts - 1
   const wt=WIN_TYPES.find(x=>x.id===type);
   const mullionCount=wt?(wt.parts-1):0;
-  winPrice+=mullionCount*(data.mullion||0);
+  const mullionCost=mullionCount*(data.mullion||0);
+  if(mullionCost) lines.push({label:'Импосты ×'+mullionCount,value:mullionCost});
 
   // Mosquito nets
   const netCount=parseInt(document.getElementById('cMosquito').value)||0;
-  if(netCount>0) winPrice+=netCount*(data.mosquito||0);
+  const netCost=netCount>0?netCount*(data.mosquito||0):0;
+  if(netCost) lines.push({label:'Сетки ×'+netCount,value:netCost});
+
+  let winPrice=basePrice+sashCost+mullionCost+netCost;
 
   // Markup
   const mT=document.getElementById('markupType').value;
@@ -1293,6 +1299,7 @@ function calcClientPrice(){
   if(mV>0){
     profitAmount=mT==='percent'?Math.round(winPrice*mV/100):mV;
     winPrice+=profitAmount;
+    lines.push({label:'Наценка'+(mT==='percent'?' '+mV+'%':''),value:profitAmount});
   }
 
   total+=winPrice;
@@ -1343,7 +1350,10 @@ function calcClientPrice(){
   const res=document.getElementById('clientResult');
   res.style.display='';
   document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
-  document.getElementById('clientBreakdown').innerHTML='<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
+  let bd='<div style="font-size:12px;margin-top:8px;color:#555">';
+  lines.forEach(l=>bd+=`<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${l.label}</span><span>${l.value.toLocaleString()} ₽</span></div>`);
+  bd+='</div><div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
+  document.getElementById('clientBreakdown').innerHTML=bd;
 
   // Send to Google Sheets
   const glazNames={single:'Однокамерный',double:'Двухкамерный',energy:'Энергосберегающий'};
