@@ -890,54 +890,69 @@ function renderPriceList(){
   el.innerHTML=pts.slice().reverse().map(p=>`<div class="price-item"><div class="desc"><b>${p.width}x${p.height}</b> ${p.configDesc}<br><span style="color:#888">${p.profile}/${p.glazing}</span></div><div class="price">${p.price.toLocaleString()} р.</div><div class="del" onclick="deletePrice(${p.id})">x</div></div>`).join('');
 }
 
-// ========== RIDGE REGRESSION ==========
-// Solves: price ≈ w0 + w1*f1 + w2*f2 + ... using all training points
-// Ridge (L2 regularization) prevents overfitting with few data points
+// ========== PRICE ESTIMATION ==========
+function featMatch(a,b){
+  // Compare features ignoring area (index 0) — same config?
+  if(!a||!b||a.length!==b.length)return false;
+  for(let i=1;i<a.length;i++)if(a[i]!==b[i])return false;
+  return true;
+}
 function estimatePrice(d){
-  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
+  let pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
+  // Filter out old points without features
+  pts=pts.filter(p=>p.features&&p.features.length>0);
   if(!pts.length)return null;
-  const target=extractFeatures(d);
-  // Fallback: if only 1 point, scale by area ratio
-  if(pts.length===1){
-    const p=pts[0];
-    return Math.round(p.price*(target[0]/p.area));
+  const target=extractFeatures(d), tArea=target[0];
+
+  // 1. Exact config match (same features except area) → scale by area
+  const exact=pts.filter(p=>featMatch(p.features,target));
+  if(exact.length>=2){
+    // Linear regression on area for this exact config
+    const n=exact.length,sx=exact.reduce((s,p)=>s+p.features[0],0),sy=exact.reduce((s,p)=>s+p.price,0),
+      sxy=exact.reduce((s,p)=>s+p.features[0]*p.price,0),sxx=exact.reduce((s,p)=>s+p.features[0]**2,0),
+      det=n*sxx-sx*sx;
+    if(Math.abs(det)>.001){const a=(n*sxy-sx*sy)/det,b=(sy-a*sx)/n;return Math.round(Math.max(0,a*tArea+b));}
   }
-  // Build feature matrix X (with bias column) and target vector y
-  const n=pts.length, nf=target.length;
-  // Re-extract features for old points that don't have them
-  const X=pts.map(p=>p.features||[p.area,...new Array(nf-1).fill(0)]);
-  const y=pts.map(p=>p.price);
-  // Add bias (intercept) column
-  const Xb=X.map(row=>[1,...row]);
-  const m=nf+1; // features + bias
-  // Ridge regression: w = (X^T X + λI)^(-1) X^T y
-  const lambda=10; // regularization strength
-  // Compute X^T X
-  const XtX=Array.from({length:m},()=>new Array(m).fill(0));
-  const Xty=new Array(m).fill(0);
-  for(let i=0;i<n;i++){
-    for(let j=0;j<m;j++){
-      Xty[j]+=Xb[i][j]*y[i];
-      for(let k=0;k<m;k++) XtX[j][k]+=Xb[i][j]*Xb[i][k];
+  if(exact.length===1){
+    // Same config, different size — scale proportionally by area
+    return Math.round(exact[0].price*(tArea/exact[0].features[0]));
+  }
+
+  // 2. Ridge regression with all points (need at least 3)
+  if(pts.length>=3){
+    const n=pts.length, nf=target.length;
+    const X=pts.map(p=>p.features);
+    const y=pts.map(p=>p.price);
+    const Xb=X.map(row=>[1,...row]);
+    const m=nf+1;
+    const lambda=100; // stronger regularization for few points
+    const XtX=Array.from({length:m},()=>new Array(m).fill(0));
+    const Xty=new Array(m).fill(0);
+    for(let i=0;i<n;i++){
+      for(let j=0;j<m;j++){
+        Xty[j]+=Xb[i][j]*y[i];
+        for(let k=0;k<m;k++) XtX[j][k]+=Xb[i][j]*Xb[i][k];
+      }
     }
+    for(let j=1;j<m;j++) XtX[j][j]+=lambda;
+    const A=XtX.map((row,i)=>[...row,Xty[i]]);
+    for(let col=0;col<m;col++){
+      let mx=col;for(let r=col+1;r<m;r++)if(Math.abs(A[r][col])>Math.abs(A[mx][col]))mx=r;
+      [A[col],A[mx]]=[A[mx],A[col]];
+      if(Math.abs(A[col][col])<1e-10)continue;
+      const piv=A[col][col];
+      for(let j=col;j<=m;j++)A[col][j]/=piv;
+      for(let r=0;r<m;r++){if(r===col)continue;const f=A[r][col];for(let j=col;j<=m;j++)A[r][j]-=f*A[col][j];}
+    }
+    const w=A.map(row=>row[m]);
+    const xb=[1,...target];
+    let pred=0;for(let j=0;j<m;j++)pred+=w[j]*xb[j];
+    if(pred>0)return Math.round(pred);
   }
-  // Add ridge penalty (not to bias term)
-  for(let j=1;j<m;j++) XtX[j][j]+=lambda;
-  // Solve via Gaussian elimination
-  const A=XtX.map((row,i)=>[...row,Xty[i]]);
-  for(let col=0;col<m;col++){
-    let mx=col;for(let r=col+1;r<m;r++)if(Math.abs(A[r][col])>Math.abs(A[mx][col]))mx=r;
-    [A[col],A[mx]]=[A[mx],A[col]];
-    if(Math.abs(A[col][col])<1e-10)continue;
-    const piv=A[col][col];
-    for(let j=col;j<=m;j++)A[col][j]/=piv;
-    for(let r=0;r<m;r++){if(r===col)continue;const f=A[r][col];for(let j=col;j<=m;j++)A[r][j]-=f*A[col][j];}
-  }
-  const w=A.map(row=>row[m]);
-  // Predict
-  const xb=[1,...target];
-  let pred=0;for(let j=0;j<m;j++)pred+=w[j]*xb[j];
-  return Math.round(Math.max(0,pred));
+
+  // 3. Fallback — average price per m² from all points
+  const avgPm2=pts.reduce((s,p)=>s+p.price/p.features[0],0)/pts.length;
+  return Math.round(avgPm2*tArea);
 }
 function updateCalcPrice(){
   const est=estimatePrice(designer2),
