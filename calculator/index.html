@@ -1099,8 +1099,8 @@ function calcClientPrice(){
   winPrice+=selectedSashes*(data.sash_tiltturn||0);
 
   // Mullions: parts - 1 (двухчастное=1 импост, трёхчастное=2)
-  const t=WIN_TYPES.find(t=>t.id===type);
-  const mullionCount=t?(t.parts-1):0;
+  const wt=WIN_TYPES.find(x=>x.id===type);
+  const mullionCount=wt?(wt.parts-1):0;
   winPrice+=mullionCount*(data.mullion||0);
 
   // Balcony door surcharge
@@ -1206,9 +1206,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('profile1').addEventListener('change',e=>{designer1.profile=e.target.value;designer1.updateConfigInfo();});
   document.getElementById('glazing1').addEventListener('change',e=>{designer1.glazingFormula=e.target.value;designer1.render();});
 
-  // Lamination
-  document.getElementById('lamInner1').addEventListener('change',e=>{designer1.lamInner=e.target.value;designer1.render();});
-  document.getElementById('lamOuter1').addEventListener('change',e=>{designer1.lamOuter=e.target.value;designer1.render();});
+  // Lamination (if elements exist)
+  const li1=document.getElementById('lamInner1'),lo1=document.getElementById('lamOuter1');
+  if(li1)li1.addEventListener('change',e=>{designer1.lamInner=e.target.value;designer1.render();});
+  if(lo1)lo1.addEventListener('change',e=>{designer1.lamOuter=e.target.value;designer1.render();});
 
   buildBasePriceTable();
   buildTypeCards();
