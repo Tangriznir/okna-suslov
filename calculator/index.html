@@ -123,9 +123,6 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
           <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Прочее (доплата за шт.)</summary>
             <div class="form-row"><label>Импост</label><input type="number" class="cp" data-key="mullion" step="50" placeholder="0"></div>
             <div class="form-row"><label>Москитная сетка</label><input type="number" class="cp" data-key="mosquito" step="50" placeholder="0"></div>
-            <div class="form-row"><label>Цветная ручка</label><input type="number" class="cp" data-key="handle_color" step="50" placeholder="0"></div>
-            <div class="form-row"><label>Сэндвич (разница от стекла)</label><input type="number" class="cp" data-key="sandwich_delta" step="50" placeholder="0"></div>
-            <div class="form-row"><label>Балконная дверь (доплата)</label><input type="number" class="cp" data-key="balcony_door" step="100" placeholder="0"></div>
           </details>
           <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Отделка и работы (для калькулятора клиента)</summary>
             <div class="form-row"><label>Откосы (руб./п.м.) — 2 высоты + 1 ширина</label><input type="number" class="cp" data-key="slopes_pm" step="50" placeholder="0"></div>
@@ -182,15 +179,15 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <div class="form-row"><label>Высота двери</label><input type="number" id="cBdoorH" value="2100" step="10" min="1800" max="2500" onchange="drawPreview()"></div>
           </div>
         </div>
-        <div style="flex:1;min-width:200px" class="control-section">
-          <select id="cProfile" style="display:none"><option value="Brusbox 60" selected>Brusbox 60</option></select>
-          <h3>Стеклопакет</h3>
-          <div class="form-row"><select id="cGlazing">
-            <option value="single">Однокамерный</option>
-            <option value="double" selected>Двухкамерный</option>
-            <option value="energy">Энергосберегающий</option>
-          </select></div>
-        </div>
+      </div>
+      <select id="cProfile" style="display:none"><option value="Brusbox 60" selected>Brusbox 60</option></select>
+      <div class="control-section">
+        <h3>Стеклопакет</h3>
+        <div class="form-row"><select id="cGlazing" onchange="drawPreview()">
+          <option value="single">Однокамерный</option>
+          <option value="double" selected>Двухкамерный</option>
+          <option value="energy">Энергосберегающий</option>
+        </select></div>
       </div>
       <div class="control-section">
         <h3>Отделка</h3>
@@ -1054,8 +1051,15 @@ function svgFrame(x,y,w,h,fw){
   s+=`<line x1="${x}" y1="${y+h}" x2="${x+fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
   return s;
 }
+function getGlassColor(){
+  const g=document.getElementById('cGlazing').value;
+  if(g==='double')return {fill:'#5cc8c8',stroke:'#3ca8a8'};
+  if(g==='energy')return {fill:'#9898e0',stroke:'#7878c0'};
+  return {fill:'#80e8e8',stroke:'#4cb8b8'}; // single
+}
 function svgGlass(x,y,w,h){
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
+  const c=getGlassColor();
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="0.5"/>`;
 }
 function svgMullion(x,y,w,h){
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f0f0ec" stroke="#c0c0c0" stroke-width="0.5"/>`;
@@ -1220,9 +1224,6 @@ function calcClientPrice(){
   const mullionCount=wt?(wt.parts-1):0;
   winPrice+=mullionCount*(data.mullion||0);
 
-  // Balcony door surcharge
-  if(type==='balcony')winPrice+=(data.balcony_door||0);
-
   // Markup
   const mT=document.getElementById('markupType').value;
   const mV=parseFloat(document.getElementById('markupValue').value)||0;
@@ -1234,19 +1235,34 @@ function calcClientPrice(){
   total+=winPrice;
 
   // Finishing — calculated by dimensions
-  const wM=w/1000, hM=h/1000; // meters
+  // Balcony: откосы = 2 высоты двери + ширина окна + ширина двери
+  //          подоконник = ширина окна, отлив = ширина окна
+  // Обычное: откосы = 2 высоты + 1 ширина, подоконник = ширина, отлив = ширина
+  let slopesLen, sillLen, dripLen;
+  if(type==='balcony'){
+    const bwW=parseInt(document.getElementById('cBwinW').value)||1400;
+    const bdW=parseInt(document.getElementById('cBdoorW').value)||700;
+    const bdH=parseInt(document.getElementById('cBdoorH').value)||2100;
+    slopesLen=2*(bdH/1000)+(bwW/1000)+(bdW/1000);
+    sillLen=bwW/1000;
+    dripLen=bwW/1000;
+  }else{
+    const wM=w/1000, hM=h/1000;
+    slopesLen=2*hM+wM;
+    sillLen=wM;
+    dripLen=wM;
+  }
   if(slopes){
-    const slopesLen=2*hM+wM; // 2 heights + 1 width
     const sp=Math.round((data.slopes_pm||0)*slopesLen);
     if(sp){lines.push({label:'Откосы ('+slopesLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
   if(sill){
-    const sp=Math.round((data.sill_pm||0)*wM);
-    if(sp){lines.push({label:'Подоконник ('+wM.toFixed(1)+' п.м.)',value:sp});total+=sp;}
+    const sp=Math.round((data.sill_pm||0)*sillLen);
+    if(sp){lines.push({label:'Подоконник ('+sillLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
   if(drip){
-    const dp=Math.round((data.drip_pm||0)*wM);
-    if(dp){lines.push({label:'Отлив ('+wM.toFixed(1)+' п.м.)',value:dp});total+=dp;}
+    const dp=Math.round((data.drip_pm||0)*dripLen);
+    if(dp){lines.push({label:'Отлив ('+dripLen.toFixed(1)+' п.м.)',value:dp});total+=dp;}
   }
 
   // Services
