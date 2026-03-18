@@ -1295,10 +1295,7 @@ function calcClientPrice(){
 
   const res=document.getElementById('clientResult');
   res.style.display='';
-  // Fuzzy price: reduce by ~20%, round down to xxx999
-  const fuzzy=Math.floor(total*0.8/1000)*1000-1;
-  const shown=Math.max(999,fuzzy);
-  document.getElementById('clientTotal').textContent=shown.toLocaleString()+' руб.';
+  document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
   document.getElementById('clientBreakdown').innerHTML='<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
