@@ -150,7 +150,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
       </div>
       <div id="sashSelector" style="display:none" class="control-section">
         <h3>Количество створок</h3>
-        <div class="form-row"><select id="cSashes" onchange="selectedSashes=parseInt(this.value);drawPreview()"><option value="1">1 шт.</option></select></div>
+        <div class="form-row"><select id="cSashes" onchange="selectedSashes=parseInt(this.value);updateMosquitoSelector();drawPreview()"><option value="1">1 шт.</option></select></div>
       </div>
       <div id="winPreview" style="text-align:center;margin:12px 0"></div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
@@ -186,10 +186,9 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
           <input type="checkbox" id="cDrip"> Отлив</label>
       </div>
-      <div class="control-section">
+      <div id="mosquitoSection" class="control-section" style="display:none">
         <h3>Москитная сетка</h3>
-        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cMosquito" onchange="drawPreview()"> Москитная сетка</label>
+        <div class="form-row"><select id="cMosquito" onchange="drawPreview()"><option value="0">Нет</option></select></div>
       </div>
       <div class="control-section">
         <h3>Работы</h3>
@@ -999,6 +998,32 @@ function buildTypeCards(){
     sashEl.style.display='none';
     selectedSashes=0;
   }
+  updateMosquitoSelector();
+}
+function updateMosquitoSelector(){
+  const t=WIN_TYPES.find(x=>x.id===selectedType);
+  // Max nets = sashes on window parts (balcony: only window sashes, not door)
+  let maxNets=0;
+  if(selectedType==='balcony'){
+    const bsl=getBalconySashLayout(selectedSashes, t.parts);
+    maxNets=bsl.win.filter(s=>s).length;
+  }else{
+    maxNets=selectedSashes;
+  }
+  const sec=document.getElementById('mosquitoSection');
+  const sel=document.getElementById('cMosquito');
+  if(maxNets>0){
+    sec.style.display='';
+    const cur=parseInt(sel.value)||0;
+    sel.innerHTML='<option value="0">Нет</option>';
+    for(let i=1;i<=maxNets;i++){
+      sel.innerHTML+=`<option value="${i}">${i} шт.</option>`;
+    }
+    sel.value=Math.min(cur,maxNets);
+  }else{
+    sec.style.display='none';
+    sel.value=0;
+  }
 }
 function selectType(id){
   const t=WIN_TYPES.find(t=>t.id===id);
@@ -1149,12 +1174,14 @@ function drawPreview(){
       svg+=svgSash(px,fw,paneW,innerH,bsl.win[i],fw);
     }
     // Mosquito nets on window sashes only (not door)
-    const hasMosq=document.getElementById('cMosquito').checked;
-    if(hasMosq){
-      for(let i=0;i<parts;i++){
+    const netCount=parseInt(document.getElementById('cMosquito').value)||0;
+    if(netCount>0){
+      let drawn=0;
+      for(let i=0;i<parts&&drawn<netCount;i++){
         if(bsl.win[i]){
           const px=wx0+fw+i*(paneW+mw);
           svg+=svgMosquito(px,fw,paneW,innerH);
+          drawn++;
         }
       }
     }
@@ -1188,10 +1215,14 @@ function drawPreview(){
       svg+=svgSash(fw+i*(paneW+mw),fw,paneW,innerH,sashes[i],fw);
     }
     // Mosquito nets on sash panes only
-    const hasMosq=document.getElementById('cMosquito').checked;
-    if(hasMosq){
-      for(let i=0;i<parts;i++){
-        if(sashes[i]) svg+=svgMosquito(fw+i*(paneW+mw),fw,paneW,innerH);
+    const netCount=parseInt(document.getElementById('cMosquito').value)||0;
+    if(netCount>0){
+      let drawn=0;
+      for(let i=0;i<parts&&drawn<netCount;i++){
+        if(sashes[i]){
+          svg+=svgMosquito(fw+i*(paneW+mw),fw,paneW,innerH);
+          drawn++;
+        }
       }
     }
     // Dimensions outside
@@ -1221,7 +1252,6 @@ function calcClientPrice(){
   const slopes=document.getElementById('cSlopes').checked;
   const sill=document.getElementById('cSill').checked;
   const drip=document.getElementById('cDrip').checked;
-  const mosquito=document.getElementById('cMosquito').checked;
   const install=document.getElementById('cInstall').checked;
   const delivery=document.getElementById('cDelivery').checked;
 
@@ -1252,17 +1282,9 @@ function calcClientPrice(){
   const mullionCount=wt?(wt.parts-1):0;
   winPrice+=mullionCount*(data.mullion||0);
 
-  // Mosquito nets: one per sash (on balcony — only on window sashes, not door)
-  if(mosquito){
-    let netCount=0;
-    if(type==='balcony'){
-      const bsl=getBalconySashLayout(selectedSashes, wt.parts);
-      netCount=bsl.win.filter(s=>s).length;
-    }else{
-      netCount=selectedSashes;
-    }
-    winPrice+=netCount*(data.mosquito||0);
-  }
+  // Mosquito nets
+  const netCount=parseInt(document.getElementById('cMosquito').value)||0;
+  if(netCount>0) winPrice+=netCount*(data.mosquito||0);
 
   // Markup
   const mT=document.getElementById('markupType').value;
