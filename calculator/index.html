@@ -96,14 +96,8 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <select id="glazing1">
               <option value="4м1-16-4м1">4м1-16-4м1 (однокамерный)</option>
               <option value="4м1-10-4м1-10-4м1">4м1-10-4м1-10-4м1 (двухкамерный)</option>
-              <option value="4м1-16-4м1(i)">4м1-16-4м1(i) (энергосбер.)</option>
-              <option value="4м1-10-4м1-10-4м1(i)">4м1-10-4м1-10-4м1(i) (двухкам. энерго)</option>
+              <option value="4м1-16-4м1(i)">4м1-16-4м1(i) (однокам. энергосбер.)</option>
             </select></div>
-        </div>
-        <div class="control-section">
-          <h3>Ламинация</h3>
-          <div class="form-row"><label>Внутренняя</label><select id="lamInner1"></select></div>
-          <div class="form-row"><label>Внешняя</label><select id="lamOuter1"></select></div>
         </div>
         <div class="control-section">
           <h3>Цены компонентов</h3>
@@ -131,6 +125,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <div class="form-row"><label>Москитная сетка</label><input type="number" class="cp" data-key="mosquito" step="50" placeholder="0"></div>
             <div class="form-row"><label>Цветная ручка</label><input type="number" class="cp" data-key="handle_color" step="50" placeholder="0"></div>
             <div class="form-row"><label>Сэндвич (разница от стекла)</label><input type="number" class="cp" data-key="sandwich_delta" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Балконная дверь (доплата)</label><input type="number" class="cp" data-key="balcony_door" step="100" placeholder="0"></div>
           </details>
           <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Отделка и работы (для калькулятора клиента)</summary>
             <div class="form-row"><label>Откосы (руб./п.м.) — 2 высоты + 1 ширина</label><input type="number" class="cp" data-key="slopes_pm" step="50" placeholder="0"></div>
@@ -168,6 +163,10 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         <h3>Тип окна</h3>
         <div id="typeCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px"></div>
       </div>
+      <div id="sashSelector" style="display:none" class="control-section">
+        <h3>Количество створок</h3>
+        <div class="form-row"><select id="cSashes" onchange="selectedSashes=parseInt(this.value)"><option value="1">1 шт.</option></select></div>
+      </div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
         <div style="flex:1;min-width:200px" class="control-section">
           <h3>Размеры (мм)</h3>
@@ -176,10 +175,11 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         </div>
         <div style="flex:1;min-width:200px" class="control-section">
           <select id="cProfile" style="display:none"><option value="Brusbox 60" selected>Brusbox 60</option></select>
-          <h3 style="margin-top:10px">Стеклопакет</h3>
+          <h3>Стеклопакет</h3>
           <div class="form-row"><select id="cGlazing">
             <option value="single">Однокамерный</option>
             <option value="double" selected>Двухкамерный</option>
+            <option value="energy">Энергосберегающий</option>
           </select></div>
         </div>
       </div>
@@ -857,8 +857,8 @@ document.querySelectorAll('.tab').forEach(tab=>{
 
 // ========== COMPONENT PRICING ==========
 const PROFILES=['Brusbox 60'];
-const GLAZINGS=['4м1-16-4м1','4м1-10-4м1-10-4м1','4м1-16-4м1(i)','4м1-10-4м1-10-4м1(i)'];
-const GLAZ_SHORT=['Однокам.','Двухкам.','Энерго','Двухк.энерго'];
+const GLAZINGS=['4м1-16-4м1','4м1-10-4м1-10-4м1','4м1-16-4м1(i)'];
+const GLAZ_SHORT=['Однокам.','Двухкам.','Энергосбер.'];
 
 function buildBasePriceTable(){
   const el=document.getElementById('basePriceTable');
@@ -929,30 +929,64 @@ function estimatePrice(d){
 }
 // ========== CLIENT CALCULATOR ==========
 const WIN_TYPES=[
-  {id:'fixed',name:'Глухое',icon:'▢',desc:'Без створок'},
-  {id:'single',name:'Одностворчатое',icon:'◫',desc:'1 створка п/о'},
-  {id:'double',name:'Двустворчатое',icon:'◫◫',desc:'Глухое + п/о'},
-  {id:'triple',name:'Трёхстворчатое',icon:'◫◫◫',desc:'П/о + глух + п/о'},
-  {id:'balcony',name:'Балконный блок',icon:'◨+◫',desc:'Дверь + окно'},
+  {id:'fixed',name:'Глухое',parts:1,minSash:0,maxSash:0,defW:600,defH:1400},
+  {id:'double',name:'Из двух частей',parts:2,minSash:0,maxSash:2,defW:1400,defH:1400},
+  {id:'triple',name:'Из трёх частей',parts:3,minSash:0,maxSash:3,defW:2000,defH:1400},
+  {id:'balcony',name:'Балконный блок',parts:2,minSash:1,maxSash:3,defW:1400,defH:1400,hasDoor:true},
 ];
-let selectedType='double';
+let selectedType='double', selectedSashes=1;
+
+function typeIcon(t){
+  // Draw simple SVG preview
+  const p=t.parts, w=60, h=50, door=t.hasDoor;
+  let svg=`<svg width="${w+( door?25:0)}" height="${h}" viewBox="0 0 ${w+(door?25:0)} ${h}" style="display:block;margin:0 auto">`;
+  if(door){
+    svg+=`<rect x="0" y="0" width="20" height="${h}" fill="#e8e8e8" stroke="#999" stroke-width="1" rx="1"/>`;
+    for(let i=0;i<p;i++){
+      const pw=w/p, px=25+i*pw;
+      svg+=`<rect x="${px}" y="8" width="${pw-2}" height="${h-8}" fill="#d0eefe" stroke="#999" stroke-width="1" rx="1"/>`;
+    }
+  }else{
+    for(let i=0;i<p;i++){
+      const pw=w/p, px=i*pw;
+      svg+=`<rect x="${px}" y="0" width="${pw-2}" height="${h}" fill="#d0eefe" stroke="#999" stroke-width="1" rx="1"/>`;
+    }
+  }
+  svg+='</svg>';
+  return svg;
+}
 
 function buildTypeCards(){
   const el=document.getElementById('typeCards');
-  el.innerHTML=WIN_TYPES.map(t=>`<div class="type-card${t.id===selectedType?' active':''}" data-type="${t.id}" onclick="selectType('${t.id}')" style="border:2px solid ${t.id===selectedType?'#E8521A':'#ddd'};border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .2s">
-    <div style="font-size:22px;margin-bottom:4px">${t.icon}</div>
-    <div style="font-size:12px;font-weight:600">${t.name}</div>
-    <div style="font-size:10px;color:#888">${t.desc}</div>
+  el.innerHTML=WIN_TYPES.map(t=>`<div data-type="${t.id}" onclick="selectType('${t.id}')" style="border:2px solid ${t.id===selectedType?'#E8521A':'#ddd'};border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .2s">
+    ${typeIcon(t)}
+    <div style="font-size:12px;font-weight:600;margin-top:4px">${t.name}</div>
   </div>`).join('');
+  // Show/hide sash selector
+  const t=WIN_TYPES.find(t=>t.id===selectedType);
+  const sashEl=document.getElementById('sashSelector');
+  if(t.maxSash>0){
+    sashEl.style.display='';
+    const sel=document.getElementById('cSashes');
+    sel.innerHTML='';
+    for(let i=t.minSash;i<=t.maxSash;i++){
+      const o=document.createElement('option');o.value=i;o.textContent=i+' шт.';sel.appendChild(o);
+    }
+    sel.value=Math.min(selectedSashes,t.maxSash);
+    if(selectedSashes<t.minSash)selectedSashes=t.minSash;
+    sel.value=selectedSashes;
+  }else{
+    sashEl.style.display='none';
+    selectedSashes=0;
+  }
 }
 function selectType(id){
+  const t=WIN_TYPES.find(t=>t.id===id);
   selectedType=id;
+  selectedSashes=t.minSash||(t.maxSash>0?1:0);
+  document.getElementById('cWidth').value=t.defW;
+  document.getElementById('cHeight').value=t.defH;
   buildTypeCards();
-  // Set default sizes
-  const defaults={fixed:[600,600],single:[600,1400],double:[1400,1400],triple:[2000,1400],balcony:[2050,2100]};
-  const d=defaults[id]||[1400,1400];
-  document.getElementById('cWidth').value=d[0];
-  document.getElementById('cHeight').value=d[1];
 }
 
 function calcClientPrice(){
@@ -970,11 +1004,11 @@ function calcClientPrice(){
 
   // Build price from components
   const area=w*h/1e6;
-  const glazKey=glazing==='single'?'4м1-16-4м1':'4м1-10-4м1-10-4м1';
+  const glazMap={single:'4м1-16-4м1',double:'4м1-10-4м1-10-4м1',energy:'4м1-16-4м1(i)'};
+  const glazKey=glazMap[glazing]||'4м1-16-4м1';
   const baseKey='base_'+profile+'_'+glazKey;
   const basePm2=data[baseKey]||0;
 
-  const lines=[];
   let total=0;
 
   if(!basePm2){
@@ -987,14 +1021,16 @@ function calcClientPrice(){
   // Base window price
   let winPrice=Math.round(basePm2*area);
 
-  // Sashes based on type
-  const sashTypes={fixed:0,single:1,double:1,triple:2,balcony:1};
-  const sashCount=sashTypes[type]||0;
-  winPrice+=sashCount*(data.sash_tiltturn||0);
+  // Sashes from user selection
+  winPrice+=selectedSashes*(data.sash_tiltturn||0);
 
-  // Mullions
-  const mullionCounts={fixed:0,single:0,double:1,triple:2,balcony:1};
-  winPrice+=(mullionCounts[type]||0)*(data.mullion||0);
+  // Mullions: parts - 1 (двухчастное=1 импост, трёхчастное=2)
+  const t=WIN_TYPES.find(t=>t.id===type);
+  const mullionCount=t?(t.parts-1):0;
+  winPrice+=mullionCount*(data.mullion||0);
+
+  // Balcony door surcharge
+  if(type==='balcony')winPrice+=(data.balcony_door||0);
 
   // Markup
   const mT=document.getElementById('markupType').value;
@@ -1004,7 +1040,6 @@ function calcClientPrice(){
     winPrice+=markup;
   }
 
-  lines.push({label:'Окно ('+profile+')',value:winPrice});
   total+=winPrice;
 
   // Finishing — calculated by dimensions
