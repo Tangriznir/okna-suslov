@@ -1105,9 +1105,9 @@ function svgSash(gx,gy,gw,gh,sash,fw){
     s+=`<line x1="${br[0]}" y1="${br[1]}" x2="${tc[0]}" y2="${tc[1]}"/>`;
   }
   s+=`</g>`;
-  // Handle — vertical bar on sash frame axis
+  // Handle — vertical bar on sash frame axis, white like profile
   const hLen=Math.min(sh*0.3,18), hW=2;
-  s+=`<rect x="${hp[0]-hW/2}" y="${hp[1]-hLen/2}" width="${hW}" height="${hLen}" fill="#555" stroke="#333" stroke-width="0.3" rx="0.5"/>`;
+  s+=`<rect x="${hp[0]-hW/2}" y="${hp[1]-hLen/2}" width="${hW}" height="${hLen}" fill="#f0f0ec" stroke="#c0c0c0" stroke-width="0.3" rx="0.5"/>`;
   return s;
 }
 
@@ -1140,15 +1140,21 @@ function drawPreview(){
     // Window frame (top-aligned with door)
     const wx0=dwPx+mw-2;
     svg+=svgFrame(wx0,0,wwPx,whPx,fw);
-    // Window panes
+    // Window panes: glass first, then mullions, then sashes on top
     const parts=tp.parts;
     const innerW=wwPx-2*fw, innerH=whPx-2*fw;
     const paneW=(innerW-(parts-1)*mw)/parts;
     for(let i=0;i<parts;i++){
       const px=wx0+fw+i*(paneW+mw);
       svg+=svgGlass(px,fw,paneW,innerH);
+    }
+    for(let i=0;i<parts-1;i++){
+      const px=wx0+fw+i*(paneW+mw);
+      svg+=svgMullion(px+paneW,fw,mw,innerH);
+    }
+    for(let i=0;i<parts;i++){
+      const px=wx0+fw+i*(paneW+mw);
       svg+=svgSash(px,fw,paneW,innerH,bsl.win[i],fw);
-      if(i<parts-1) svg+=svgMullion(px+paneW,fw,mw,innerH);
     }
     // Dimensions
     svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
@@ -1167,14 +1173,17 @@ function drawPreview(){
     let svg=`<svg width="${sw+60}" height="${sh+30}" viewBox="-30 -5 ${sw+60} ${sh+30}">`;
     // Outer frame
     svg+=svgFrame(0,0,sw,sh,fw);
-    // Inner panes
+    // Inner panes: glass → mullions → sashes on top
     const innerW=sw-2*fw, innerH=sh-2*fw;
     const paneW=(innerW-(parts-1)*mw)/parts;
     for(let i=0;i<parts;i++){
-      const px=fw+i*(paneW+mw);
-      svg+=svgGlass(px,fw,paneW,innerH);
-      svg+=svgSash(px,fw,paneW,innerH,sashes[i],fw);
-      if(i<parts-1) svg+=svgMullion(px+paneW,fw,mw,innerH);
+      svg+=svgGlass(fw+i*(paneW+mw),fw,paneW,innerH);
+    }
+    for(let i=0;i<parts-1;i++){
+      svg+=svgMullion(fw+i*(paneW+mw)+paneW,fw,mw,innerH);
+    }
+    for(let i=0;i<parts;i++){
+      svg+=svgSash(fw+i*(paneW+mw),fw,paneW,innerH,sashes[i],fw);
     }
     // Dimensions outside
     svg+=`<text x="${sw/2}" y="${sh+16}" text-anchor="middle" font-size="10" fill="#888">${w}</text>`;
