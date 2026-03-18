@@ -1046,10 +1046,11 @@ function calcClientPrice(){
 
   const res=document.getElementById('clientResult');
   res.style.display='';
-  document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
-  document.getElementById('clientBreakdown').innerHTML=lines.map(l=>
-    `<div>${l.label}: ${l.value.toLocaleString()} р.</div>`
-  ).join('');
+  // Fuzzy price: reduce by ~20%, round down to xxx999
+  const fuzzy=Math.floor(total*0.8/1000)*1000-1;
+  const shown=Math.max(999,fuzzy);
+  document.getElementById('clientTotal').textContent='от '+shown.toLocaleString()+' руб.';
+  document.getElementById('clientBreakdown').innerHTML='<div style="font-size:12px;margin-top:6px">Точная стоимость после замера</div>';
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
 function calcPrices(){
