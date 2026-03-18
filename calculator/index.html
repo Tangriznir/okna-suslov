@@ -262,7 +262,7 @@ class WindowDesigner {
     this.dimInput = document.getElementById(dimInputId);
     this.configInfoEl = document.getElementById(configInfoId);
     this.width = 1000; this.height = 1000;
-    this.root = {type:'leaf',sash:null,mosquito:null};
+    this.root = {type:'leaf',sash:null,mosquito:null,filling:null};
     this.sections = [];
     this.margin = {top:50,right:90,bottom:100,left:80};
     this.scale=1; this.ox=0; this.oy=0;
@@ -356,10 +356,20 @@ class WindowDesigner {
   _drawGlass(s){
     const{x,y,w,h}=s.bounds;
     const px=this.mx(x),py=this.my(y),pw=this.ms(w),ph=this.ms(h);
-    this.ctx.fillStyle=glassCol(this.glazingFormula);
-    this.ctx.fillRect(px,py,pw,ph);
-    this.ctx.strokeStyle=glassBrd(this.glazingFormula); this.ctx.lineWidth=.5;
-    this.ctx.strokeRect(px,py,pw,ph);
+    const c=this.ctx, fl=s.filling;
+    if(fl){
+      // Sandwich panel — white fill with thickness label
+      c.fillStyle='#fff'; c.fillRect(px,py,pw,ph);
+      c.strokeStyle='#bbb'; c.lineWidth=1; c.strokeRect(px,py,pw,ph);
+      c.fillStyle='#666'; c.font='bold '+Math.max(11,Math.min(16,pw/8))+'px sans-serif';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText(fl==='sandwich-24'?'Сэндвич 24мм':'Сэндвич 32мм',px+pw/2,py+ph/2);
+    }else{
+      c.fillStyle=glassCol(this.glazingFormula);
+      c.fillRect(px,py,pw,ph);
+      c.strokeStyle=glassBrd(this.glazingFormula); c.lineWidth=.5;
+      c.strokeRect(px,py,pw,ph);
+    }
     this.paneRegions.push({x:px,y:py,w:pw,h:ph,section:s});
   }
   _drawMullions(n){
@@ -606,6 +616,14 @@ class WindowDesigner {
       items.push({icon:'◫',label:'Створка...',action:()=>openSashDialog(this)});
       if(pane.sash){
         items.push({icon:'x',label:'Убрать створку',action:()=>this.removeSash(pane)});
+      }
+      items.push({divider:true});
+      items.push({header:'Заполнение'});
+      const fl=pane.filling;
+      items.push({icon:fl===null?'●':'',label:'Стеклопакет',action:()=>{pane.filling=null;this.render();this._notify();}});
+      items.push({icon:fl==='sandwich-24'?'●':'',label:'Сэндвич 24мм',action:()=>{pane.filling='sandwich-24';this.render();this._notify();}});
+      items.push({icon:fl==='sandwich-32'?'●':'',label:'Сэндвич 32мм',action:()=>{pane.filling='sandwich-32';this.render();this._notify();}});
+      if(pane.sash){
         items.push({divider:true});
         items.push({header:'Москитная сетка'});
         const mq=pane.mosquito;
@@ -662,14 +680,14 @@ class WindowDesigner {
   // Tree ops
   addMullion(pane,dir){
     const pos=dir==='v'?pane.bounds.x+pane.bounds.w/2:pane.bounds.y+pane.bounds.h/2;
-    const nn={type:'split',direction:dir,position:pos,children:[{type:'leaf',sash:null,mosquito:null},{type:'leaf',sash:null,mosquito:null}]};
+    const nn={type:'split',direction:dir,position:pos,children:[{type:'leaf',sash:null,mosquito:null,filling:null},{type:'leaf',sash:null,mosquito:null,filling:null}]};
     this._rep(pane,nn); this.selectedPanes=[];this.selectedMullion=null;
     this.computeLayout();this._computeScale();this.render();this._notify();
   }
   addSash(pane,opts){pane.sash={...opts};this.selectedPanes=[];this.render();this._notify();}
   removeSash(pane){pane.sash=null;pane.mosquito=null;this.selectedPanes=[];this.render();this._notify();}
   removeMullion(splitNode){
-    const nl={type:'leaf',sash:null,mosquito:null};
+    const nl={type:'leaf',sash:null,mosquito:null,filling:null};
     this._rep(splitNode,nl);this.selectedMullion=null;
     this.computeLayout();this._computeScale();this.render();this._notify();
   }
@@ -678,7 +696,7 @@ class WindowDesigner {
 
   reset(){
     this.width=1000;this.height=1000;
-    this.root={type:'leaf',sash:null,mosquito:null};
+    this.root={type:'leaf',sash:null,mosquito:null,filling:null};
     this.selectedPanes=[];this.selectedMullion=null;
     this.glazingFormula='4м1-16-4м1';
     this.lamInner='#f0f0ec';this.lamOuter='#f0f0ec';
