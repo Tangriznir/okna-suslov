@@ -1028,7 +1028,7 @@ function updateMosquitoSelector(){
 function selectType(id){
   const t=WIN_TYPES.find(t=>t.id===id);
   selectedType=id;
-  selectedSashes=t.minSash||(t.maxSash>0?1:0);
+  selectedSashes=t.minSash!==undefined?t.minSash:0;
   // Toggle dims
   document.getElementById('dimsNormal').style.display=id==='balcony'?'none':'';
   document.getElementById('dimsBalcony').style.display=id==='balcony'?'':'none';
