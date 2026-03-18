@@ -1337,10 +1337,48 @@ function calcClientPrice(){
     if(dp){lines.push({label:'Доставка',value:dp});total+=dp;}
   }
 
+  // Profit = markup amount
+  const prodTotal=total-(mV>0?(mT==='percent'?Math.round((winPrice/(1+mV/100))*mV/100):mV):0);
+  const profit=total-prodTotal;
+
   const res=document.getElementById('clientResult');
   res.style.display='';
   document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
   document.getElementById('clientBreakdown').innerHTML='<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
+
+  // Send to Google Sheets
+  const glazNames={single:'Однокамерный',double:'Двухкамерный',energy:'Энергосберегающий'};
+  const typeNames={single:'Одинарное',double:'Двухчастное',triple:'Трёхчастное',balcony:'Балконный блок'};
+  let sizeStr;
+  if(type==='balcony'){
+    sizeStr=(document.getElementById('cBwinW').value||1400)+'×'+(document.getElementById('cBwinH').value||1400)+' + дверь '+(document.getElementById('cBdoorW').value||700)+'×'+(document.getElementById('cBdoorH').value||2100);
+  }else{
+    sizeStr=(document.getElementById('cWidth').value||1400)+'×'+(document.getElementById('cHeight').value||1400);
+  }
+  const extras=[];
+  if(slopes)extras.push('откосы');
+  if(sill)extras.push('подоконник');
+  if(drip)extras.push('отлив');
+  if(install)extras.push('установка');
+  if(delivery)extras.push('доставка');
+  if(netCount>0)extras.push('сетки: '+netCount);
+  // Get IP and send
+  fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
+    fetch('https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec',{
+      method:'POST', mode:'no-cors',
+      body:JSON.stringify({
+        ip:d.ip,
+        type:typeNames[type]||type,
+        size:sizeStr,
+        glazing:glazNames[glazing]||glazing,
+        sashes:selectedSashes,
+        nets:netCount,
+        price:total,
+        profit:profit,
+        extras:extras.join(', ')
+      })
+    });
+  }).catch(()=>{});
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
 function calcPrices(){
