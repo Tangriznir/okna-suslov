@@ -946,19 +946,24 @@ const WIN_TYPES=[
 let selectedType='double', selectedSashes=1;
 
 function typeIcon(t){
-  // Draw simple SVG preview
-  const p=t.parts, w=60, h=50, door=t.hasDoor;
-  let svg=`<svg width="${w+( door?25:0)}" height="${h}" viewBox="0 0 ${w+(door?25:0)} ${h}" style="display:block;margin:0 auto">`;
+  const p=t.parts, w=60, h=50, door=t.hasDoor, f=4, m=3;
+  let svg=`<svg width="${w+(door?24:0)}" height="${h}" viewBox="0 0 ${w+(door?24:0)} ${h}" style="display:block;margin:0 auto">`;
   if(door){
-    svg+=`<rect x="0" y="0" width="20" height="${h}" fill="#e8e8e8" stroke="#999" stroke-width="1" rx="1"/>`;
+    // Door
+    svg+=`<rect x="0" y="0" width="20" height="${h}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
+    svg+=`<rect x="${f}" y="${f}" width="${20-2*f}" height="${h-2*f}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
+    // Window (top-aligned)
+    const wh=h-10;
+    svg+=`<rect x="22" y="0" width="${w-2}" height="${wh}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
+    const iw=w-2-2*f, ih=wh-2*f, pw=(iw-(p-1)*m)/p;
     for(let i=0;i<p;i++){
-      const pw=w/p, px=25+i*pw;
-      svg+=`<rect x="${px}" y="8" width="${pw-2}" height="${h-8}" fill="#d0eefe" stroke="#999" stroke-width="1" rx="1"/>`;
+      svg+=`<rect x="${22+f+i*(pw+m)}" y="${f}" width="${pw}" height="${ih}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
     }
   }else{
+    svg+=`<rect x="0" y="0" width="${w}" height="${h}" fill="#f0f0ec" stroke="#bbb" stroke-width="1"/>`;
+    const iw=w-2*f, ih=h-2*f, pw=(iw-(p-1)*m)/p;
     for(let i=0;i<p;i++){
-      const pw=w/p, px=i*pw;
-      svg+=`<rect x="${px}" y="0" width="${pw-2}" height="${h}" fill="#d0eefe" stroke="#999" stroke-width="1" rx="1"/>`;
+      svg+=`<rect x="${f+i*(pw+m)}" y="${f}" width="${pw}" height="${ih}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
     }
   }
   svg+='</svg>';
@@ -1004,34 +1009,73 @@ function selectType(id){
   drawPreview();
 }
 
+// SVG helpers for window-like drawing
+function svgFrame(x,y,w,h,fw){
+  // Frame with mitered corners (4 trapezoids)
+  const fc='#f0f0ec', sc='#c0c0c0', mc='#d8d8d8';
+  let s='';
+  // Top
+  s+=`<polygon points="${x},${y} ${x+w},${y} ${x+w-fw},${y+fw} ${x+fw},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Right
+  s+=`<polygon points="${x+w},${y} ${x+w},${y+h} ${x+w-fw},${y+h-fw} ${x+w-fw},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Bottom
+  s+=`<polygon points="${x+w},${y+h} ${x},${y+h} ${x+fw},${y+h-fw} ${x+w-fw},${y+h-fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Left
+  s+=`<polygon points="${x},${y+h} ${x},${y} ${x+fw},${y+fw} ${x+fw},${y+h-fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Miter lines (diagonal welding seams)
+  s+=`<line x1="${x}" y1="${y}" x2="${x+fw}" y2="${y+fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  s+=`<line x1="${x+w}" y1="${y}" x2="${x+w-fw}" y2="${y+fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  s+=`<line x1="${x+w}" y1="${y+h}" x2="${x+w-fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  s+=`<line x1="${x}" y1="${y+h}" x2="${x+fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  return s;
+}
+function svgGlass(x,y,w,h){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#80e8e8" stroke="#4cb8b8" stroke-width="0.5"/>`;
+}
+function svgMullion(x,y,w,h){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f0f0ec" stroke="#c0c0c0" stroke-width="0.5"/>`;
+}
+
 function drawPreview(){
   const el=document.getElementById('winPreview');
   const type=selectedType;
-  const t=WIN_TYPES.find(t=>t.id===type);
-  const maxW=300, maxH=200;
+  const tp=WIN_TYPES.find(x=>x.id===type);
+  const maxW=320, maxH=220;
+  const fw=8, mw=6; // frame width, mullion width in px
 
   if(type==='balcony'){
     const wW=parseInt(document.getElementById('cBwinW').value)||1400;
     const wH=parseInt(document.getElementById('cBwinH').value)||1400;
     const dW=parseInt(document.getElementById('cBdoorW').value)||700;
     const dH=parseInt(document.getElementById('cBdoorH').value)||2100;
-    const totalW=wW+dW, totalH=Math.max(wH,dH);
+    const totalW=wW+dW, totalH=dH;
     const sc=Math.min(maxW/totalW,maxH/totalH);
-    const sw=Math.round(totalW*sc), sh=Math.round(totalH*sc);
     const dwPx=Math.round(dW*sc), dhPx=Math.round(dH*sc);
     const wwPx=Math.round(wW*sc), whPx=Math.round(wH*sc);
-    const doorY=sh-dhPx, winY=sh-whPx;
-    let svg=`<svg width="${sw+2}" height="${sh+30}" viewBox="-1 -1 ${sw+2} ${sh+32}">`;
-    // Door
-    svg+=`<rect x="0" y="${doorY}" width="${dwPx}" height="${dhPx}" fill="#e8e8e8" stroke="#666" stroke-width="2" rx="1"/>`;
-    svg+=`<text x="${dwPx/2}" y="${doorY+dhPx/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#555">${dW}×${dH}</text>`;
-    // Window parts
-    const parts=t.parts;
-    const partW=wwPx/parts;
+    const sw=dwPx+wwPx, sh=dhPx;
+    // Window aligns to TOP of door
+    let svg=`<svg width="${sw+60}" height="${sh+40}" viewBox="-30 -5 ${sw+60} ${sh+40}">`;
+    // Door frame
+    svg+=svgFrame(0,0,dwPx,dhPx,fw);
+    svg+=svgGlass(fw,fw,dwPx-2*fw,dhPx-2*fw);
+    // Mullion between door and window
+    svg+=svgMullion(dwPx-1,0,mw,Math.max(dhPx,whPx));
+    // Window frame (top-aligned with door)
+    svg+=svgFrame(dwPx+mw-2,0,wwPx,whPx,fw);
+    // Window panes
+    const parts=tp.parts;
+    const innerW=wwPx-2*fw, innerH=whPx-2*fw;
+    const paneW=(innerW-(parts-1)*mw)/parts;
     for(let i=0;i<parts;i++){
-      svg+=`<rect x="${dwPx+i*partW+1}" y="${winY}" width="${partW-2}" height="${whPx}" fill="#d0eefe" stroke="#666" stroke-width="1.5" rx="1"/>`;
+      const px=dwPx+mw-2+fw+i*(paneW+mw);
+      svg+=svgGlass(px,fw,paneW,innerH);
+      if(i<parts-1) svg+=svgMullion(px+paneW,fw,mw,innerH);
     }
-    svg+=`<text x="${dwPx+wwPx/2}" y="${winY+whPx/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#555">${wW}×${wH}</text>`;
+    // Dimensions
+    svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
+    svg+=`<text x="${dwPx+mw+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
+    svg+=`<text x="-8" y="${dhPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(-90,-8,${dhPx/2})">${dH}</text>`;
+    svg+=`<text x="${sw+mw+8}" y="${whPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(90,${sw+mw+8},${whPx/2})">${wH}</text>`;
     svg+='</svg>';
     el.innerHTML=svg;
   }else{
@@ -1039,16 +1083,23 @@ function drawPreview(){
     const h=parseInt(document.getElementById('cHeight').value)||1400;
     const sc=Math.min(maxW/w,maxH/h);
     const sw=Math.round(w*sc), sh=Math.round(h*sc);
-    const parts=t.parts;
-    const partW=sw/parts;
-    let svg=`<svg width="${sw+2}" height="${sh+30}" viewBox="-1 -1 ${sw+2} ${sh+32}">`;
+    const parts=tp.parts;
+    let svg=`<svg width="${sw+60}" height="${sh+30}" viewBox="-30 -5 ${sw+60} ${sh+30}">`;
+    // Outer frame
+    svg+=svgFrame(0,0,sw,sh,fw);
+    // Inner panes
+    const innerW=sw-2*fw, innerH=sh-2*fw;
+    const paneW=(innerW-(parts-1)*mw)/parts;
     for(let i=0;i<parts;i++){
-      svg+=`<rect x="${i*partW}" y="0" width="${partW-2}" height="${sh}" fill="#d0eefe" stroke="#666" stroke-width="2" rx="1"/>`;
+      const px=fw+i*(paneW+mw);
+      svg+=svgGlass(px,fw,paneW,innerH);
+      if(i<parts-1) svg+=svgMullion(px+paneW,fw,mw,innerH);
     }
-    svg+=`<text x="${sw/2}" y="${sh/2}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#555">${w}×${h}</text>`;
-    // Dimension labels
-    svg+=`<text x="${sw/2}" y="${sh+18}" text-anchor="middle" font-size="11" fill="#888">${w} мм</text>`;
-    svg+=`<text x="${sw+10}" y="${sh/2}" text-anchor="start" font-size="11" fill="#888" transform="rotate(90,${sw+10},${sh/2})">${h} мм</text>`;
+    // Glass label
+    svg+=`<text x="${sw/2}" y="${sh/2+1}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#2a8a8a">${Math.round(innerW/sc)} × ${Math.round(innerH/sc)}</text>`;
+    // Dimensions outside
+    svg+=`<text x="${sw/2}" y="${sh+16}" text-anchor="middle" font-size="10" fill="#888">${w}</text>`;
+    svg+=`<text x="-8" y="${sh/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(-90,-8,${sh/2})">${h}</text>`;
     svg+='</svg>';
     el.innerHTML=svg;
   }
