@@ -112,14 +112,14 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         <div class="control-section">
           <h3>Обучение цен</h3>
           <div class="form-row"><label>Цена от производителя (руб.)</label>
-            <input type="number" id="priceInput" placeholder="Введите цену..." step="100" oninput="updateTrainingCalc()"></div>
+            <input type="number" id="priceInput" placeholder="Введите цену..." step="100"></div>
           <button class="btn btn-primary btn-block btn-sm" onclick="savePrice()" style="margin-top:6px">Сохранить точку цены</button>
           <div class="price-list" id="priceList"></div>
         </div>
         <div class="control-section">
           <h3>Настройки наценки</h3>
           <div class="form-row"><label>Скидка производителя (%)</label>
-            <input type="number" id="discountInput" value="57" min="0" max="99" onchange="saveSettings()" oninput="updateTrainingCalc()"></div>
+            <input type="number" id="discountInput" value="57" min="0" max="99" onchange="saveSettings()"></div>
           <div class="form-row"><label>Наценка для клиента</label>
             <div class="inline">
               <input type="number" id="markupValue" value="30" min="0" onchange="saveSettings()">
@@ -127,10 +127,10 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             </div></div>
         </div>
         <div class="control-section">
-          <h3>Расчёт</h3>
+          <button class="btn btn-block" onclick="calcPrices()" style="background:#E8521A;color:#fff;font-size:15px;padding:12px 16px;margin-bottom:12px">Рассчитать</button>
           <div class="info-box">
+            <div class="info-row"><span class="label">Цена производства</span><span class="value" id="prodPrice">—</span></div>
             <div class="info-row"><span class="label">Цена для клиента</span><span class="value" id="clientPrice">—</span></div>
-            <div class="info-row"><span class="label">Прибыль</span><span class="value" id="profitValue" style="color:#2a9d2a">—</span></div>
           </div>
         </div>
         <button class="btn btn-secondary btn-sm btn-block" onclick="resetDesigner(1)">Сбросить конструкцию</button>
@@ -839,7 +839,7 @@ function savePrice(){
     price,date:new Date().toISOString().split('T')[0]};
   const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
   pts.push(pt);localStorage.setItem('okna_prices',JSON.stringify(pts));
-  document.getElementById('priceInput').value='';renderPriceList();updateTrainingCalc();
+  document.getElementById('priceInput').value='';renderPriceList();
 }
 function deletePrice(id){let p=JSON.parse(localStorage.getItem('okna_prices')||'[]');p=p.filter(x=>x.id!==id);localStorage.setItem('okna_prices',JSON.stringify(p));renderPriceList();}
 function renderPriceList(){
@@ -866,18 +866,17 @@ function updateCalcPrice(){
   fE.textContent=fn.toLocaleString()+' руб.';
   bE.innerHTML=`<div>Базовая: ${est.toLocaleString()} р.</div><div>Скидка ${disc}%: ${dc.toLocaleString()} р.</div><div>Наценка: <b>${fn.toLocaleString()} р.</b></div>`;
 }
-function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({discount:parseFloat(document.getElementById('discountInput').value)||0,markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));updateTrainingCalc();}
-function updateTrainingCalc(){
-  const pi=document.getElementById('priceInput'),cp=document.getElementById('clientPrice'),pv=document.getElementById('profitValue');
-  const est=parseInt(pi.value)||estimatePrice(designer1);
-  if(!est){cp.textContent='—';pv.textContent='—';return;}
+function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({discount:parseFloat(document.getElementById('discountInput').value)||0,markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
+function calcPrices(){
+  const pp=document.getElementById('prodPrice'),cp=document.getElementById('clientPrice');
+  const est=estimatePrice(designer1);
+  if(!est){pp.textContent='нет данных';cp.textContent='нет данных';return;}
   const disc=parseFloat(document.getElementById('discountInput').value)||0,
     mT=document.getElementById('markupType').value,mV=parseFloat(document.getElementById('markupValue').value)||0;
-  const cost=Math.round(est*(100-disc)/100);
-  const client=mT==='percent'?Math.round(cost*(100+mV)/100):cost+mV;
-  const profit=client-cost;
+  const prod=Math.round(est*(100-disc)/100);
+  const client=mT==='percent'?Math.round(prod*(100+mV)/100):prod+mV;
+  pp.textContent=prod.toLocaleString()+' руб.';
   cp.textContent=client.toLocaleString()+' руб.';
-  pv.textContent=profit.toLocaleString()+' руб.';
 }
 function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')||'{}');if(s.discount!==undefined)document.getElementById('discountInput').value=s.discount;if(s.markupType)document.getElementById('markupType').value=s.markupType;if(s.markupValue!==undefined)document.getElementById('markupValue').value=s.markupValue;}
 
