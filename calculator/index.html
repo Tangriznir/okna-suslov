@@ -110,11 +110,32 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
           <div class="form-row"><label>Внешняя</label><select id="lamOuter1"></select></div>
         </div>
         <div class="control-section">
-          <h3>Обучение цен</h3>
-          <div class="form-row"><label>Цена от производителя (руб.)</label>
-            <input type="number" id="priceInput" placeholder="Введите цену..." step="100"></div>
-          <button class="btn btn-primary btn-block btn-sm" onclick="savePrice()" style="margin-top:6px">Сохранить точку цены</button>
-          <div class="price-list" id="priceList"></div>
+          <h3>Цены компонентов</h3>
+          <div style="font-size:11px;color:#888;margin-bottom:8px">Заполни один раз — всё считается автоматически</div>
+          <details open><summary style="cursor:pointer;font-weight:600;font-size:12px;margin-bottom:6px">Базовая цена за м² (глухое)</summary>
+            <div id="basePriceTable" style="font-size:12px"></div>
+          </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Створки (доплата за шт.)</summary>
+            <div class="form-row"><label>Поворотная</label><input type="number" class="cp" data-key="sash_swing" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Поворотно-откидная</label><input type="number" class="cp" data-key="sash_tiltturn" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Фрамуга</label><input type="number" class="cp" data-key="sash_tilt" step="100" placeholder="0"></div>
+          </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Фурнитура (доплата за шт.)</summary>
+            <div class="form-row"><label>Roto (доплата к базе)</label><input type="number" class="cp" data-key="hw_Roto" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Vorne (база)</label><input type="number" class="cp" data-key="hw_Vorne" value="0" disabled></div>
+            <div class="form-row"><label>Verta</label><input type="number" class="cp" data-key="hw_Verta" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Futuruss</label><input type="number" class="cp" data-key="hw_Futuruss" step="50" placeholder="0"></div>
+          </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Ламинация (доплата)</summary>
+            <div class="form-row"><label>Внутренняя</label><input type="number" class="cp" data-key="lam_inner" step="100" placeholder="0"></div>
+            <div class="form-row"><label>Наружная</label><input type="number" class="cp" data-key="lam_outer" step="100" placeholder="0"></div>
+          </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Прочее (доплата за шт.)</summary>
+            <div class="form-row"><label>Импост</label><input type="number" class="cp" data-key="mullion" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Москитная сетка</label><input type="number" class="cp" data-key="mosquito" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Цветная ручка</label><input type="number" class="cp" data-key="handle_color" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Сэндвич (разница от стекла)</label><input type="number" class="cp" data-key="sandwich_delta" step="50" placeholder="0"></div>
+          </details>
         </div>
         <div class="control-section">
           <h3>Наценка для клиента</h3>
@@ -829,130 +850,77 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-// ========== PRICING ==========
-// ========== FEATURE EXTRACTION ==========
-// Extracts numerical feature vector from designer config for regression
-function extractFeatures(d){
-  const f=[];
-  // 1. Area m²
-  f.push(d.width*d.height/1e6);
-  // 2-6. Profile one-hot: Brusbox60, KBE58, Montblanc60, Rehau60, Rehau70
-  const profs=['Brusbox 60','KBE 58','Montblanc 60','Rehau 60','Rehau 70'];
-  profs.forEach(p=>f.push(d.profile===p?1:0));
-  // 7-10. Glazing one-hot
-  const glazs=['4м1-16-4м1','4м1-10-4м1-10-4м1','4м1-16-4м1(i)','4м1-10-4м1-10-4м1(i)'];
-  glazs.forEach(g=>f.push(d.glazingFormula===g?1:0));
-  // 11-13. Sash counts by type (excluding direction — doesn't affect price)
-  const secs=d.sections||[];
-  f.push(secs.filter(s=>s.sash&&s.sash.type==='swing').length);
-  f.push(secs.filter(s=>s.sash&&s.sash.type==='tilt-turn').length);
-  f.push(secs.filter(s=>s.sash&&s.sash.type==='tilt').length);
-  // 14-17. Hardware counts
-  const hws=['Roto','Vorne','Verta','Futuruss'];
-  hws.forEach(h=>f.push(secs.filter(s=>s.sash&&s.sash.hardware===h).length));
-  // 18. Inner lamination (0=white, 1=colored)
-  f.push(d.lamInner!=='#f0f0ec'?1:0);
-  // 19. Outer lamination
-  f.push(d.lamOuter!=='#f0f0ec'?1:0);
-  // 20. Sandwich panel count
-  f.push(secs.filter(s=>s.filling==='sandwich-24'||s.filling==='sandwich-32').length);
-  // 21. Number of mullions (splits)
-  let mullions=0; function countM(n){if(n.type==='split'){mullions++;n.children.forEach(countM);}} countM(d.root);
-  f.push(mullions);
-  // 22. Mosquito net count
-  f.push(secs.filter(s=>s.mosquito).length);
-  // 23. Handle color non-white count
-  f.push(secs.filter(s=>s.sash&&s.sash.handleColor&&s.sash.handleColor!=='white').length);
-  return f;
-}
-const FEATURE_NAMES=['Площадь м²','Brusbox 60','KBE 58','Montblanc 60','Rehau 60','Rehau 70',
-  'Однокамерный','Двухкамерный','Энергосбер.','Двухкам.энерго',
-  'Поворотная','Поворотно-откидная','Фрамуга',
-  'Roto','Vorne','Verta','Futuruss',
-  'Ламинация внутр.','Ламинация наруж.',
-  'Сэндвич','Импосты','Москитная сетка','Цветная ручка'];
+// ========== COMPONENT PRICING ==========
+const PROFILES=['Brusbox 60','KBE 58','Montblanc 60','Rehau 60','Rehau 70'];
+const GLAZINGS=['4м1-16-4м1','4м1-10-4м1-10-4м1','4м1-16-4м1(i)','4м1-10-4м1-10-4м1(i)'];
+const GLAZ_SHORT=['Однокам.','Двухкам.','Энерго','Двухк.энерго'];
 
-function savePrice(){
-  const price=parseInt(document.getElementById('priceInput').value);
-  if(!price||price<=0){alert('Введите цену');return;}
-  const d=designer1;
-  const pt={id:Date.now(),profile:d.profile,glazing:d.glazingFormula,width:d.width,height:d.height,
-    area:parseFloat((d.width*d.height/1e6).toFixed(3)),configDesc:d.getDesc(),
-    features:extractFeatures(d),price,date:new Date().toISOString().split('T')[0]};
-  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
-  pts.push(pt);localStorage.setItem('okna_prices',JSON.stringify(pts));
-  document.getElementById('priceInput').value='';renderPriceList();
-}
-function deletePrice(id){let p=JSON.parse(localStorage.getItem('okna_prices')||'[]');p=p.filter(x=>x.id!==id);localStorage.setItem('okna_prices',JSON.stringify(p));renderPriceList();}
-function renderPriceList(){
-  const pts=JSON.parse(localStorage.getItem('okna_prices')||'[]'),el=document.getElementById('priceList');
-  if(!pts.length){el.innerHTML='<div style="color:#999;font-size:12px;padding:8px;">Нет точек</div>';return;}
-  el.innerHTML=pts.slice().reverse().map(p=>`<div class="price-item"><div class="desc"><b>${p.width}x${p.height}</b> ${p.configDesc}<br><span style="color:#888">${p.profile}/${p.glazing}</span></div><div class="price">${p.price.toLocaleString()} р.</div><div class="del" onclick="deletePrice(${p.id})">x</div></div>`).join('');
+function buildBasePriceTable(){
+  const el=document.getElementById('basePriceTable');
+  let html='<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  html+='<tr><th style="text-align:left;padding:2px 4px"></th>';
+  GLAZ_SHORT.forEach(g=>html+='<th style="padding:2px 3px;font-size:10px">'+g+'</th>');
+  html+='</tr>';
+  PROFILES.forEach(prof=>{
+    html+='<tr><td style="padding:2px 4px;font-weight:600;font-size:10px">'+prof+'</td>';
+    GLAZINGS.forEach(glaz=>{
+      const key='base_'+prof+'_'+glaz;
+      html+='<td style="padding:2px"><input type="number" class="cp" data-key="'+key+'" step="100" placeholder="0" style="width:100%;padding:3px;font-size:11px;border:1px solid #ddd;border-radius:3px;text-align:center"></td>';
+    });
+    html+='</tr>';
+  });
+  html+='</table>';
+  el.innerHTML=html;
 }
 
-// ========== PRICE ESTIMATION ==========
-function featMatch(a,b){
-  // Compare features ignoring area (index 0) — same config?
-  if(!a||!b||a.length!==b.length)return false;
-  for(let i=1;i<a.length;i++)if(a[i]!==b[i])return false;
-  return true;
+function saveComponentPrices(){
+  const data={};
+  document.querySelectorAll('.cp:not([disabled])').forEach(inp=>{
+    const v=parseFloat(inp.value);
+    if(!isNaN(v)&&v!==0)data[inp.dataset.key]=v;
+  });
+  localStorage.setItem('okna_components',JSON.stringify(data));
 }
+function loadComponentPrices(){
+  const data=JSON.parse(localStorage.getItem('okna_components')||'{}');
+  document.querySelectorAll('.cp:not([disabled])').forEach(inp=>{
+    if(data[inp.dataset.key]!==undefined)inp.value=data[inp.dataset.key];
+  });
+}
+
 function estimatePrice(d){
-  let pts=JSON.parse(localStorage.getItem('okna_prices')||'[]');
-  // Filter out old points without features
-  pts=pts.filter(p=>p.features&&p.features.length>0);
-  if(!pts.length)return null;
-  const target=extractFeatures(d), tArea=target[0];
-
-  // 1. Exact config match (same features except area) → scale by area
-  const exact=pts.filter(p=>featMatch(p.features,target));
-  if(exact.length>=2){
-    // Linear regression on area for this exact config
-    const n=exact.length,sx=exact.reduce((s,p)=>s+p.features[0],0),sy=exact.reduce((s,p)=>s+p.price,0),
-      sxy=exact.reduce((s,p)=>s+p.features[0]*p.price,0),sxx=exact.reduce((s,p)=>s+p.features[0]**2,0),
-      det=n*sxx-sx*sx;
-    if(Math.abs(det)>.001){const a=(n*sxy-sx*sy)/det,b=(sy-a*sx)/n;return Math.round(Math.max(0,a*tArea+b));}
-  }
-  if(exact.length===1){
-    // Same config, different size — scale proportionally by area
-    return Math.round(exact[0].price*(tArea/exact[0].features[0]));
-  }
-
-  // 2. Ridge regression with all points (need at least 3)
-  if(pts.length>=3){
-    const n=pts.length, nf=target.length;
-    const X=pts.map(p=>p.features);
-    const y=pts.map(p=>p.price);
-    const Xb=X.map(row=>[1,...row]);
-    const m=nf+1;
-    const lambda=100; // stronger regularization for few points
-    const XtX=Array.from({length:m},()=>new Array(m).fill(0));
-    const Xty=new Array(m).fill(0);
-    for(let i=0;i<n;i++){
-      for(let j=0;j<m;j++){
-        Xty[j]+=Xb[i][j]*y[i];
-        for(let k=0;k<m;k++) XtX[j][k]+=Xb[i][j]*Xb[i][k];
-      }
-    }
-    for(let j=1;j<m;j++) XtX[j][j]+=lambda;
-    const A=XtX.map((row,i)=>[...row,Xty[i]]);
-    for(let col=0;col<m;col++){
-      let mx=col;for(let r=col+1;r<m;r++)if(Math.abs(A[r][col])>Math.abs(A[mx][col]))mx=r;
-      [A[col],A[mx]]=[A[mx],A[col]];
-      if(Math.abs(A[col][col])<1e-10)continue;
-      const piv=A[col][col];
-      for(let j=col;j<=m;j++)A[col][j]/=piv;
-      for(let r=0;r<m;r++){if(r===col)continue;const f=A[r][col];for(let j=col;j<=m;j++)A[r][j]-=f*A[col][j];}
-    }
-    const w=A.map(row=>row[m]);
-    const xb=[1,...target];
-    let pred=0;for(let j=0;j<m;j++)pred+=w[j]*xb[j];
-    if(pred>0)return Math.round(pred);
-  }
-
-  // 3. Fallback — average price per m² from all points
-  const avgPm2=pts.reduce((s,p)=>s+p.price/p.features[0],0)/pts.length;
-  return Math.round(avgPm2*tArea);
+  const data=JSON.parse(localStorage.getItem('okna_components')||'{}');
+  const area=d.width*d.height/1e6;
+  // Base price per m²
+  const baseKey='base_'+d.profile+'_'+d.glazingFormula;
+  const basePm2=data[baseKey]||0;
+  if(!basePm2)return null;
+  let price=Math.round(basePm2*area);
+  // Sashes
+  const secs=d.sections||[];
+  secs.forEach(s=>{
+    if(!s.sash)return;
+    const st=s.sash.type;
+    if(st==='swing')price+=(data.sash_swing||0);
+    else if(st==='tilt-turn')price+=(data.sash_tiltturn||0);
+    else if(st==='tilt')price+=(data.sash_tilt||0);
+    // Hardware surcharge
+    const hw=s.sash.hardware;
+    if(hw&&hw!=='Vorne')price+=(data['hw_'+hw]||0);
+    // Colored handle
+    if(s.sash.handleColor&&s.sash.handleColor!=='white')price+=(data.handle_color||0);
+  });
+  // Lamination
+  if(d.lamInner!=='#f0f0ec')price+=(data.lam_inner||0);
+  if(d.lamOuter!=='#f0f0ec')price+=(data.lam_outer||0);
+  // Mullions
+  let mullions=0;(function countM(n){if(n.type==='split'){mullions++;n.children.forEach(countM);}})(d.root);
+  price+=mullions*(data.mullion||0);
+  // Mosquito nets
+  price+=secs.filter(s=>s.mosquito).length*(data.mosquito||0);
+  // Sandwich delta
+  price+=secs.filter(s=>s.filling==='sandwich-24'||s.filling==='sandwich-32').length*(data.sandwich_delta||0);
+  return price;
 }
 function updateCalcPrice(){
   const est=estimatePrice(designer2),
@@ -1030,7 +998,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
 
   designer2.onConfigChange=updateCalcPrice;
-  loadSettings(); renderPriceList();
+  buildBasePriceTable();
+  loadSettings(); loadComponentPrices();
+  // Auto-save component prices on any input change
+  document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
 });
 </script>
 </body>
