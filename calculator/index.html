@@ -1350,10 +1350,10 @@ function calcClientPrice(){
   const res=document.getElementById('clientResult');
   res.style.display='';
   document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
-  let bd='<div style="font-size:12px;margin-top:8px;color:#555">';
-  lines.forEach(l=>bd+=`<div style="display:flex;justify-content:space-between;padding:2px 0"><span>${l.label}</span><span>${l.value.toLocaleString()} ₽</span></div>`);
-  bd+='</div><div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
-  document.getElementById('clientBreakdown').innerHTML=bd;
+  document.getElementById('clientBreakdown').innerHTML='<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
+  // Debug in console (F12)
+  console.table(lines);
+  console.log('Итого:',total,'Прибыль:',profit);
 
   // Send to Google Sheets
   const glazNames={single:'Однокамерный',double:'Двухкамерный',energy:'Энергосберегающий'};
