@@ -460,6 +460,8 @@ class WindowDesigner {
   }
 
   _drawLabel(s){
+    // Sandwich/empty have their own labels drawn in _drawGlass
+    if(s.filling==='sandwich-24'||s.filling==='sandwich-32'||s.filling==='empty')return;
     const{x,y,w,h}=s.bounds,cx=this.mx(x+w/2),cy=this.my(y+h/2),c=this.ctx;
     let gw=Math.round(w),gh=Math.round(h);
     if(s.sash){gw=Math.round(w-2*SFW+2*SASH_OVR);gh=Math.round(h-2*SFW+2*SASH_OVR);}
