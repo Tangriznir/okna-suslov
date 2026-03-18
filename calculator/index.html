@@ -90,11 +90,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
           <div class="info-box" id="configInfo1"></div>
           <div class="form-row"><label>Профиль</label>
             <select id="profile1">
-              <option value="Brusbox 60">Brusbox 60 (3 кам, 60мм)</option>
-              <option value="KBE 58">KBE 58 (3 кам, 58мм)</option>
-              <option value="Montblanc 60">Montblanc 60 (3 кам, 60мм)</option>
-              <option value="Rehau 60" selected>Rehau 60 (3 кам, 60мм)</option>
-              <option value="Rehau 70">Rehau 70 (5 кам, 70мм)</option>
+              <option value="Brusbox 60" selected>Brusbox 60 (3 кам, 60мм)</option>
             </select></div>
           <div class="form-row"><label>Стеклопакет</label>
             <select id="glazing1">
@@ -179,14 +175,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
           <div class="form-row"><label>Высота</label><input type="number" id="cHeight" value="1400" step="10" min="400" max="2500"></div>
         </div>
         <div style="flex:1;min-width:200px" class="control-section">
-          <h3>Профиль</h3>
-          <div class="form-row"><select id="cProfile">
-            <option value="Brusbox 60">Brusbox 60 (3 кам, 60мм)</option>
-            <option value="KBE 58">KBE 58 (3 кам, 58мм)</option>
-            <option value="Montblanc 60">Montblanc 60 (3 кам, 60мм)</option>
-            <option value="Rehau 60" selected>Rehau 60 (3 кам, 60мм)</option>
-            <option value="Rehau 70">Rehau 70 (5 кам, 70мм)</option>
-          </select></div>
+          <select id="cProfile" style="display:none"><option value="Brusbox 60" selected>Brusbox 60</option></select>
           <h3 style="margin-top:10px">Стеклопакет</h3>
           <div class="form-row"><select id="cGlazing">
             <option value="single">Однокамерный</option>
@@ -314,7 +303,7 @@ class WindowDesigner {
     this.selectedMullion = null; // split node reference
     this.editingDim = null;
     this.dimRegions = []; this.paneRegions = []; this.mullionRegions = [];
-    this.profile = 'Rehau 60';
+    this.profile = 'Brusbox 60';
     this.glazingFormula = '4м1-16-4м1';
     this.lamInner = '#f0f0ec'; this.lamOuter = '#f0f0ec';
     this.onConfigChange = null; this.onReset = null;
@@ -867,7 +856,7 @@ document.querySelectorAll('.tab').forEach(tab=>{
 });
 
 // ========== COMPONENT PRICING ==========
-const PROFILES=['Brusbox 60','KBE 58','Montblanc 60','Rehau 60','Rehau 70'];
+const PROFILES=['Brusbox 60'];
 const GLAZINGS=['4м1-16-4м1','4м1-10-4м1-10-4м1','4м1-16-4м1(i)','4м1-10-4м1-10-4м1(i)'];
 const GLAZ_SHORT=['Однокам.','Двухкам.','Энерго','Двухк.энерго'];
 
