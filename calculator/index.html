@@ -167,11 +167,20 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
         <h3>Количество створок</h3>
         <div class="form-row"><select id="cSashes" onchange="selectedSashes=parseInt(this.value)"><option value="1">1 шт.</option></select></div>
       </div>
+      <div id="winPreview" style="text-align:center;margin:12px 0"></div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
         <div style="flex:1;min-width:200px" class="control-section">
           <h3>Размеры (мм)</h3>
-          <div class="form-row"><label>Ширина</label><input type="number" id="cWidth" value="1400" step="10" min="400" max="3000"></div>
-          <div class="form-row"><label>Высота</label><input type="number" id="cHeight" value="1400" step="10" min="400" max="2500"></div>
+          <div id="dimsNormal">
+            <div class="form-row"><label>Ширина</label><input type="number" id="cWidth" value="1400" step="10" min="400" max="3000" oninput="drawPreview()"></div>
+            <div class="form-row"><label>Высота</label><input type="number" id="cHeight" value="1400" step="10" min="400" max="2500" oninput="drawPreview()"></div>
+          </div>
+          <div id="dimsBalcony" style="display:none">
+            <div class="form-row"><label>Ширина окна</label><input type="number" id="cBwinW" value="1400" step="10" min="400" max="3000" oninput="drawPreview()"></div>
+            <div class="form-row"><label>Высота окна</label><input type="number" id="cBwinH" value="1400" step="10" min="400" max="2500" oninput="drawPreview()"></div>
+            <div class="form-row"><label>Ширина двери</label><input type="number" id="cBdoorW" value="700" step="10" min="400" max="1200" oninput="drawPreview()"></div>
+            <div class="form-row"><label>Высота двери</label><input type="number" id="cBdoorH" value="2100" step="10" min="1800" max="2500" oninput="drawPreview()"></div>
+          </div>
         </div>
         <div style="flex:1;min-width:200px" class="control-section">
           <select id="cProfile" style="display:none"><option value="Brusbox 60" selected>Brusbox 60</option></select>
@@ -984,16 +993,81 @@ function selectType(id){
   const t=WIN_TYPES.find(t=>t.id===id);
   selectedType=id;
   selectedSashes=t.minSash||(t.maxSash>0?1:0);
-  document.getElementById('cWidth').value=t.defW;
-  document.getElementById('cHeight').value=t.defH;
+  // Toggle dims
+  document.getElementById('dimsNormal').style.display=id==='balcony'?'none':'';
+  document.getElementById('dimsBalcony').style.display=id==='balcony'?'':'none';
+  if(id!=='balcony'){
+    document.getElementById('cWidth').value=t.defW;
+    document.getElementById('cHeight').value=t.defH;
+  }
   buildTypeCards();
+  drawPreview();
+}
+
+function drawPreview(){
+  const el=document.getElementById('winPreview');
+  const type=selectedType;
+  const t=WIN_TYPES.find(t=>t.id===type);
+  const maxW=300, maxH=200;
+
+  if(type==='balcony'){
+    const wW=parseInt(document.getElementById('cBwinW').value)||1400;
+    const wH=parseInt(document.getElementById('cBwinH').value)||1400;
+    const dW=parseInt(document.getElementById('cBdoorW').value)||700;
+    const dH=parseInt(document.getElementById('cBdoorH').value)||2100;
+    const totalW=wW+dW, totalH=Math.max(wH,dH);
+    const sc=Math.min(maxW/totalW,maxH/totalH);
+    const sw=Math.round(totalW*sc), sh=Math.round(totalH*sc);
+    const dwPx=Math.round(dW*sc), dhPx=Math.round(dH*sc);
+    const wwPx=Math.round(wW*sc), whPx=Math.round(wH*sc);
+    const doorY=sh-dhPx, winY=sh-whPx;
+    let svg=`<svg width="${sw+2}" height="${sh+30}" viewBox="-1 -1 ${sw+2} ${sh+32}">`;
+    // Door
+    svg+=`<rect x="0" y="${doorY}" width="${dwPx}" height="${dhPx}" fill="#e8e8e8" stroke="#666" stroke-width="2" rx="1"/>`;
+    svg+=`<text x="${dwPx/2}" y="${doorY+dhPx/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#555">${dW}×${dH}</text>`;
+    // Window parts
+    const parts=t.parts;
+    const partW=wwPx/parts;
+    for(let i=0;i<parts;i++){
+      svg+=`<rect x="${dwPx+i*partW+1}" y="${winY}" width="${partW-2}" height="${whPx}" fill="#d0eefe" stroke="#666" stroke-width="1.5" rx="1"/>`;
+    }
+    svg+=`<text x="${dwPx+wwPx/2}" y="${winY+whPx/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#555">${wW}×${wH}</text>`;
+    svg+='</svg>';
+    el.innerHTML=svg;
+  }else{
+    const w=parseInt(document.getElementById('cWidth').value)||1400;
+    const h=parseInt(document.getElementById('cHeight').value)||1400;
+    const sc=Math.min(maxW/w,maxH/h);
+    const sw=Math.round(w*sc), sh=Math.round(h*sc);
+    const parts=t.parts;
+    const partW=sw/parts;
+    let svg=`<svg width="${sw+2}" height="${sh+30}" viewBox="-1 -1 ${sw+2} ${sh+32}">`;
+    for(let i=0;i<parts;i++){
+      svg+=`<rect x="${i*partW}" y="0" width="${partW-2}" height="${sh}" fill="#d0eefe" stroke="#666" stroke-width="2" rx="1"/>`;
+    }
+    svg+=`<text x="${sw/2}" y="${sh/2}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#555">${w}×${h}</text>`;
+    // Dimension labels
+    svg+=`<text x="${sw/2}" y="${sh+18}" text-anchor="middle" font-size="11" fill="#888">${w} мм</text>`;
+    svg+=`<text x="${sw+10}" y="${sh/2}" text-anchor="start" font-size="11" fill="#888" transform="rotate(90,${sw+10},${sh/2})">${h} мм</text>`;
+    svg+='</svg>';
+    el.innerHTML=svg;
+  }
 }
 
 function calcClientPrice(){
   const data=JSON.parse(localStorage.getItem('okna_components')||'{}');
   const type=selectedType;
-  const w=parseInt(document.getElementById('cWidth').value)||1400;
-  const h=parseInt(document.getElementById('cHeight').value)||1400;
+  let w,h;
+  if(type==='balcony'){
+    const bwW=parseInt(document.getElementById('cBwinW').value)||1400;
+    const bwH=parseInt(document.getElementById('cBwinH').value)||1400;
+    const bdW=parseInt(document.getElementById('cBdoorW').value)||700;
+    const bdH=parseInt(document.getElementById('cBdoorH').value)||2100;
+    w=bwW+bdW; h=Math.max(bwH,bdH);
+  }else{
+    w=parseInt(document.getElementById('cWidth').value)||1400;
+    h=parseInt(document.getElementById('cHeight').value)||1400;
+  }
   const profile=document.getElementById('cProfile').value;
   const glazing=document.getElementById('cGlazing').value;
   const slopes=document.getElementById('cSlopes').checked;
@@ -1138,6 +1212,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   buildBasePriceTable();
   buildTypeCards();
+  drawPreview();
   loadSettings(); loadComponentPrices();
   // Auto-save component prices on any input change
   document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
