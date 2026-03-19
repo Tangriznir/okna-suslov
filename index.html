@@ -349,6 +349,11 @@
       .advantages-grid{grid-template-columns:repeat(2,1fr)}
       .services-grid{grid-template-columns:1fr}
       .profiles-grid{grid-template-columns:1fr;max-width:360px;margin-inline:auto}
+      .profile-category .profiles-grid{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0;margin-top:0}
+      .profile-category.cat-open .profiles-grid{max-height:6000px;opacity:1;margin-top:24px}
+      .category-header{cursor:pointer;padding:32px 24px}
+      .category-header::after{content:'\25BC';display:block;margin-top:12px;font-size:18px;transition:transform .3s ease;opacity:.4}
+      .cat-open .category-header::after{transform:rotate(180deg)}
       .reviews-grid{grid-template-columns:1fr}
       .contacts-grid{grid-template-columns:1fr}
       .footer-grid{grid-template-columns:1fr}
@@ -1156,6 +1161,35 @@ document.addEventListener('DOMContentLoaded',function(){
     gsap.from('.trust-item',{opacity:0,y:20,duration:.5,stagger:.08,scrollTrigger:{trigger:'.trust-strip',start:'top 90%',once:true}});
   }
 });
+</script>
+<script>
+// Аккордеон профилей на мобилке
+(function(){
+  function initAccordion(){
+    var cats=document.querySelectorAll('.profile-category');
+    if(window.innerWidth>768){
+      cats.forEach(function(c){c.classList.add('cat-open')});
+      return;
+    }
+    cats.forEach(function(cat){
+      cat.classList.remove('cat-open');
+      var header=cat.querySelector('.category-header');
+      if(!header.dataset.accordionBound){
+        header.dataset.accordionBound='1';
+        header.addEventListener('click',function(){
+          if(window.innerWidth>768) return;
+          cat.classList.toggle('cat-open');
+        });
+      }
+    });
+  }
+  initAccordion();
+  var resizeTimer;
+  window.addEventListener('resize',function(){
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(initAccordion,200);
+  });
+})();
 </script>
 <script>
 // Автозагрузка цен из Google Sheets (лист "Цены на сайте")
