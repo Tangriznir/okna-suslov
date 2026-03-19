@@ -204,6 +204,29 @@
     .profile-features li{font-size:14px;color:var(--n500);padding:6px 0;border-bottom:1px solid var(--n100);display:flex;align-items:center;gap:8px}
     .profile-features li::before{content:'\2713';color:#22C55E;font-weight:700;font-size:13px}
     .cat-premium .profile-features li::before{color:#fbbf24}
+    .profile-category .profiles-grid{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0;margin-top:0}
+    .profile-category.cat-open .profiles-grid{max-height:6000px;opacity:1;margin-top:24px}
+    .category-header{cursor:pointer}
+    .cat-toggle-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 24px;border-radius:24px;font-size:14px;font-weight:600;border:2px solid;transition:all .3s ease}
+    .cat-economy .cat-toggle-btn{background:#e0f2fe;color:#0369a1;border-color:#7dd3fc}
+    .cat-economy .cat-toggle-btn:hover{background:#bae6fd}
+    .cat-standard .cat-toggle-btn{background:#dcfce7;color:#15803d;border-color:#86efac}
+    .cat-standard .cat-toggle-btn:hover{background:#bbf7d0}
+    .cat-premium .cat-toggle-btn{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.3)}
+    .cat-premium .cat-toggle-btn:hover{background:rgba(251,191,36,.25)}
+    .cat-toggle-btn .arrow{transition:transform .3s ease;font-size:12px}
+    .cat-open .cat-toggle-btn .arrow{transform:rotate(180deg)}
+    .cat-open .cat-toggle-btn .btn-text-show{display:none}
+    .cat-toggle-btn .btn-text-hide{display:none}
+    .cat-open .cat-toggle-btn .btn-text-hide{display:inline}
+    .profile-calc-link{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;color:#fff;background:linear-gradient(135deg,var(--blue-600),var(--blue-700));text-decoration:none;transition:all .3s ease}
+    .profile-calc-link:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(26,92,184,.3)}
+    .profile-calc-link::after{content:'\2192';transition:transform .3s ease}
+    .profile-calc-link:hover::after{transform:translateX(3px)}
+    .cat-premium .profile-calc-link{background:linear-gradient(135deg,#f59e0b,#d97706)}
+    .floating-calc{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:999;display:none;padding:14px 28px;border-radius:30px;background:linear-gradient(135deg,var(--orange-500),var(--orange-600));color:#fff;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(249,115,22,.4);transition:all .3s ease;white-space:nowrap}
+    .floating-calc:hover{transform:translateX(-50%) translateY(-2px);box-shadow:0 6px 24px rgba(249,115,22,.5)}
+    @media(max-width:768px){.floating-calc{display:block}}
 
     /* Calculator placeholder */
     .calc-placeholder{background:linear-gradient(135deg,var(--blue-900),var(--blue-800));border-radius:var(--r-xl);padding:64px;text-align:center;color:#fff;position:relative;overflow:hidden}
@@ -349,19 +372,7 @@
       .advantages-grid{grid-template-columns:repeat(2,1fr)}
       .services-grid{grid-template-columns:1fr}
       .profiles-grid{grid-template-columns:1fr;max-width:360px;margin-inline:auto}
-      .profile-category .profiles-grid{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0;margin-top:0}
-      .profile-category.cat-open .profiles-grid{max-height:6000px;opacity:1;margin-top:24px}
-      .category-header{cursor:pointer;padding:32px 24px}
-      .category-header::after{display:none}
-      .cat-toggle-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 24px;border-radius:24px;font-size:14px;font-weight:600;border:2px solid;transition:all .3s ease}
-      .cat-economy .cat-toggle-btn{background:#e0f2fe;color:#0369a1;border-color:#7dd3fc}
-      .cat-standard .cat-toggle-btn{background:#dcfce7;color:#15803d;border-color:#86efac}
-      .cat-premium .cat-toggle-btn{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.3)}
-      .cat-toggle-btn .arrow{transition:transform .3s ease;font-size:12px}
-      .cat-open .cat-toggle-btn .arrow{transform:rotate(180deg)}
-      .cat-open .cat-toggle-btn .btn-text-show{display:none}
-      .cat-toggle-btn .btn-text-hide{display:none}
-      .cat-open .cat-toggle-btn .btn-text-hide{display:inline}
+      .profiles-grid{grid-template-columns:1fr;max-width:360px;margin-inline:auto}
       .reviews-grid{grid-template-columns:1fr}
       .contacts-grid{grid-template-columns:1fr}
       .footer-grid{grid-template-columns:1fr}
@@ -1089,6 +1100,9 @@
   </div>
 </footer>
 
+<!-- Плавающая кнопка калькулятора (мобилка) -->
+<a href="/okna-suslov/calculator/" class="floating-calc">Рассчитать стоимость &rarr;</a>
+
 <!-- FLOAT WHATSAPP -->
 <a href="https://wa.me/79533375677" target="_blank" class="float-wa" title="Написать в WhatsApp">
   <svg viewBox="0 0 32 32"><path d="M16 2.003A13.82 13.82 0 002.19 15.83a13.73 13.73 0 001.86 6.926L2 30l5.404-2.012A13.82 13.82 0 0029.813 15.83 13.82 13.82 0 0016 2.003zm8.022 19.09c-.34.952-1.985 1.82-2.736 1.896-.752.076-1.45.34-4.874-1.015-4.128-1.634-6.748-5.876-6.952-6.148-.204-.272-1.666-2.214-1.666-4.224s1.053-2.998 1.428-3.406c.374-.408.817-.51 1.09-.51s.544.003.782.014c.252.012.59-.096.921.703.34.816 1.156 2.828 1.258 3.032.102.204.17.442.034.714-.136.272-.204.442-.408.68-.204.238-.43.532-.612.714-.204.204-.416.425-.178.833.238.408 1.058 1.746 2.27 2.828 1.56 1.392 2.876 1.824 3.284 2.026.408.204.646.17.883-.102.238-.272 1.02-1.19 1.292-1.598.272-.408.544-.34.917-.204.374.136 2.372 1.12 2.778 1.324.408.204.68.306.782.476.102.17.102.986-.238 1.938z"/></svg>
@@ -1175,25 +1189,24 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 </script>
 <script>
-// Аккордеон профилей на мобилке
+// Кнопки "Рассчитать" в карточки профилей
+(function(){
+  document.querySelectorAll('#profiles .profile-card').forEach(function(card){
+    var a=document.createElement('a');
+    a.href='/okna-suslov/calculator/';
+    a.className='profile-calc-link';
+    a.textContent='Рассчитать ';
+    card.appendChild(a);
+  });
+})();
+// Аккордеон профилей — работает на всех устройствах
 (function(){
   var cats=document.querySelectorAll('.profile-category');
-  var wasMobile=window.innerWidth<=768;
-  // На десктопе — всё раскрыто
-  if(!wasMobile) cats.forEach(function(c){c.classList.add('cat-open')});
-  // Привязываем клик один раз
+  // Привязываем клик
   cats.forEach(function(cat){
     cat.querySelector('.category-header').addEventListener('click',function(){
-      if(window.innerWidth>768) return;
       cat.classList.toggle('cat-open');
     });
-  });
-  // Только при реальном переключении mobile↔desktop
-  window.addEventListener('resize',function(){
-    var isMobile=window.innerWidth<=768;
-    if(isMobile===wasMobile) return;
-    wasMobile=isMobile;
-    if(!isMobile) cats.forEach(function(c){c.classList.add('cat-open')});
   });
 })();
 </script>
