@@ -69,6 +69,16 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
 .price-display .final{font-size:28px;font-weight:700}
 .price-display .breakdown{margin-top:10px;font-size:12px;opacity:.8}
 .price-display .breakdown div{padding:2px 0}
+.comp-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #ffe0b2;font-size:12px}
+.comp-row:last-child{border-bottom:none}
+.comp-row .comp-name{color:#555;flex:1}
+.comp-row .comp-price{font-weight:700;white-space:nowrap;margin-left:8px}
+.comp-row .comp-price.cheaper{color:#2a9d2a}
+.comp-row .comp-price.expensive{color:#dc3545}
+.comp-row .comp-diff{font-size:10px;color:#888;margin-left:4px;white-space:nowrap}
+.comp-input-row{display:flex;gap:6px;align-items:center;margin-bottom:4px;font-size:11px}
+.comp-input-row label{flex:1;color:#555}
+.comp-input-row input{width:80px;padding:3px 6px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:right}
 </style>
 </head>
 <body>
@@ -135,6 +145,22 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
             <div class="info-row" id="markupRow" style="display:none"><span class="label">Наценка</span><span class="value" id="markupDisplay" style="color:#E8521A">—</span></div>
             <div class="info-row" id="clientRow" style="display:none"><span class="label">Цена для клиента</span><span class="value" id="clientPrice" style="font-size:15px">—</span></div>
             <div class="info-row" id="profitRow" style="display:none"><span class="label">Прибыль</span><span class="value" id="profitValue" style="color:#2a9d2a">—</span></div>
+          </div>
+          <!-- Блок сравнения с конкурентами -->
+          <div id="competitorBlock" style="display:none;margin-top:12px">
+            <div style="background:#fff3e0;border:1px solid #ffcc02;border-radius:8px;padding:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <h4 style="font-size:13px;margin:0;color:#e65100">Цены конкурентов</h4>
+                <button class="btn btn-sm" onclick="toggleCompetitorEdit()" style="font-size:10px;padding:2px 8px;background:#fff3e0;border:1px solid #ffcc02">&#9998;</button>
+              </div>
+              <div id="competitorPrices" style="font-size:12px"></div>
+              <div id="competitorEdit" style="display:none;margin-top:8px;border-top:1px solid #ffcc02;padding-top:8px">
+                <div style="font-size:11px;color:#888;margin-bottom:6px">Цены за м² (обновляй при необходимости)</div>
+                <div id="competitorInputs"></div>
+                <button class="btn btn-sm" onclick="saveCompetitorPrices()" style="margin-top:6px;background:#e65100;color:#fff;font-size:11px">Сохранить</button>
+                <button class="btn btn-sm" onclick="runCompetitorParse()" style="margin-top:6px;background:#1a5cb8;color:#fff;font-size:11px;margin-left:4px">Автопарсинг</button>
+              </div>
+            </div>
           </div>
         </div>
         <button class="btn btn-secondary btn-sm btn-block" onclick="resetDesigner(1)">Сбросить конструкцию</button>
@@ -1394,6 +1420,8 @@ function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({mar
 
 // ========== GOOGLE SHEETS PRICES ==========
 const SHEET_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRz-SO0rLEgvdcJx5MbILqQ9oacz3g8GYlFlFZYP5rvL7acplung7SJYBcRLXVuFVwxpV1gxIo2ARsw/pub?gid=0&single=true&output=csv';
+// Лист "Конкуренты" — замени gid после создания листа (Файл → Поделиться → Опубликовать → выбрать лист Конкуренты)
+const COMP_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRz-SO0rLEgvdcJx5MbILqQ9oacz3g8GYlFlFZYP5rvL7acplung7SJYBcRLXVuFVwxpV1gxIo2ARsw/pub?gid=1370719884&single=true&output=csv';
 let sheetPrices=null;
 
 function loadSheetPrices(){
@@ -1425,6 +1453,32 @@ function loadSheetPrices(){
     }
   }).catch(e=>console.warn('Не удалось загрузить цены из Google Sheets:',e));
 }
+
+function loadSheetCompetitors(){
+  if(COMP_CSV_URL.includes('COMPETITORS_GID')) return; // gid ещё не заполнен
+  fetch(COMP_CSV_URL).then(r=>r.text()).then(csv=>{
+    const lines=csv.split('\n').slice(1);
+    if(lines.length===0) return;
+    const competitors=[];
+    lines.forEach(line=>{
+      const p=line.split(',');
+      if(p.length>=5){
+        const id=p[0].trim(), pm2=parseFloat(p[1]), sash=parseFloat(p[2])||0, mull=parseFloat(p[3])||0;
+        const name=p[4]?p[4].trim():'', note=p[5]?p[5].trim():'';
+        if(id&&!isNaN(pm2)&&pm2>0){
+          competitors.push({id, pricePerM2:pm2, sashExtra:sash, mullionExtra:mull, name:name||id, note});
+        }
+      }
+    });
+    if(competitors.length>0){
+      localStorage.setItem('okna_competitors', JSON.stringify(competitors));
+      const date=lines[0].split(',')[6];
+      if(date) localStorage.setItem('okna_competitors_date', date.trim());
+      console.log('Цены конкурентов из таблицы:', competitors.length, 'шт');
+    }
+  }).catch(e=>console.warn('Конкуренты из таблицы не загружены:',e));
+}
+
 function calcPrices(){
   const est=estimatePrice(designer1);
   const box=document.getElementById('calcResult');
@@ -1446,7 +1500,223 @@ function calcPrices(){
   }else{
     ['markupRow','clientRow','profitRow'].forEach(id=>document.getElementById(id).style.display='none');
   }
+  showCompetitorComparison(designer1, est);
 }
+
+// ========== COMPETITOR COMPARISON ==========
+const DEFAULT_COMPETITORS = [
+  {
+    id: 'kaleva_standard',
+    name: 'Калева Стандарт',
+    pricePerM2: 14580,
+    sashExtra: 4000,
+    mullionExtra: 1200,
+    note: 'Малоярославец, Московская 16'
+  },
+  {
+    id: 'kaleva_design',
+    name: 'Калева Дизайн',
+    pricePerM2: 22260,
+    sashExtra: 5000,
+    mullionExtra: 1500,
+    note: 'Премиум линейка'
+  },
+  {
+    id: 'okno_melke60',
+    name: 'О-КНО MELKE 60',
+    pricePerM2: 4250,
+    sashExtra: 2800,
+    mullionExtra: 700,
+    note: '4 камеры 60мм, реклама от 2364'
+  },
+  {
+    id: 'okno_melke70',
+    name: 'О-КНО MELKE Evol.70',
+    pricePerM2: 6900,
+    sashExtra: 3000,
+    mullionExtra: 800,
+    note: '5 камер 70мм, реклама от 3824'
+  },
+  {
+    id: 'okno_rehau_delight',
+    name: 'О-КНО REHAU Delight',
+    pricePerM2: 8800,
+    sashExtra: 3200,
+    mullionExtra: 900,
+    note: '5 камер 70мм, реклама от 4890'
+  },
+  {
+    id: 'okno_kbe_master',
+    name: 'О-КНО KBE Master 70',
+    pricePerM2: 9400,
+    sashExtra: 3100,
+    mullionExtra: 850,
+    note: '4 камеры 70мм, реклама от 5202'
+  },
+  {
+    id: 'okno_rehau_brilliant',
+    name: 'О-КНО REHAU Brilliant',
+    pricePerM2: 11800,
+    sashExtra: 3500,
+    mullionExtra: 1000,
+    note: '5 камер 70мм, реклама от 6560'
+  },
+  {
+    id: 'satels_veka',
+    name: 'Сателс Veka Softline',
+    pricePerM2: 7200,
+    sashExtra: 3000,
+    mullionExtra: 800,
+    note: 'Veka 70мм, реклама от 4000'
+  }
+];
+
+function getCompetitorData() {
+  const saved = JSON.parse(localStorage.getItem('okna_competitors') || 'null');
+  return saved || DEFAULT_COMPETITORS;
+}
+
+function saveCompetitorPrices() {
+  const competitors = getCompetitorData();
+  competitors.forEach(c => {
+    const inp = document.getElementById('comp_' + c.id);
+    if (inp) c.pricePerM2 = parseFloat(inp.value) || 0;
+    const sashInp = document.getElementById('comp_sash_' + c.id);
+    if (sashInp) c.sashExtra = parseFloat(sashInp.value) || 0;
+  });
+  localStorage.setItem('okna_competitors', JSON.stringify(competitors));
+  document.getElementById('competitorEdit').style.display = 'none';
+  // Пересчитать
+  const est = estimatePrice(designer1);
+  if (est) showCompetitorComparison(designer1, est);
+}
+
+function toggleCompetitorEdit() {
+  const el = document.getElementById('competitorEdit');
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? '' : 'none';
+  if (isHidden) buildCompetitorInputs();
+}
+
+function buildCompetitorInputs() {
+  const competitors = getCompetitorData();
+  const container = document.getElementById('competitorInputs');
+  container.innerHTML = competitors.map(c => `
+    <div class="comp-input-row">
+      <label>${c.name}</label>
+      <input id="comp_${c.id}" type="number" value="${c.pricePerM2}" step="100" placeholder="за м²">
+      <input id="comp_sash_${c.id}" type="number" value="${c.sashExtra||0}" step="100" placeholder="створка" style="width:65px" title="Доплата за створку">
+    </div>
+  `).join('');
+}
+
+function showCompetitorComparison(d, myPrice) {
+  const block = document.getElementById('competitorBlock');
+  const container = document.getElementById('competitorPrices');
+  if (!myPrice) { block.style.display = 'none'; return; }
+
+  block.style.display = '';
+  const competitors = getCompetitorData();
+  const area = d.width * d.height / 1e6;
+
+  // Считаем количество створок и импостов
+  let sashCount = 0;
+  const secs = d.sections || [];
+  secs.forEach(s => { if (s.sash) sashCount++; });
+  let mullionCount = 0;
+  (function countM(n) { if (n.type === 'split') { mullionCount++; n.children.forEach(countM); } })(d.root);
+
+  // Наценка пользователя для сравнения с клиентской ценой
+  const mT = document.getElementById('markupType').value;
+  const mV = parseFloat(document.getElementById('markupValue').value) || 0;
+  const markup = mV > 0 ? (mT === 'percent' ? Math.round(myPrice * mV / 100) : mV) : 0;
+  const myClientPrice = myPrice + markup;
+
+  let html = '<div class="comp-row" style="font-weight:600;border-bottom:2px solid #ffcc02">' +
+    '<span class="comp-name">Ты (Brusbox 60)</span>' +
+    '<span class="comp-price" style="color:#1a5cb8">' + myClientPrice.toLocaleString() + ' ₽</span>' +
+    '<span class="comp-diff"></span></div>';
+
+  competitors.forEach(c => {
+    const compPrice = Math.round(c.pricePerM2 * area + sashCount * (c.sashExtra || 0) + mullionCount * (c.mullionExtra || 0));
+    const diff = compPrice - myClientPrice;
+    const diffPct = Math.round(diff / myClientPrice * 100);
+    const cls = diff > 0 ? 'expensive' : 'cheaper';
+    const sign = diff > 0 ? '+' : '';
+
+    html += `<div class="comp-row">
+      <span class="comp-name" title="${c.note || ''}">${c.name}</span>
+      <span class="comp-price ${cls}">${compPrice.toLocaleString()} ₽</span>
+      <span class="comp-diff">${sign}${diffPct}%</span>
+    </div>`;
+  });
+
+  // Дата обновления
+  const savedDate = localStorage.getItem('okna_competitors_date');
+  if (savedDate) {
+    html += `<div style="font-size:10px;color:#aaa;margin-top:4px">Обновлено: ${savedDate}</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function runCompetitorParse() {
+  alert('Запусти в терминале:\\nnode parse-competitors.mjs\\n\\nПосле завершения нажми "Загрузить JSON" ниже.');
+  // Добавляем кнопку загрузки файла если ещё нет
+  if (!document.getElementById('compFileInput')) {
+    const div = document.getElementById('competitorEdit');
+    const fileHtml = '<div style="margin-top:6px"><input type="file" id="compFileInput" accept=".json" onchange="loadCompetitorFile(this)" style="font-size:11px"></div>';
+    div.insertAdjacentHTML('beforeend', fileHtml);
+  }
+}
+
+function loadCompetitorFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.competitors) throw new Error('Нет данных конкурентов');
+
+      const competitors = getCompetitorData();
+      let updated = 0;
+
+      // Обновляем цены из О-КНО (profiles с pricePerM2)
+      const okno = data.competitors.find(c => c.name === 'О-КНО');
+      if (okno && okno.profiles && okno.profiles.length > 0) {
+        const profileMap = {};
+        okno.profiles.forEach(p => {
+          const key = p.profile.toLowerCase();
+          profileMap[key] = p.pricePerM2;
+        });
+        competitors.forEach(c => {
+          if (!c.id.startsWith('okno_')) return;
+          // Ищем совпадение по имени
+          for (const [key, price] of Object.entries(profileMap)) {
+            if (c.name.toLowerCase().includes(key.split(' ')[0].toLowerCase()) &&
+                c.name.toLowerCase().includes(key.split(' ').pop().toLowerCase())) {
+              c.pricePerM2 = price;
+              updated++;
+              break;
+            }
+          }
+        });
+      }
+
+      if (data.date) localStorage.setItem('okna_competitors_date', data.date);
+      localStorage.setItem('okna_competitors', JSON.stringify(competitors));
+      alert('Обновлено ' + updated + ' цен (' + (data.date || 'без даты') + ')');
+      const est = estimatePrice(designer1);
+      if (est) showCompetitorComparison(designer1, est);
+      buildCompetitorInputs();
+    } catch (err) {
+      alert('Ошибка загрузки: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
 function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')||'{}');if(s.markupType)document.getElementById('markupType').value=s.markupType;if(s.markupValue!==undefined)document.getElementById('markupValue').value=s.markupValue;}
 
 // ========== RESET ==========
@@ -1490,6 +1760,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   drawPreview();
   loadSettings(); loadComponentPrices();
   loadSheetPrices();
+  loadSheetCompetitors();
   // Auto-save component prices on any input change
   document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
 });
