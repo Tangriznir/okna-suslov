@@ -42,6 +42,7 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
 .control-section{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #eee}
 .control-section:last-child{border-bottom:none}
 .control-section h3{font-size:14px;margin-bottom:10px;color:#333}
+input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{border-color:#E8521A!important;box-shadow:0 0 0 2px #E8521A40}
 .form-row{margin-bottom:8px}
 .form-row label{display:block;font-size:11px;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
 .form-row select,.form-row input[type="number"]{width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
@@ -232,6 +233,24 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
       <div id="mosquitoSection" class="control-section" style="display:none">
         <h3>Москитная сетка</h3>
         <div class="form-row"><select id="cMosquito" onchange="drawPreview()"><option value="0">Нет</option></select></div>
+      </div>
+      <div id="blindsSection" class="control-section" style="display:none">
+        <h3>Жалюзи горизонтальные</h3>
+        <div class="form-row"><select id="cBlinds" onchange="drawPreview()"><option value="0">Нет</option></select></div>
+        <div id="blindsColorRow" style="display:none;margin-top:6px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="blindsColors">
+            <label style="cursor:pointer" title="Белый"><input type="radio" name="blindColor" value="#ffffff" checked style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#ffffff;border:2px solid #ccc;transition:all .2s"></span></label>
+          </div>
+        </div>
+      </div>
+      <div id="rollSection" class="control-section" style="display:none">
+        <h3>Рулонные шторы</h3>
+        <div class="form-row"><select id="cRolls" onchange="drawPreview()"><option value="0">Нет</option></select></div>
+        <div id="rollsColorRow" style="display:none;margin-top:6px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="rollsColors">
+            <label style="cursor:pointer" title="Белый"><input type="radio" name="rollColor" value="#ffffff" checked style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#ffffff;border:2px solid #ccc;transition:all .2s"></span></label>
+          </div>
+        </div>
       </div>
       <div class="control-section">
         <h3>Работы</h3>
@@ -1042,6 +1061,32 @@ function buildTypeCards(){
     selectedSashes=0;
   }
   updateMosquitoSelector();
+  updateBlindsSelector();
+}
+function updateBlindsSelector(){
+  const t=WIN_TYPES.find(x=>x.id===selectedType);
+  // Для балкона: parts оконных + 1 дверь
+  const maxParts=t?(selectedType==='balcony'?t.parts+1:t.parts):1;
+  // Жалюзи
+  const bSec=document.getElementById('blindsSection');
+  const bSel=document.getElementById('cBlinds');
+  const bColor=document.getElementById('blindsColorRow');
+  bSec.style.display='';
+  const bCur=parseInt(bSel.value)||0;
+  bSel.innerHTML='<option value="0">Нет</option>';
+  for(let i=1;i<=maxParts;i++) bSel.innerHTML+=`<option value="${i}">${i} шт.</option>`;
+  bSel.value=Math.min(bCur,maxParts);
+  bColor.style.display=parseInt(bSel.value)>0?'':'none';
+  // Рулонные шторы
+  const rSec=document.getElementById('rollSection');
+  const rSel=document.getElementById('cRolls');
+  const rColor=document.getElementById('rollsColorRow');
+  rSec.style.display='';
+  const rCur=parseInt(rSel.value)||0;
+  rSel.innerHTML='<option value="0">Нет</option>';
+  for(let i=1;i<=maxParts;i++) rSel.innerHTML+=`<option value="${i}">${i} шт.</option>`;
+  rSel.value=Math.min(rCur,maxParts);
+  rColor.style.display=parseInt(rSel.value)>0?'':'none';
 }
 function updateMosquitoSelector(){
   const t=WIN_TYPES.find(x=>x.id===selectedType);
@@ -1121,6 +1166,37 @@ function svgMosquito(x,y,w,h){
   let s=`<g stroke="#888" stroke-width="0.3" opacity="0.25">`;
   for(let i=sp;i<w;i+=sp) s+=`<line x1="${x+i}" y1="${y}" x2="${x+i}" y2="${y+h}"/>`;
   for(let i=sp;i<h;i+=sp) s+=`<line x1="${x}" y1="${y+i}" x2="${x+w}" y2="${y+i}"/>`;
+  s+=`</g>`;
+  return s;
+}
+function svgBlinds(x,y,w,h,color){
+  // Горизонтальные жалюзи — ламели
+  const slat=3.5, gap=1.2; // высота ламели и зазор
+  const step=slat+gap;
+  const fill=color||'#ffffff';
+  const stroke=fill==='#ffffff'?'#d0d0d0':'#00000030';
+  let s=`<g opacity="0.85">`;
+  // Верхний карниз
+  s+=`<rect x="${x+1}" y="${y+1}" width="${w-2}" height="${4}" rx="1" fill="#c8c8c8" stroke="#aaa" stroke-width="0.3"/>`;
+  // Ламели
+  for(let py=y+6;py+slat<y+h;py+=step){
+    s+=`<rect x="${x+2}" y="${py}" width="${w-4}" height="${slat}" rx="0.5" fill="${fill}" stroke="${stroke}" stroke-width="0.3"/>`;
+  }
+  s+=`</g>`;
+  return s;
+}
+function svgRollerShade(x,y,w,h,color){
+  // Рулонная штора — полотно сверху ~80% высоты
+  const fill=color||'#ffffff';
+  const shadeH=h*0.8;
+  const stroke=fill==='#ffffff'?'#d0d0d0':'#00000020';
+  let s=`<g opacity="0.7">`;
+  // Кассета сверху
+  s+=`<rect x="${x+1}" y="${y+1}" width="${w-2}" height="${5}" rx="1.5" fill="#b0b0b0" stroke="#999" stroke-width="0.3"/>`;
+  // Полотно
+  s+=`<rect x="${x+2}" y="${y+6}" width="${w-4}" height="${shadeH-6}" rx="0" fill="${fill}" stroke="${stroke}" stroke-width="0.3"/>`;
+  // Нижняя планка
+  s+=`<rect x="${x+2}" y="${y+shadeH}" width="${w-4}" height="${2.5}" rx="0.5" fill="#b0b0b0" stroke="#999" stroke-width="0.3"/>`;
   s+=`</g>`;
   return s;
 }
@@ -1228,6 +1304,34 @@ function drawPreview(){
         }
       }
     }
+    // Жалюзи на балконный блок (дверь + оконные части)
+    const bBlinds=parseInt(document.getElementById('cBlinds').value)||0;
+    if(bBlinds>0){
+      const bColor=document.querySelector('input[name="blindColor"]:checked');
+      const bc=bColor?bColor.value:'#ffffff';
+      let bDrawn=0;
+      // Сначала дверь
+      if(bDrawn<bBlinds){svg+=svgBlinds(fw,fw,dwPx-2*fw,dhPx-2*fw,bc);bDrawn++;}
+      // Потом оконные части
+      for(let i=0;i<parts&&bDrawn<bBlinds;i++){
+        const px=wx0+fw+i*(paneW+mw);
+        svg+=svgBlinds(px,fw,paneW,innerH,bc);
+        bDrawn++;
+      }
+    }
+    // Рулонные шторы на балконный блок
+    const bRolls=parseInt(document.getElementById('cRolls').value)||0;
+    if(bRolls>0){
+      const rColor=document.querySelector('input[name="rollColor"]:checked');
+      const rc=rColor?rColor.value:'#ffffff';
+      let rDrawn=0;
+      if(rDrawn<bRolls){svg+=svgRollerShade(fw,fw,dwPx-2*fw,dhPx-2*fw,rc);rDrawn++;}
+      for(let i=0;i<parts&&rDrawn<bRolls;i++){
+        const px=wx0+fw+i*(paneW+mw);
+        svg+=svgRollerShade(px,fw,paneW,innerH,rc);
+        rDrawn++;
+      }
+    }
     // Dimensions
     svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
     svg+=`<text x="${wx0+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
@@ -1266,6 +1370,24 @@ function drawPreview(){
           svg+=svgMosquito(fw+i*(paneW+mw),fw,paneW,innerH);
           drawn++;
         }
+      }
+    }
+    // Жалюзи горизонтальные
+    const blindsCount=parseInt(document.getElementById('cBlinds').value)||0;
+    if(blindsCount>0){
+      const bColor=document.querySelector('input[name="blindColor"]:checked');
+      const bc=bColor?bColor.value:'#ffffff';
+      for(let i=0;i<Math.min(blindsCount,parts);i++){
+        svg+=svgBlinds(fw+i*(paneW+mw),fw,paneW,innerH,bc);
+      }
+    }
+    // Рулонные шторы
+    const rollsCount=parseInt(document.getElementById('cRolls').value)||0;
+    if(rollsCount>0){
+      const rColor=document.querySelector('input[name="rollColor"]:checked');
+      const rc=rColor?rColor.value:'#ffffff';
+      for(let i=0;i<Math.min(rollsCount,parts);i++){
+        svg+=svgRollerShade(fw+i*(paneW+mw),fw,paneW,innerH,rc);
       }
     }
     // Dimensions outside
@@ -1334,7 +1456,19 @@ function calcClientPrice(){
   const netCost=netCount>0?netCount*(data.mosquito||0):0;
   if(netCost) lines.push({label:'Сетки ×'+netCount,value:netCost});
 
-  let winPrice=basePrice+sashCost+mullionCost+netCost;
+  // Жалюзи горизонтальные (G-form: 1499 + установка 500)
+  const blindsQty=parseInt(document.getElementById('cBlinds').value)||0;
+  const blindPrice=data.blinds_price||1499, blindInstall=data.blinds_install||500;
+  const blindsCost=blindsQty*(blindPrice+blindInstall);
+  if(blindsCost) lines.push({label:'Жалюзи ×'+blindsQty+' ('+blindPrice+'+'+blindInstall+')',value:blindsCost});
+
+  // Рулонные шторы (Integra Slim: 1399 + установка 500)
+  const rollsQty=parseInt(document.getElementById('cRolls').value)||0;
+  const rollPrice=data.rolls_price||1399, rollInstall=data.rolls_install||500;
+  const rollsCost=rollsQty*(rollPrice+rollInstall);
+  if(rollsCost) lines.push({label:'Шторы рулонные ×'+rollsQty+' ('+rollPrice+'+'+rollInstall+')',value:rollsCost});
+
+  let winPrice=basePrice+sashCost+mullionCost+netCost+blindsCost+rollsCost;
 
   // Markup — from Google Sheet or admin settings
   const mT=sheetPrices?'percent':document.getElementById('markupType').value;
@@ -1415,6 +1549,8 @@ function calcClientPrice(){
   if(install)extras.push('установка');
   if(delivery)extras.push('доставка');
   if(netCount>0)extras.push('сетки: '+netCount);
+  if(blindsQty>0)extras.push('жалюзи: '+blindsQty);
+  if(rollsQty>0)extras.push('шторы: '+rollsQty);
   // Get IP and send
   fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
     fetch('https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec',{
@@ -1783,6 +1919,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadSheetCompetitors();
   // Auto-save component prices on any input change
   document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
+  // Перерисовка при смене цвета жалюзи/штор
+  document.addEventListener('change',e=>{
+    if(e.target.name==='blindColor'||e.target.name==='rollColor') drawPreview();
+  });
 });
 </script>
 </body>
