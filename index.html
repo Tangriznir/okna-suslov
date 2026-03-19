@@ -352,8 +352,16 @@
       .profile-category .profiles-grid{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0;margin-top:0}
       .profile-category.cat-open .profiles-grid{max-height:6000px;opacity:1;margin-top:24px}
       .category-header{cursor:pointer;padding:32px 24px}
-      .category-header::after{content:'\25BC';display:block;margin-top:12px;font-size:18px;transition:transform .3s ease;opacity:.4}
-      .cat-open .category-header::after{transform:rotate(180deg)}
+      .category-header::after{display:none}
+      .cat-toggle-btn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 24px;border-radius:24px;font-size:14px;font-weight:600;border:2px solid;transition:all .3s ease}
+      .cat-economy .cat-toggle-btn{background:#e0f2fe;color:#0369a1;border-color:#7dd3fc}
+      .cat-standard .cat-toggle-btn{background:#dcfce7;color:#15803d;border-color:#86efac}
+      .cat-premium .cat-toggle-btn{background:rgba(251,191,36,.15);color:#fbbf24;border-color:rgba(251,191,36,.3)}
+      .cat-toggle-btn .arrow{transition:transform .3s ease;font-size:12px}
+      .cat-open .cat-toggle-btn .arrow{transform:rotate(180deg)}
+      .cat-open .cat-toggle-btn .btn-text-show{display:none}
+      .cat-toggle-btn .btn-text-hide{display:none}
+      .cat-open .cat-toggle-btn .btn-text-hide{display:inline}
       .reviews-grid{grid-template-columns:1fr}
       .contacts-grid{grid-template-columns:1fr}
       .footer-grid{grid-template-columns:1fr}
@@ -655,6 +663,7 @@
         <span class="cat-label">Эконом</span>
         <h3>Доступные решения</h3>
         <p>Для дачи, балкона и бюджетного ремонта. 3-камерный профиль 58-60 мм — проверенная теплоизоляция по лучшей цене</p>
+        <span class="cat-toggle-btn"><span class="btn-text-show">Показать 6 профилей</span><span class="btn-text-hide">Свернуть</span> <span class="arrow">&#9660;</span></span>
       </div>
       <div class="profiles-grid">
         <div class="profile-card popular reveal">
@@ -738,6 +747,7 @@
         <span class="cat-label">Стандарт</span>
         <h3>Оптимальный выбор</h3>
         <p>Для квартиры и загородного дома. 5-камерный профиль 70 мм — тишина и тепло круглый год</p>
+        <span class="cat-toggle-btn"><span class="btn-text-show">Показать 9 профилей</span><span class="btn-text-hide">Свернуть</span> <span class="arrow">&#9660;</span></span>
       </div>
       <div class="profiles-grid">
         <div class="profile-card reveal">
@@ -845,6 +855,7 @@
         <span class="cat-label">Премиум</span>
         <h3>Максимальная эффективность</h3>
         <p>Для тех, кто строит на десятилетия. 6+ камер, широкий профиль — абсолютная тишина и минимальные теплопотери</p>
+        <span class="cat-toggle-btn"><span class="btn-text-show">Показать 3 профиля</span><span class="btn-text-hide">Свернуть</span> <span class="arrow">&#9660;</span></span>
       </div>
       <div class="profiles-grid">
         <div class="profile-card reveal">
