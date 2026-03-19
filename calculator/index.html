@@ -82,6 +82,22 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
 </style>
 </head>
 <body>
+<!-- Баннер REHAU — виден только на сайте -->
+<div id="rehauBanner" style="display:none">
+  <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:32px 24px;text-align:center;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;opacity:.05;background:repeating-linear-gradient(45deg,transparent,transparent 40px,#fff 40px,#fff 41px)"></div>
+    <div style="position:relative;max-width:700px;margin:0 auto">
+      <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#f59e0b;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);padding:4px 16px;border-radius:20px;margin-bottom:12px">Официальный партнёр</div>
+      <div style="font-size:clamp(2rem,5vw,3rem);font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:8px">REHAU</div>
+      <div style="font-size:15px;color:rgba(255,255,255,.6);line-height:1.5;max-width:480px;margin:0 auto 16px">Рассчитайте стоимость окон премиум-класса за 30 секунд. Точная цена без посредников</div>
+      <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,.5)"><span style="color:#22c55e;font-weight:700">&#10003;</span> Гарантия 40 лет</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,.5)"><span style="color:#22c55e;font-weight:700">&#10003;</span> Немецкий профиль</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:rgba(255,255,255,.5)"><span style="color:#22c55e;font-weight:700">&#10003;</span> Монтаж по ГОСТ</div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="app">
   <div class="tabs">
     <button class="tab active" data-tab="training">Обучение</button>
@@ -1450,6 +1466,9 @@ function loadSheetPrices(){
       document.getElementById('tab-training').classList.remove('active');
       document.getElementById('tab-training').style.display='none';
       document.getElementById('tab-calculator').classList.add('active');
+      // Показываем баннер REHAU
+      var banner=document.getElementById('rehauBanner');
+      if(banner) banner.style.display='block';
     }
   }).catch(e=>console.warn('Не удалось загрузить цены из Google Sheets:',e));
 }
