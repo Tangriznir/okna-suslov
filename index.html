@@ -1176,29 +1176,23 @@ document.addEventListener('DOMContentLoaded',function(){
 <script>
 // Аккордеон профилей на мобилке
 (function(){
-  function initAccordion(){
-    var cats=document.querySelectorAll('.profile-category');
-    if(window.innerWidth>768){
-      cats.forEach(function(c){c.classList.add('cat-open')});
-      return;
-    }
-    cats.forEach(function(cat){
-      cat.classList.remove('cat-open');
-      var header=cat.querySelector('.category-header');
-      if(!header.dataset.accordionBound){
-        header.dataset.accordionBound='1';
-        header.addEventListener('click',function(){
-          if(window.innerWidth>768) return;
-          cat.classList.toggle('cat-open');
-        });
-      }
+  var cats=document.querySelectorAll('.profile-category');
+  var wasMobile=window.innerWidth<=768;
+  // На десктопе — всё раскрыто
+  if(!wasMobile) cats.forEach(function(c){c.classList.add('cat-open')});
+  // Привязываем клик один раз
+  cats.forEach(function(cat){
+    cat.querySelector('.category-header').addEventListener('click',function(){
+      if(window.innerWidth>768) return;
+      cat.classList.toggle('cat-open');
     });
-  }
-  initAccordion();
-  var resizeTimer;
+  });
+  // Только при реальном переключении mobile↔desktop
   window.addEventListener('resize',function(){
-    clearTimeout(resizeTimer);
-    resizeTimer=setTimeout(initAccordion,200);
+    var isMobile=window.innerWidth<=768;
+    if(isMobile===wasMobile) return;
+    wasMobile=isMobile;
+    if(!isMobile) cats.forEach(function(c){c.classList.add('cat-open')});
   });
 })();
 </script>
