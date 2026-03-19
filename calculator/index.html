@@ -1453,17 +1453,17 @@ function calcClientPrice(){
   const netCost=netCount>0?netCount*(data.mosquito||0):0;
   if(netCost) lines.push({label:'Сетки ×'+netCount,value:netCost});
 
-  // Жалюзи горизонтальные (G-form: 1499 + установка 500)
+  // Жалюзи горизонтальные (цена с установкой из таблицы, фоллбек 1999)
   const blindsQty=parseInt(document.getElementById('cBlinds').value)||0;
-  const blindPrice=data.blinds_price||1499, blindInstall=data.blinds_install||500;
-  const blindsCost=blindsQty*(blindPrice+blindInstall);
-  if(blindsCost) lines.push({label:'Жалюзи ×'+blindsQty+' ('+blindPrice+'+'+blindInstall+')',value:blindsCost});
+  const blindsFullPrice=data.blinds_price||1999;
+  const blindsCost=blindsQty*blindsFullPrice;
+  if(blindsCost) lines.push({label:'Жалюзи ×'+blindsQty,value:blindsCost});
 
-  // Рулонные шторы (Integra Slim: 1399 + установка 500)
+  // Рулонные шторы (цена с установкой из таблицы, фоллбек 1899)
   const rollsQty=parseInt(document.getElementById('cRolls').value)||0;
-  const rollPrice=data.rolls_price||1399, rollInstall=data.rolls_install||500;
-  const rollsCost=rollsQty*(rollPrice+rollInstall);
-  if(rollsCost) lines.push({label:'Шторы рулонные ×'+rollsQty+' ('+rollPrice+'+'+rollInstall+')',value:rollsCost});
+  const rollsFullPrice=data.rolls_price||1899;
+  const rollsCost=rollsQty*rollsFullPrice;
+  if(rollsCost) lines.push({label:'Шторы рулонные ×'+rollsQty,value:rollsCost});
 
   let winPrice=basePrice+sashCost+mullionCost+netCost+blindsCost+rollsCost;
 
