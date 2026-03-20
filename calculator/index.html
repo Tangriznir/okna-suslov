@@ -271,9 +271,20 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
       <div class="control-section">
         <h3>Отделка</h3>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cSlopes"> Откосы</label>
+          <input type="checkbox" id="cSlopes" onchange="drawPreview()"> Откосы</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cSill"> Подоконник</label>
+          <input type="checkbox" id="cSill" onchange="document.getElementById('sillColorRow').style.display=this.checked?'':'none';drawPreview()"> Подоконник</label>
+        <div id="sillColorRow" style="display:none;margin-left:28px;margin-top:2px">
+          <select id="cSillColor" onchange="drawPreview()" style="font-size:13px">
+            <option value="#ffffff" selected>Белый</option>
+            <option value="#d4a76a">Золотой дуб</option>
+            <option value="#4a3728">Морёный дуб</option>
+            <option value="#3d2b1f">Тёмный дуб</option>
+            <option value="#3a3a3a">Антрацит</option>
+            <option value="#5c3317">Шоколад</option>
+            <option value="#2c2c2c">Чёрный</option>
+          </select>
+        </div>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
           <input type="checkbox" id="cDrip"> Отлив</label>
       </div>
@@ -1308,6 +1319,33 @@ function svgSash(gx,gy,gw,gh,sash,fw){
   return s;
 }
 
+function svgSlopes(x,y,w,h,depth){
+  // Откосы — трапеции сверху, слева, справа (перспектива от стены к раме), всегда белые
+  const fc='#f5f5f0', sc='#c0c0c0';
+  let s='';
+  // Верхний откос
+  s+=`<polygon points="${x-depth},${y-depth} ${x+w+depth},${y-depth} ${x+w},${y} ${x},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Левый откос
+  s+=`<polygon points="${x-depth},${y-depth} ${x},${y} ${x},${y+h} ${x-depth},${y+h+depth}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Правый откос
+  s+=`<polygon points="${x+w+depth},${y-depth} ${x+w+depth},${y+h+depth} ${x+w},${y+h} ${x+w},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Диагональные линии на стыках (тени)
+  s+=`<line x1="${x-depth}" y1="${y-depth}" x2="${x}" y2="${y}" stroke="#ddd" stroke-width="0.5"/>`;
+  s+=`<line x1="${x+w+depth}" y1="${y-depth}" x2="${x+w}" y2="${y}" stroke="#ddd" stroke-width="0.5"/>`;
+  s+=`<line x1="${x-depth}" y1="${y+h+depth}" x2="${x}" y2="${y+h}" stroke="#ddd" stroke-width="0.5"/>`;
+  s+=`<line x1="${x+w+depth}" y1="${y+h+depth}" x2="${x+w}" y2="${y+h}" stroke="#ddd" stroke-width="0.5"/>`;
+  return s;
+}
+function svgSill(x,y,w,depth,color){
+  // Подоконник — снизу окна, толще откосов, с небольшим выступом вперёд
+  const fc=color||'#ffffff', sc='#b0b0b0';
+  const overhang=depth*0.3; // выступ за пределы откосов
+  let s='';
+  s+=`<polygon points="${x-depth-overhang},${y+depth} ${x+w+depth+overhang},${y+depth} ${x+w},${y} ${x},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.7"/>`;
+  // Торец подоконника (передняя кромка)
+  s+=`<rect x="${x-depth-overhang}" y="${y+depth}" width="${w+2*depth+2*overhang}" height="${3}" rx="0.5" fill="${darken(fc,15)}" stroke="${sc}" stroke-width="0.5"/>`;
+  return s;
+}
 function drawPreview(){
   const el=document.getElementById('winPreview');
   const type=selectedType;
@@ -1326,7 +1364,19 @@ function drawPreview(){
     const wwPx=Math.round(wW*sc), whPx=Math.round(wH*sc);
     const sw=dwPx+wwPx, sh=dhPx;
     const bsl=getBalconySashLayout(selectedSashes, tp.parts);
-    let svg=`<svg width="${sw+60}" height="${sh+40}" viewBox="-30 -5 ${sw+60} ${sh+40}">`;
+    const showSlopes=document.getElementById('cSlopes').checked;
+    const showSill=document.getElementById('cSill').checked;
+    const slopeD=14, sillD=slopeD*3;
+    const pad=Math.max(showSlopes?slopeD+4:0, showSill?sillD+8:0);
+    const padTop=showSlopes?slopeD+4:0;
+    const padBot=showSill?sillD+12:0;
+    let svg=`<svg width="${sw+60+pad*2}" height="${sh+40+padTop+padBot}" viewBox="${-30-pad} ${-5-padTop} ${sw+60+pad*2} ${sh+40+padTop+padBot}">`;
+    // Откосы и подоконник для балкона
+    if(showSlopes) svg+=svgSlopes(0,0,sw+mw,sh,slopeD);
+    if(showSill){
+      const sillColor=document.getElementById('cSillColor').value||'#ffffff';
+      svg+=svgSill(0,sh,sw+mw,sillD,sillColor);
+    }
     // Door frame
     svg+=svgFrame(0,0,dwPx,dhPx,fw);
     const dGx=fw, dGy=fw, dGw=dwPx-2*fw, dGh=dhPx-2*fw;
@@ -1402,7 +1452,19 @@ function drawPreview(){
     const sw=Math.round(w*sc), sh=Math.round(h*sc);
     const parts=tp.parts;
     const sashes=getSashLayout(type,selectedSashes,parts);
-    let svg=`<svg width="${sw+60}" height="${sh+30}" viewBox="-30 -5 ${sw+60} ${sh+30}">`;
+    const showSlopes=document.getElementById('cSlopes').checked;
+    const showSill=document.getElementById('cSill').checked;
+    const slopeD=14, sillD=slopeD*3; // глубина откосов и подоконника
+    const pad=Math.max(showSlopes?slopeD+4:0, showSill?sillD+8:0);
+    const padTop=showSlopes?slopeD+4:0;
+    const padBot=showSill?sillD+12:0;
+    let svg=`<svg width="${sw+60+pad*2}" height="${sh+30+padTop+padBot}" viewBox="${-30-pad} ${-5-padTop} ${sw+60+pad*2} ${sh+30+padTop+padBot}">`;
+    // Откосы и подоконник — рисуем ДО окна (фон)
+    if(showSlopes) svg+=svgSlopes(0,0,sw,sh,slopeD);
+    if(showSill){
+      const sillColor=document.getElementById('cSillColor').value||'#ffffff';
+      svg+=svgSill(0,sh,sw,sillD,sillColor);
+    }
     // Outer frame
     svg+=svgFrame(0,0,sw,sh,fw);
     // Inner panes: glass → mullions → sashes on top
