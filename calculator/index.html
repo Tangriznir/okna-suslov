@@ -326,7 +326,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="rollsColors">
             <label style="cursor:pointer" title="Белый"><input type="radio" name="rollColor" value="white" data-color="#ffffff" checked style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#ffffff;border:2px solid #ccc;transition:all .2s"></span></label>
             <label style="cursor:pointer" title="Блюз 29 (бежевый)"><input type="radio" name="rollColor" value="blues29" data-color="#c4a882" style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#c4a882;border:2px solid #ccc;transition:all .2s"></span></label>
-            <label style="cursor:pointer" title="Атлантик 88 (блэкаут)"><input type="radio" name="rollColor" value="atlantic88" data-color="#9eaeb8" data-blackout="1" style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#9eaeb8;border:2px solid #ccc;transition:all .2s"></span></label>
+            <label style="cursor:pointer" title="Атлантик 88 (блэкаут)"><input type="radio" name="rollColor" value="atlantic_bo_88" data-color="#9eaeb8" data-blackout="1" style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#9eaeb8;border:2px solid #ccc;transition:all .2s"></span></label>
           </div>
         </div>
       </div>
@@ -1314,6 +1314,12 @@ function svgRollerShade(x,y,w,h,color,blackout){
   s+=`<rect x="${x+1}" y="${y+1}" width="${w-2}" height="${5}" rx="1.5" fill="#b0b0b0" stroke="#999" stroke-width="0.3"/>`;
   // Полотно
   s+=`<rect x="${x+2}" y="${y+6}" width="${w-4}" height="${shadeH-6}" rx="0" fill="${fill}" stroke="${stroke}" stroke-width="0.3"/>`;
+  // Надпись BLACKOUT по центру полотна
+  if(blackout){
+    const cx=x+w/2, cy=y+6+(shadeH-6)/2;
+    const fs=Math.min(w*0.18,shadeH*0.12,14);
+    s+=`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="Arial,sans-serif" font-size="${fs}" font-weight="bold" fill="#fff" opacity="0.45" letter-spacing="2">BLACKOUT</text>`;
+  }
   // Нижняя планка
   s+=`<rect x="${x+2}" y="${y+shadeH}" width="${w-4}" height="${2.5}" rx="0.5" fill="#b0b0b0" stroke="#999" stroke-width="0.3"/>`;
   s+=`</g>`;
