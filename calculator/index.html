@@ -1267,7 +1267,7 @@ function svgSash(gx,gy,gw,gh,sash,fw){
   const sf=5, ov=2; // sash frame width, overlap onto main frame
   const sx=gx-ov, sy=gy-ov, sw=gw+2*ov, sh=gh+2*ov;
   const lam=getLamColor();
-  const fc=lam.inner, sc=darken(fc,40), mc=darken(fc,20);
+  const fc=lam.outer, sc=darken(fc,40), mc=darken(fc,20);
   // Sash frame — 4 trapezoids with mitered corners (like svgFrame)
   s+=`<polygon points="${sx},${sy} ${sx+sw},${sy} ${sx+sw-sf},${sy+sf} ${sx+sf},${sy+sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
   s+=`<polygon points="${sx+sw},${sy} ${sx+sw},${sy+sh} ${sx+sw-sf},${sy+sh-sf} ${sx+sw-sf},${sy+sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
