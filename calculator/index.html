@@ -1545,6 +1545,11 @@ function drawPreview(){
         svg+=svgRollerShade(p.x,p.y,p.w,p.h,rc);
       }
     }
+    // Линия пола под дверью
+    const floorY=dhPx+(showSlopes?slopeD:0)+3;
+    const vbX2=-30-wallPad, vbW2=sw+60+wallPad*2;
+    svg+=`<line x1="${vbX2}" y1="${floorY}" x2="${vbX2+vbW2}" y2="${floorY}" stroke="#b0a898" stroke-width="1.5"/>`;
+    svg+=`<line x1="${vbX2}" y1="${floorY+1}" x2="${vbX2+vbW2}" y2="${floorY+1}" stroke="#c8c0b4" stroke-width="0.5"/>`;
     // Dimensions
     svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
     svg+=`<text x="${wx0+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
