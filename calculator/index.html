@@ -303,7 +303,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
           </select>
         </div>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cDrip"> Отлив</label>
+          <input type="checkbox" id="cDrip" onchange="drawPreview()"> Отлив</label>
       </div>
       <div id="mosquitoSection" class="control-section" style="display:none">
         <h3>Москитная сетка</h3>
@@ -330,15 +330,15 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
       <div class="control-section">
         <h3>Работы</h3>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cInstall"> Установка</label>
+          <input type="checkbox" id="cInstall" onchange="drawPreview()"> Установка</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cDelivery"> Доставка</label>
+          <input type="checkbox" id="cDelivery" onchange="drawPreview()"> Доставка</label>
       </div>
-      <button class="btn btn-block" onclick="calcClientPrice()" style="background:#E8521A;color:#fff;font-size:16px;padding:14px 16px;margin:12px 0">Рассчитать стоимость</button>
-      <div id="clientResult" class="price-display" style="display:none">
+      <div id="clientResult" class="price-display">
         <div class="final" id="clientTotal">—</div>
         <div class="breakdown" id="clientBreakdown"></div>
       </div>
+      <button class="btn btn-block" id="orderBtn" onclick="showOrderForm()" style="background:#E8521A;color:#fff;font-size:16px;padding:14px 16px;margin:12px 0;display:none">Оставить заявку</button>
     </div>
   </div>
 </div>
@@ -1423,7 +1423,7 @@ function drawPreview(){
     const showSill=document.getElementById('cSill').checked;
     const slopeD=7, sillD=slopeD*2;
     const wallPad=20;
-    const padBot=showSill?sillD+12:wallPad;
+    const padBot=showSlopes?slopeD+12:wallPad;
     let svg=`<svg width="${sw+60+wallPad*2}" height="${sh+40+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${sw+60+wallPad*2} ${sh+40+wallPad+padBot}">`;
     // Стена — фон с освещением от окна
     const wallColor=document.getElementById('cWallColor').value||'#f5f0e8';
@@ -1435,13 +1435,47 @@ function drawPreview(){
       <stop offset="100%" stop-color="#000000" stop-opacity="0.08"/>
     </radialGradient></defs>`;
     svg+=`<rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" fill="url(#winLight)"/>`;
-    // Откосы и подоконник для балкона
-    if(showSlopes) svg+=svgSlopes(0,0,sw+mw,sh,slopeD);
-    if(showSill){
-      const sillColor=document.getElementById('cSillColor').value||'#ffffff';
-      svg+=svgSill(0,sh,sw+mw,sillD,sillColor);
-      svg+=`<defs><linearGradient id="sillShadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0.15"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></linearGradient></defs>`;
-      svg+=`<rect x="${-sillD-2}" y="${sh+sillD+6}" width="${sw+mw+2*sillD+4}" height="${15}" fill="url(#sillShadow)"/>`;
+    // Откосы и подоконник для балкона (кастомная отрисовка)
+    if(showSlopes||showSill){
+      const d=slopeD, fc='#f5f5f0', sc='#c0c0c0', fp=3, ffc='#ffffff', fsc='#b0b0b0';
+      const fullW=sw+mw;
+      svg+=`<defs>
+        <filter id="shSlope" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="1" dy="1" stdDeviation="2" flood-color="#00000025"/></filter>
+        <filter id="shFrame" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#00000030"/></filter>
+        <filter id="shSill" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000035"/></filter>
+        <linearGradient id="shTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0.08"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+        <linearGradient id="shLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0.06"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+        <linearGradient id="shRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0.06"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+      </defs>`;
+      if(showSlopes){
+        svg+=`<g filter="url(#shSlope)">`;
+        // Верхний откос — на всю ширину
+        svg+=`<polygon points="${-d},${-d} ${fullW+d},${-d} ${fullW},0 0,0" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Левый откос — на всю высоту двери
+        svg+=`<polygon points="${-d},${-d} 0,0 0,${dhPx} ${-d},${dhPx+d}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Правый откос — только до высоты окна (до подоконника)
+        svg+=`<polygon points="${fullW+d},${-d} ${fullW+d},${whPx} ${fullW},${whPx} ${fullW},0" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Нижняя панель двери (декоративная, как откос)
+        svg+=`<polygon points="${-d},${dhPx+d} ${dwPx+Math.floor(mw/2)},${dhPx+d} ${dwPx+Math.floor(mw/2)},${dhPx} 0,${dhPx}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        svg+=`</g>`;
+        // Внутренние тени на откосах
+        svg+=`<polygon points="${-d},${-d} ${fullW+d},${-d} ${fullW},0 0,0" fill="url(#shTop)"/>`;
+        svg+=`<polygon points="${-d},${-d} 0,0 0,${dhPx} ${-d},${dhPx+d}" fill="url(#shLeft)"/>`;
+        svg+=`<polygon points="${fullW+d},${-d} ${fullW+d},${whPx} ${fullW},${whPx} ${fullW},0" fill="url(#shRight)"/>`;
+        // F-профиль: верх, лево (до низа двери), право (до окна), низ двери
+        svg+=`<rect x="${-d-fp}" y="${-d-fp}" width="${fullW+2*d+2*fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<rect x="${-d-fp}" y="${-d-fp}" width="${fp}" height="${dhPx+2*d+2*fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<rect x="${fullW+d}" y="${-d-fp}" width="${fp}" height="${whPx+d+fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<rect x="${-d-fp}" y="${dhPx+d}" width="${dwPx+Math.floor(mw/2)+d+fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+      }
+      if(showSill){
+        // Подоконник только под окном
+        const sillColor=document.getElementById('cSillColor').value||'#ffffff';
+        const sillX=dwPx+mw-2;
+        svg+=svgSill(sillX,whPx,wwPx,sillD,sillColor);
+        svg+=`<defs><linearGradient id="sillShadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0.15"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></linearGradient></defs>`;
+        svg+=`<rect x="${sillX-sillD-2}" y="${whPx+sillD+6}" width="${wwPx+2*sillD+4}" height="${15}" fill="url(#sillShadow)"/>`;
+      }
     }
     // Door frame
     svg+=svgFrame(0,0,dwPx,dhPx,fw);
@@ -1596,6 +1630,7 @@ function drawPreview(){
     svg+='</svg>';
     el.innerHTML=svg;
   }
+  calcClientPrice();
 }
 
 function calcClientPrice(){
@@ -1633,6 +1668,7 @@ function calcClientPrice(){
   if(!basePm2){
     document.getElementById('clientResult').style.display='';
     document.getElementById('clientTotal').textContent='Цена не задана';
+    document.getElementById('orderBtn').style.display='none';
     document.getElementById('clientBreakdown').innerHTML='<div>Заполните цены во вкладке "Обучение"</div>';
     return;
   }
@@ -1668,7 +1704,26 @@ function calcClientPrice(){
   const rollsCost=rollsQty*rollsFullPrice;
   if(rollsCost) lines.push({label:'Шторы рулонные ×'+rollsQty,value:rollsCost});
 
-  let winPrice=basePrice+sashCost+mullionCost+netCost;
+  // Ламинация — % наценка на базу, импост, створку
+  const lam=getLamColor();
+  const lamOuter=lam.outer!=='#f0f0ec';
+  const lamInner=lam.inner!=='#f0f0ec';
+  const lamSides=lamOuter&&lamInner?2:(lamOuter||lamInner?1:0);
+  let lamCost=0;
+  if(lamSides>0){
+    const pfx=lamSides===2?'lam_two_':'lam_one_';
+    const basePct=data[pfx+'base_pct']||0;
+    const mullPct=data[pfx+'mullion_pct']||0;
+    const sashPct=data[pfx+'sash_pct']||0;
+    const lamBase=Math.round(basePrice*basePct/100);
+    const lamMull=Math.round(mullionCost*mullPct/100);
+    const lamSash=Math.round(sashCost*sashPct/100);
+    lamCost=lamBase+lamMull+lamSash;
+    const lamLabel=lamSides===2?'Ламинация двуст.':'Ламинация одност.';
+    if(lamCost) lines.push({label:lamLabel,value:lamCost});
+  }
+
+  let winPrice=basePrice+sashCost+mullionCost+netCost+lamCost;
 
   // Markup — from Google Sheet or admin settings (НЕ на жалюзи/шторы — они уже с наценкой)
   const mT=sheetPrices?'percent':document.getElementById('markupType').value;
@@ -1731,7 +1786,8 @@ function calcClientPrice(){
   const res=document.getElementById('clientResult');
   res.style.display='';
   document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
-  document.getElementById('clientBreakdown').innerHTML='<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, для точной цены необходим замер</div>';
+  document.getElementById('clientBreakdown').innerHTML=lines.map(l=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:#666">'+l.label+'</span><span>'+l.value.toLocaleString()+' ₽</span></div>').join('')+'<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, точная — после замера</div>';
+  document.getElementById('orderBtn').style.display='';
   // Debug in console (F12)
   console.table(lines);
   console.log('Итого:',total,'Прибыль:',profit);
@@ -1754,6 +1810,8 @@ function calcClientPrice(){
   if(netCount>0)extras.push('сетки: '+netCount);
   if(blindsQty>0)extras.push('жалюзи: '+blindsQty);
   if(rollsQty>0)extras.push('шторы: '+rollsQty);
+  if(lamSides===1)extras.push('ламинация одност.');
+  if(lamSides===2)extras.push('ламинация двуст.');
   // Get IP and send
   fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
     fetch('https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec',{
@@ -2076,6 +2134,26 @@ function loadCompetitorFile(input) {
   reader.readAsText(file);
 }
 
+function showOrderForm(){
+  const total=document.getElementById('clientTotal').textContent;
+  const html='<div style="position:fixed;inset:0;background:#00000060;z-index:9999;display:flex;align-items:center;justify-content:center" id="orderModal" onclick="if(event.target===this)this.remove()"><div style="background:#fff;border-radius:16px;padding:32px;max-width:400px;width:90%;box-shadow:0 20px 60px #00000030"><h3 style="margin:0 0 8px;font-size:20px">Оставить заявку</h3><p style="color:#666;font-size:14px;margin:0 0 20px">Ориентировочная стоимость: <b>'+total+'</b></p><input type="text" id="orderName" placeholder="Ваше имя" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:10px;box-sizing:border-box"><input type="tel" id="orderPhone" placeholder="Телефон" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:16px;box-sizing:border-box"><button onclick="submitOrder()" style="width:100%;padding:12px;background:#E8521A;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer">Отправить</button></div></div>';
+  document.body.insertAdjacentHTML('beforeend',html);
+  document.getElementById('orderPhone').focus();
+}
+function submitOrder(){
+  const name=document.getElementById('orderName').value.trim();
+  const phone=document.getElementById('orderPhone').value.trim();
+  if(!phone){document.getElementById('orderPhone').style.borderColor='#e53935';return;}
+  const total=document.getElementById('clientTotal').textContent;
+  const btn=document.querySelector('#orderModal button');
+  btn.textContent='Отправка...';btn.disabled=true;
+  // Отправка через существующий webhook
+  const url='https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec';
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip:'order',name:name,phone:phone,total:total,type:selectedType,timestamp:new Date().toISOString()})}).then(()=>{
+    document.getElementById('orderModal').innerHTML='<div style="background:#fff;border-radius:16px;padding:40px;text-align:center;max-width:400px;width:90%"><div style="font-size:48px;margin-bottom:12px">✓</div><h3 style="margin:0 0 8px">Заявка отправлена!</h3><p style="color:#666;font-size:14px;margin:0">Мы перезвоним в ближайшее время</p></div>';
+    setTimeout(()=>{const m=document.getElementById('orderModal');if(m)m.remove();},3000);
+  }).catch(()=>{btn.textContent='Ошибка, попробуйте позвонить';btn.style.background='#999';});
+}
 function loadSettings(){const s=JSON.parse(localStorage.getItem('okna_settings')||'{}');if(s.markupType)document.getElementById('markupType').value=s.markupType;if(s.markupValue!==undefined)document.getElementById('markupValue').value=s.markupValue;}
 
 // ========== RESET ==========
