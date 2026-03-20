@@ -1432,6 +1432,8 @@ function drawPreview(){
   if(warns.length){
     dw.style.display='';
     dw.textContent='Превышены габариты ('+warns.join(', ')+'), для уточнения возможности изготовления свяжитесь с нами';
+    calcClientPrice();
+    return;
   }else{dw.style.display='none';}
   const fw=8, mw=6; // frame width, mullion width in px
 
