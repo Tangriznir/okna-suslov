@@ -214,6 +214,23 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
       </div>
       <select id="cProfile" style="display:none"><option value="Brusbox 60" selected>Brusbox 60</option></select>
       <div class="control-section">
+        <h3>Цвет стены</h3>
+        <div class="form-row"><select id="cWallColor" onchange="drawPreview()">
+          <option value="#f5f0e8">Слоновая кость</option>
+          <option value="#faf6f0">Белый жемчуг</option>
+          <option value="#f0ece4">Кремовый</option>
+          <option value="#e8e4d8">Тёплый бежевый</option>
+          <option value="#d6cfc4">Капучино</option>
+          <option value="#e0ddd6">Пепельный</option>
+          <option value="#dce4dc">Мятный</option>
+          <option value="#d8dce8">Лавандовый</option>
+          <option value="#dce8e8">Голубой лёд</option>
+          <option value="#e8e0d0">Песочный</option>
+          <option value="#f0e0d0">Персиковый</option>
+          <option value="#e0d8c8">Льняной</option>
+        </select></div>
+      </div>
+      <div class="control-section">
         <h3>Ламинация профиля</h3>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:120px">
@@ -1374,10 +1391,12 @@ function drawPreview(){
     const showSlopes=document.getElementById('cSlopes').checked;
     const showSill=document.getElementById('cSill').checked;
     const slopeD=7, sillD=slopeD*2;
-    const pad=Math.max(showSlopes?slopeD+4:0, showSill?sillD+8:0);
-    const padTop=showSlopes?slopeD+4:0;
-    const padBot=showSill?sillD+12:0;
-    let svg=`<svg width="${sw+60+pad*2}" height="${sh+40+padTop+padBot}" viewBox="${-30-pad} ${-5-padTop} ${sw+60+pad*2} ${sh+40+padTop+padBot}">`;
+    const wallPad=20;
+    const padBot=showSill?sillD+12:wallPad;
+    let svg=`<svg width="${sw+60+wallPad*2}" height="${sh+40+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${sw+60+wallPad*2} ${sh+40+wallPad+padBot}">`;
+    // Стена — фон
+    const wallColor=document.getElementById('cWallColor').value||'#f5f0e8';
+    svg+=`<rect x="${-30-wallPad}" y="${-5-wallPad}" width="${sw+60+wallPad*2}" height="${sh+40+wallPad+padBot}" fill="${wallColor}"/>`;
     // Откосы и подоконник для балкона
     if(showSlopes) svg+=svgSlopes(0,0,sw+mw,sh,slopeD);
     if(showSill){
@@ -1461,12 +1480,14 @@ function drawPreview(){
     const sashes=getSashLayout(type,selectedSashes,parts);
     const showSlopes=document.getElementById('cSlopes').checked;
     const showSill=document.getElementById('cSill').checked;
-    const slopeD=7, sillD=slopeD*2; // глубина откосов и подоконника
-    const pad=Math.max(showSlopes?slopeD+4:0, showSill?sillD+8:0);
-    const padTop=showSlopes?slopeD+4:0;
-    const padBot=showSill?sillD+12:0;
-    let svg=`<svg width="${sw+60+pad*2}" height="${sh+30+padTop+padBot}" viewBox="${-30-pad} ${-5-padTop} ${sw+60+pad*2} ${sh+30+padTop+padBot}">`;
-    // Откосы и подоконник — рисуем ДО окна (фон)
+    const slopeD=7, sillD=slopeD*2;
+    const wallPad=20; // стена вокруг окна
+    const padBot=showSill?sillD+12:wallPad;
+    let svg=`<svg width="${sw+60+wallPad*2}" height="${sh+30+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${sw+60+wallPad*2} ${sh+30+wallPad+padBot}">`;
+    // Стена — фон
+    const wallColor=document.getElementById('cWallColor').value||'#f5f0e8';
+    svg+=`<rect x="${-30-wallPad}" y="${-5-wallPad}" width="${sw+60+wallPad*2}" height="${sh+30+wallPad+padBot}" fill="${wallColor}"/>`;
+    // Откосы и подоконник — поверх стены
     if(showSlopes) svg+=svgSlopes(0,0,sw,sh,slopeD);
     if(showSill){
       const sillColor=document.getElementById('cSillColor').value||'#ffffff';
