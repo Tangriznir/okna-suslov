@@ -295,12 +295,10 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
         <div id="sillColorRow" style="display:none;margin-left:28px;margin-top:2px">
           <select id="cSillColor" onchange="drawPreview()" style="font-size:13px">
             <option value="#ffffff" selected>Белый</option>
-            <option value="#d4a76a">Золотой дуб</option>
-            <option value="#4a3728">Морёный дуб</option>
-            <option value="#3d2b1f">Тёмный дуб</option>
-            <option value="#3a3a3a">Антрацит</option>
-            <option value="#5c3317">Шоколад</option>
-            <option value="#2c2c2c">Чёрный</option>
+            <option value="#d4c4a0">Бежевый</option>
+            <option value="#b8860b">Дуб</option>
+            <option value="#808080">Серый</option>
+            <option value="#5c3a1e">Орех</option>
           </select>
         </div>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
@@ -1820,7 +1818,9 @@ function calcClientPrice(){
     if(sp){lines.push({label:'Откосы ('+slopesLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
   if(sill){
-    const sp=Math.round((data.sill_pm||0)*sillLen);
+    const sillColor=document.getElementById('cSillColor').value;
+    const sillPm=sillColor==='#ffffff'?(data.sill_pm||0):(data.sill_color_pm||data.sill_pm||0);
+    const sp=Math.round(sillPm*sillLen);
     if(sp){lines.push({label:'Подоконник ('+sillLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
   if(drip){
