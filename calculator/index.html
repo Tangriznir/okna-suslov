@@ -41,8 +41,6 @@ canvas{display:block;border:1px solid #e5e5e5;border-radius:4px;background:#fff}
 .overlay.hidden{display:none}
 .control-section{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #eee}
 .control-section:last-child{border-bottom:none}
-.lam-swatch{display:block;width:28px;height:28px;border-radius:4px;border:2px solid #999;transition:all .2s;box-sizing:border-box}
-input[name="lamOuter"]:checked+.lam-swatch,input[name="lamInner"]:checked+.lam-swatch{border-color:#E8521A;box-shadow:0 0 0 2px #E8521A40;transform:scale(1.1)}
 .control-section h3{font-size:14px;margin-bottom:10px;color:#333}
 input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{border-color:#E8521A!important;box-shadow:0 0 0 2px #E8521A40}
 .form-row{margin-bottom:8px}
@@ -221,23 +219,43 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
           <div style="flex:1;min-width:120px">
             <label style="font-size:12px;color:#888">Снаружи</label>
             <select id="cLamOuter" onchange="drawPreview()" style="width:100%;margin-top:4px">
-              <option value="#f0f0ec" selected>Белый</option>
-              <option value="#b8860b">Золотой дуб</option>
-              <option value="#5c3317">Орех</option>
-              <option value="#4a0e0e">Махагон</option>
-              <option value="#3a3a3a">Антрацит</option>
-              <option value="#3e1c0a">Шоколад</option>
+              <option value="#f0f0ec" selected>Белая основа</option>
+              <option value="#c8963c">Золотой дуб</option>
+              <option value="#6b2226">Махагон</option>
+              <option value="#d4a76a">Светлый дуб</option>
+              <option value="#4a3728">Морёный дуб ST-F</option>
+              <option value="#6b4226">Орех V</option>
+              <option value="#3d2b1f">Тёмный дуб FL-F1</option>
+              <option value="#b08040">Натуральный дуб FL-G</option>
+              <option value="#3b1015">Чёрная вишня</option>
+              <option value="#7b3f00">Сапели (заказ)</option>
+              <option value="#8b7355">Дуб ST-G (заказ)</option>
+              <option value="#8b6914">Рустикальный дуб 1</option>
+              <option value="#5c3317">Шоколадно-коричневый 8875</option>
+              <option value="#2c1608">Чёрно-коричневый 8518</option>
+              <option value="#7b6b4e">Горная сосна (заказ)</option>
+              <option value="#6b4423">Коричневый каштан 8099 (заказ)</option>
             </select>
           </div>
           <div style="flex:1;min-width:120px">
             <label style="font-size:12px;color:#888">Внутри</label>
             <select id="cLamInner" onchange="drawPreview()" style="width:100%;margin-top:4px">
-              <option value="#f0f0ec" selected>Белый</option>
-              <option value="#b8860b">Золотой дуб</option>
-              <option value="#5c3317">Орех</option>
-              <option value="#4a0e0e">Махагон</option>
-              <option value="#3a3a3a">Антрацит</option>
-              <option value="#3e1c0a">Шоколад</option>
+              <option value="#f0f0ec" selected>Белая основа</option>
+              <option value="#c8963c">Золотой дуб</option>
+              <option value="#6b2226">Махагон</option>
+              <option value="#d4a76a">Светлый дуб</option>
+              <option value="#4a3728">Морёный дуб ST-F</option>
+              <option value="#6b4226">Орех V</option>
+              <option value="#3d2b1f">Тёмный дуб FL-F1</option>
+              <option value="#b08040">Натуральный дуб FL-G</option>
+              <option value="#3b1015">Чёрная вишня</option>
+              <option value="#7b3f00">Сапели (заказ)</option>
+              <option value="#8b7355">Дуб ST-G (заказ)</option>
+              <option value="#8b6914">Рустикальный дуб 1</option>
+              <option value="#5c3317">Шоколадно-коричневый 8875</option>
+              <option value="#2c1608">Чёрно-коричневый 8518</option>
+              <option value="#7b6b4e">Горная сосна (заказ)</option>
+              <option value="#6b4423">Коричневый каштан 8099 (заказ)</option>
             </select>
           </div>
         </div>
@@ -1160,8 +1178,8 @@ function selectType(id){
 
 // SVG helpers for window-like drawing
 function getLamColor(){
-  const outer=(document.querySelector('input[name="lamOuter"]:checked')||{}).value||'#f0f0ec';
-  const inner=(document.querySelector('input[name="lamInner"]:checked')||{}).value||'#f0f0ec';
+  const outer=document.getElementById('cLamOuter').value||'#f0f0ec';
+  const inner=document.getElementById('cLamInner').value||'#f0f0ec';
   return {outer,inner};
 }
 function darken(hex,amt){
