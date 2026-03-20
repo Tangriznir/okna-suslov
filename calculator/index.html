@@ -1418,6 +1418,7 @@ function drawPreview(){
     const dwPx=Math.round(dW*sc), dhPx=Math.round(dH*sc);
     const wwPx=Math.round(wW*sc), whPx=Math.round(wH*sc);
     const sw=dwPx+wwPx, sh=dhPx;
+    const wx0=dwPx+mw-2; // левый край рамы окна
     const bsl=getBalconySashLayout(selectedSashes, tp.parts);
     const showSlopes=document.getElementById('cSlopes').checked;
     const showSill=document.getElementById('cSill').checked;
@@ -1448,33 +1449,40 @@ function drawPreview(){
         <linearGradient id="shRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity="0.06"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
       </defs>`;
       if(showSlopes){
+        const rEdge=wx0+wwPx; // правый край рамы окна (без зазора)
+        const mCenter=dwPx+Math.floor(mw/2); // центр импоста
         svg+=`<g filter="url(#shSlope)">`;
-        // Верхний откос — на всю ширину
-        svg+=`<polygon points="${-d},${-d} ${fullW+d},${-d} ${fullW},0 0,0" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Верхний откос — на всю ширину (до правого края окна)
+        svg+=`<polygon points="${-d},${-d} ${rEdge+d},${-d} ${rEdge},0 0,0" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
         // Левый откос — на всю высоту двери
         svg+=`<polygon points="${-d},${-d} 0,0 0,${dhPx} ${-d},${dhPx+d}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
-        // Правый откос — только до высоты окна (до подоконника)
-        svg+=`<polygon points="${fullW+d},${-d} ${fullW+d},${whPx} ${fullW},${whPx} ${fullW},0" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
-        // Нижняя панель двери (декоративная, как откос)
-        svg+=`<polygon points="${-d},${dhPx+d} ${dwPx+Math.floor(mw/2)},${dhPx+d} ${dwPx+Math.floor(mw/2)},${dhPx} 0,${dhPx}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Правый откос окна — только до подоконника
+        svg+=`<polygon points="${rEdge+d},${-d} ${rEdge+d},${whPx} ${rEdge},${whPx} ${rEdge},0" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Правый откос двери — из-под подоконника до низа двери
+        svg+=`<polygon points="${mCenter+d},${whPx} ${mCenter+d},${dhPx} ${mCenter},${dhPx} ${mCenter},${whPx}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+        // Нижняя панель двери (декоративная)
+        svg+=`<polygon points="${-d},${dhPx+d} ${mCenter+d},${dhPx+d} ${mCenter+d},${dhPx} 0,${dhPx}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
         svg+=`</g>`;
-        // Внутренние тени на откосах
-        svg+=`<polygon points="${-d},${-d} ${fullW+d},${-d} ${fullW},0 0,0" fill="url(#shTop)"/>`;
+        // Внутренние тени
+        svg+=`<polygon points="${-d},${-d} ${rEdge+d},${-d} ${rEdge},0 0,0" fill="url(#shTop)"/>`;
         svg+=`<polygon points="${-d},${-d} 0,0 0,${dhPx} ${-d},${dhPx+d}" fill="url(#shLeft)"/>`;
-        svg+=`<polygon points="${fullW+d},${-d} ${fullW+d},${whPx} ${fullW},${whPx} ${fullW},0" fill="url(#shRight)"/>`;
-        // F-профиль: верх, лево (до низа двери), право (до окна), низ двери
-        svg+=`<rect x="${-d-fp}" y="${-d-fp}" width="${fullW+2*d+2*fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<polygon points="${rEdge+d},${-d} ${rEdge+d},${whPx} ${rEdge},${whPx} ${rEdge},0" fill="url(#shRight)"/>`;
+        svg+=`<polygon points="${mCenter+d},${whPx} ${mCenter+d},${dhPx} ${mCenter},${dhPx} ${mCenter},${whPx}" fill="url(#shRight)"/>`;
+        // F-профиль: верх, лево, право окна, право двери (под подоконником), низ двери
+        svg+=`<rect x="${-d-fp}" y="${-d-fp}" width="${rEdge+2*d+2*fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
         svg+=`<rect x="${-d-fp}" y="${-d-fp}" width="${fp}" height="${dhPx+2*d+2*fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
-        svg+=`<rect x="${fullW+d}" y="${-d-fp}" width="${fp}" height="${whPx+d+fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
-        svg+=`<rect x="${-d-fp}" y="${dhPx+d}" width="${dwPx+Math.floor(mw/2)+d+fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<rect x="${rEdge+d}" y="${-d-fp}" width="${fp}" height="${whPx+d+fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<rect x="${mCenter+d}" y="${whPx}" width="${fp}" height="${dhPx-whPx+d}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+        svg+=`<rect x="${-d-fp}" y="${dhPx+d}" width="${mCenter+2*d+2*fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
       }
       if(showSill){
-        // Подоконник только под окном
+        // Подоконник только под окном: от импоста до правого края
         const sillColor=document.getElementById('cSillColor').value||'#ffffff';
-        const sillX=dwPx+mw-2;
-        svg+=svgSill(sillX,whPx,wwPx,sillD,sillColor);
+        const sillX=dwPx+Math.floor(mw/2); // от центра импоста
+        const sillW=wx0+wwPx-sillX; // до правого края окна
+        svg+=svgSill(sillX,whPx,sillW,sillD,sillColor);
         svg+=`<defs><linearGradient id="sillShadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0.15"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></linearGradient></defs>`;
-        svg+=`<rect x="${sillX-sillD-2}" y="${whPx+sillD+6}" width="${wwPx+2*sillD+4}" height="${15}" fill="url(#sillShadow)"/>`;
+        svg+=`<rect x="${sillX-sillD-2}" y="${whPx+sillD+6}" width="${sillW+2*sillD+4}" height="${15}" fill="url(#sillShadow)"/>`;
       }
     }
     // Door frame
@@ -1485,7 +1493,6 @@ function drawPreview(){
     // Mullion between door and window
     svg+=svgMullion(dwPx-1,0,mw,Math.max(dhPx,whPx));
     // Window frame (top-aligned with door)
-    const wx0=dwPx+mw-2;
     svg+=svgFrame(wx0,0,wwPx,whPx,fw);
     // Window panes: glass first, then mullions, then sashes on top
     const parts=tp.parts;
