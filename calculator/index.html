@@ -1685,9 +1685,9 @@ function calcClientPrice(){
 
   if(!basePm2){
     document.getElementById('clientResult').style.display='';
-    document.getElementById('clientTotal').textContent='Цена не задана';
-    document.getElementById('orderBtn').style.display='none';
-    document.getElementById('clientBreakdown').innerHTML='<div>Заполните цены во вкладке "Обучение"</div>';
+    document.getElementById('clientTotal').textContent='0 руб.';
+    document.getElementById('orderBtn').style.display='';
+    document.getElementById('clientBreakdown').innerHTML='';
     return;
   }
 
