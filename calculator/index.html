@@ -1235,15 +1235,75 @@ function svgFrame(x,y,w,h,fw){
   s+=`<line x1="${x}" y1="${y+h}" x2="${x+fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
   return s;
 }
-function getGlassColor(){
+function getGlassTint(){
   const g=document.getElementById('cGlazing').value;
-  if(g==='double')return {fill:'#5cc8c8',stroke:'#3ca8a8'};
-  if(g==='energy')return {fill:'#9898e0',stroke:'#7878c0'};
-  return {fill:'#80e8e8',stroke:'#4cb8b8'}; // single
+  if(g==='double')return {color:'#5cc8c8',opacity:0.18};
+  if(g==='energy')return {color:'#8888d8',opacity:0.22};
+  return {color:'#60d8d8',opacity:0.12}; // single — почти прозрачный
+}
+var _sceneDefs=false;
+function svgSceneDefs(){
+  if(_sceneDefs)return '';
+  _sceneDefs=true;
+  return `<defs>
+    <!-- Летний пейзаж -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a90d9"/>
+      <stop offset="45%" stop-color="#87ceeb"/>
+      <stop offset="65%" stop-color="#b8e4f0"/>
+      <stop offset="100%" stop-color="#d4eef7"/>
+    </linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a9e3e"/>
+      <stop offset="100%" stop-color="#3d7a2a"/>
+    </linearGradient>
+    <!-- Отблеск стекла -->
+    <linearGradient id="glassGlare" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.25"/>
+      <stop offset="30%" stop-color="#fff" stop-opacity="0.02"/>
+      <stop offset="70%" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="95%" stop-color="#fff" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>`;
+}
+function svgScene(x,y,w,h){
+  // Летний пейзаж за стеклом
+  const treeH=h*0.35, grassH=h*0.12;
+  let s=`<clipPath id="gc${Math.round(x)}${Math.round(y)}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath>`;
+  s+=`<g clip-path="url(#gc${Math.round(x)}${Math.round(y)})">`;
+  // Небо
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#sky)"/>`;
+  // Облака
+  const cy1=y+h*0.15, cy2=y+h*0.25;
+  s+=`<ellipse cx="${x+w*0.3}" cy="${cy1}" rx="${w*0.18}" ry="${h*0.06}" fill="#fff" opacity="0.7"/>`;
+  s+=`<ellipse cx="${x+w*0.35}" cy="${cy1-h*0.02}" rx="${w*0.12}" ry="${h*0.05}" fill="#fff" opacity="0.5"/>`;
+  s+=`<ellipse cx="${x+w*0.75}" cy="${cy2}" rx="${w*0.14}" ry="${h*0.04}" fill="#fff" opacity="0.6"/>`;
+  // Дальние деревья (тёмно-зелёные кроны)
+  const treeY=y+h-treeH-grassH;
+  s+=`<rect x="${x}" y="${treeY+treeH*0.4}" width="${w}" height="${treeH*0.6+grassH}" fill="url(#grass)"/>`;
+  // Кроны деревьев
+  const trees=[0.1,0.25,0.42,0.58,0.72,0.88];
+  trees.forEach(tx=>{
+    const cx=x+w*tx, r=w*0.09+Math.random()*w*0.04;
+    s+=`<ellipse cx="${cx}" cy="${treeY+treeH*0.45}" rx="${r}" ry="${r*1.1}" fill="#4a8a30" opacity="0.9"/>`;
+    s+=`<ellipse cx="${cx-r*0.3}" cy="${treeY+treeH*0.35}" rx="${r*0.7}" ry="${r*0.8}" fill="#5a9e3e" opacity="0.8"/>`;
+  });
+  s+=`</g>`;
+  return s;
 }
 function svgGlass(x,y,w,h){
-  const c=getGlassColor();
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="0.5"/>`;
+  const t=getGlassTint();
+  let s='';
+  s+=svgSceneDefs();
+  // Пейзаж за стеклом
+  s+=svgScene(x,y,w,h);
+  // Тонировка стеклопакета
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${t.color}" opacity="${t.opacity}"/>`;
+  // Отблеск
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#glassGlare)"/>`;
+  // Рамка стекла
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#a0b8c0" stroke-width="0.3"/>`;
+  return s;
 }
 function svgMullion(x,y,w,h){
   const lam=getLamColor();
@@ -1380,6 +1440,7 @@ function svgSill(x,y,w,depth,color){
   return s;
 }
 function drawPreview(){
+  _sceneDefs=false; // сброс для новой отрисовки
   const el=document.getElementById('winPreview');
   const type=selectedType;
   const tp=WIN_TYPES.find(x=>x.id===type);
