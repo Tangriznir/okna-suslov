@@ -1215,24 +1215,30 @@ function darken(hex,amt){
   r=Math.max(0,r-amt);g=Math.max(0,g-amt);b=Math.max(0,b-amt);
   return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
 }
-function svgFrame(x,y,w,h,fw){
+function svgFrame(x,y,w,h,fw,skip){
   // Frame with mitered corners (4 trapezoids) — outer side uses lamination color
+  // skip: 'left'|'right' — пропустить сторону (для балконного блока)
   const lam=getLamColor();
   const fc=lam.inner, sc=darken(fc,40), mc=darken(fc,20);
   let s='';
+  const tl=skip==='left'?x:x+fw, tr=skip==='right'?x+w:x+w-fw;
+  const bl=skip==='left'?x:x+fw, br=skip==='right'?x+w:x+w-fw;
   // Top
-  s+=`<polygon points="${x},${y} ${x+w},${y} ${x+w-fw},${y+fw} ${x+fw},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
-  // Right
-  s+=`<polygon points="${x+w},${y} ${x+w},${y+h} ${x+w-fw},${y+h-fw} ${x+w-fw},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  s+=`<polygon points="${x},${y} ${x+w},${y} ${tr},${y+fw} ${tl},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
   // Bottom
-  s+=`<polygon points="${x+w},${y+h} ${x},${y+h} ${x+fw},${y+h-fw} ${x+w-fw},${y+h-fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  s+=`<polygon points="${x+w},${y+h} ${x},${y+h} ${bl},${y+h-fw} ${br},${y+h-fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Right
+  if(skip!=='right'){
+    s+=`<polygon points="${x+w},${y} ${x+w},${y+h} ${x+w-fw},${y+h-fw} ${x+w-fw},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+    s+=`<line x1="${x+w}" y1="${y}" x2="${x+w-fw}" y2="${y+fw}" stroke="${mc}" stroke-width="0.8"/>`;
+    s+=`<line x1="${x+w}" y1="${y+h}" x2="${x+w-fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  }
   // Left
-  s+=`<polygon points="${x},${y+h} ${x},${y} ${x+fw},${y+fw} ${x+fw},${y+h-fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
-  // Miter lines (diagonal welding seams)
-  s+=`<line x1="${x}" y1="${y}" x2="${x+fw}" y2="${y+fw}" stroke="${mc}" stroke-width="0.8"/>`;
-  s+=`<line x1="${x+w}" y1="${y}" x2="${x+w-fw}" y2="${y+fw}" stroke="${mc}" stroke-width="0.8"/>`;
-  s+=`<line x1="${x+w}" y1="${y+h}" x2="${x+w-fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
-  s+=`<line x1="${x}" y1="${y+h}" x2="${x+fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  if(skip!=='left'){
+    s+=`<polygon points="${x},${y+h} ${x},${y} ${x+fw},${y+fw} ${x+fw},${y+h-fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
+    s+=`<line x1="${x}" y1="${y}" x2="${x+fw}" y2="${y+fw}" stroke="${mc}" stroke-width="0.8"/>`;
+    s+=`<line x1="${x}" y1="${y+h}" x2="${x+fw}" y2="${y+h-fw}" stroke="${mc}" stroke-width="0.8"/>`;
+  }
   return s;
 }
 function getGlassTint(){
@@ -1418,17 +1424,18 @@ function drawPreview(){
     const dwPx=Math.round(dW*sc), dhPx=Math.round(dH*sc);
     const wwPx=Math.round(wW*sc), whPx=Math.round(wH*sc);
     const sw=dwPx+wwPx, sh=dhPx;
-    const wx0=dwPx+mw-2; // левый край рамы окна
+    const wx0=dwPx+mw; // окно начинается сразу после импоста
     const bsl=getBalconySashLayout(selectedSashes, tp.parts);
     const showSlopes=document.getElementById('cSlopes').checked;
     const showSill=document.getElementById('cSill').checked;
     const slopeD=7, sillD=slopeD*2;
     const wallPad=20;
     const padBot=showSlopes?slopeD+12:wallPad;
-    let svg=`<svg width="${sw+60+wallPad*2}" height="${sh+40+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${sw+60+wallPad*2} ${sh+40+wallPad+padBot}">`;
+    const totalW=sw+mw; // полная ширина: дверь + импост + окно
+    let svg=`<svg width="${totalW+60+wallPad*2}" height="${sh+40+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${totalW+60+wallPad*2} ${sh+40+wallPad+padBot}">`;
     // Стена — фон с освещением от окна
     const wallColor=document.getElementById('cWallColor').value||'#f5f0e8';
-    const vbX=-30-wallPad, vbY=-5-wallPad, vbW=sw+60+wallPad*2, vbH=sh+40+wallPad+padBot;
+    const vbX=-30-wallPad, vbY=-5-wallPad, vbW=totalW+60+wallPad*2, vbH=sh+40+wallPad+padBot;
     svg+=`<rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" fill="${wallColor}"/>`;
     svg+=`<defs><radialGradient id="winLight" cx="50%" cy="45%" r="70%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
@@ -1485,29 +1492,29 @@ function drawPreview(){
         svg+=`<rect x="${sillX-sillD-2}" y="${whPx+sillD+6}" width="${sillW+2*sillD+4}" height="${15}" fill="url(#sillShadow)"/>`;
       }
     }
-    // Door frame
-    svg+=svgFrame(0,0,dwPx,dhPx,fw);
-    const dGx=fw, dGy=fw, dGw=dwPx-2*fw, dGh=dhPx-2*fw;
+    // Door frame (без правой стороны — там импост)
+    svg+=svgFrame(0,0,dwPx,dhPx,fw,'right');
+    const dGx=fw, dGy=fw, dGw=dwPx-fw, dGh=dhPx-2*fw;
     svg+=svgGlass(dGx,dGy,dGw,dGh);
     svg+=svgSash(dGx,dGy,dGw,dGh,bsl.door,fw);
-    // Mullion between door and window
-    svg+=svgMullion(dwPx-1,0,mw,Math.max(dhPx,whPx));
-    // Window frame (top-aligned with door)
-    svg+=svgFrame(wx0,0,wwPx,whPx,fw);
-    // Window panes: glass first, then mullions, then sashes on top
+    // Импост между дверью и окном
+    svg+=svgMullion(dwPx,0,mw,dhPx);
+    // Window frame (без левой стороны — там импост)
+    svg+=svgFrame(wx0,0,wwPx,whPx,fw,'left');
+    // Window panes: стёкла начинаются от импоста (без левой рамки)
     const parts=tp.parts;
-    const innerW=wwPx-2*fw, innerH=whPx-2*fw;
+    const innerW=wwPx-fw, innerH=whPx-2*fw;
     const paneW=(innerW-(parts-1)*mw)/parts;
     for(let i=0;i<parts;i++){
-      const px=wx0+fw+i*(paneW+mw);
+      const px=wx0+i*(paneW+mw);
       svg+=svgGlass(px,fw,paneW,innerH);
     }
     for(let i=0;i<parts-1;i++){
-      const px=wx0+fw+i*(paneW+mw);
+      const px=wx0+i*(paneW+mw);
       svg+=svgMullion(px+paneW,fw,mw,innerH);
     }
     for(let i=0;i<parts;i++){
-      const px=wx0+fw+i*(paneW+mw);
+      const px=wx0+i*(paneW+mw);
       svg+=svgSash(px,fw,paneW,innerH,bsl.win[i],fw);
     }
     // Mosquito nets on window sashes only (not door)
@@ -1516,7 +1523,7 @@ function drawPreview(){
       let drawn=0;
       for(let i=0;i<parts&&drawn<netCount;i++){
         if(bsl.win[i]){
-          const px=wx0+fw+i*(paneW+mw);
+          const px=wx0+i*(paneW+mw);
           svg+=svgMosquito(px,fw,paneW,innerH);
           drawn++;
         }
@@ -1527,8 +1534,8 @@ function drawPreview(){
     const bBlinds=parseInt(document.getElementById('cBlinds').value)||0;
     const bRolls=parseInt(document.getElementById('cRolls').value)||0;
     // Собираем координаты всех частей балкона
-    const balcPanes=[{x:fw,y:fw,w:dwPx-2*fw,h:dhPx-2*fw}]; // дверь
-    for(let i=0;i<parts;i++) balcPanes.push({x:wx0+fw+i*(paneW+mw),y:fw,w:paneW,h:innerH});
+    const balcPanes=[{x:fw,y:fw,w:dwPx-fw,h:dhPx-2*fw}]; // дверь (до импоста)
+    for(let i=0;i<parts;i++) balcPanes.push({x:wx0+i*(paneW+mw),y:fw,w:paneW,h:innerH});
     if(bBlinds>0){
       const bColor=document.querySelector('input[name="blindColor"]:checked');
       const bc=bColor?bColor.value:'#ffffff';
@@ -1547,14 +1554,14 @@ function drawPreview(){
     }
     // Линия пола под дверью
     const floorY=dhPx+(showSlopes?slopeD:0)+3;
-    const vbX2=-30-wallPad, vbW2=sw+60+wallPad*2;
+    const vbX2=-30-wallPad, vbW2=totalW+60+wallPad*2;
     svg+=`<line x1="${vbX2}" y1="${floorY}" x2="${vbX2+vbW2}" y2="${floorY}" stroke="#b0a898" stroke-width="1.5"/>`;
     svg+=`<line x1="${vbX2}" y1="${floorY+1}" x2="${vbX2+vbW2}" y2="${floorY+1}" stroke="#c8c0b4" stroke-width="0.5"/>`;
     // Dimensions
     svg+=`<text x="${dwPx/2}" y="${dhPx+16}" text-anchor="middle" font-size="10" fill="#888">${dW}</text>`;
     svg+=`<text x="${wx0+wwPx/2}" y="${whPx+16}" text-anchor="middle" font-size="10" fill="#888">${wW}</text>`;
     svg+=`<text x="-8" y="${dhPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(-90,-8,${dhPx/2})">${dH}</text>`;
-    svg+=`<text x="${sw+mw+8}" y="${whPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(90,${sw+mw+8},${whPx/2})">${wH}</text>`;
+    svg+=`<text x="${wx0+wwPx+8}" y="${whPx/2}" text-anchor="middle" font-size="10" fill="#888" transform="rotate(90,${wx0+wwPx+8},${whPx/2})">${wH}</text>`;
     svg+='</svg>';
     el.innerHTML=svg;
   }else{
