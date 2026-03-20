@@ -1804,7 +1804,7 @@ function calcClientPrice(){
   const res=document.getElementById('clientResult');
   res.style.display='';
   document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
-  document.getElementById('clientBreakdown').innerHTML=lines.map(l=>'<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f0f0f0"><span style="color:#555">'+l.label+'</span><span style="font-weight:600">'+l.value.toLocaleString()+' ₽</span></div>').join('');
+  document.getElementById('clientBreakdown').innerHTML='';
   document.getElementById('orderBtn').style.display='';
   // Debug in console (F12)
   console.table(lines);
