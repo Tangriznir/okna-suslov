@@ -1465,9 +1465,9 @@ function calcClientPrice(){
   const rollsCost=rollsQty*rollsFullPrice;
   if(rollsCost) lines.push({label:'Шторы рулонные ×'+rollsQty,value:rollsCost});
 
-  let winPrice=basePrice+sashCost+mullionCost+netCost+blindsCost+rollsCost;
+  let winPrice=basePrice+sashCost+mullionCost+netCost;
 
-  // Markup — from Google Sheet or admin settings
+  // Markup — from Google Sheet or admin settings (НЕ на жалюзи/шторы — они уже с наценкой)
   const mT=sheetPrices?'percent':document.getElementById('markupType').value;
   const mV=sheetPrices?(data.markup_percent||0):(parseFloat(document.getElementById('markupValue').value)||0);
   let profitAmount=0;
@@ -1476,6 +1476,9 @@ function calcClientPrice(){
     winPrice+=profitAmount;
     lines.push({label:'Наценка'+(mT==='percent'?' '+mV+'%':''),value:profitAmount});
   }
+
+  // Жалюзи/шторы добавляются ПОСЛЕ наценки
+  winPrice+=blindsCost+rollsCost;
 
   total+=winPrice;
 
