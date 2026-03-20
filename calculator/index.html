@@ -330,15 +330,15 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
       <div class="control-section">
         <h3>Работы</h3>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cInstall" onchange="drawPreview()"> Установка</label>
+          <input type="checkbox" id="cInstall" onchange="if(this.checked)document.getElementById('cDelivery').checked=true;drawPreview()"> Установка</label>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
-          <input type="checkbox" id="cDelivery" onchange="drawPreview()"> Доставка</label>
+          <input type="checkbox" id="cDelivery" onchange="if(this.checked)document.getElementById('cInstall').checked=true;drawPreview()"> Доставка</label>
       </div>
+      <div id="clientBreakdown" style="margin-bottom:8px"></div>
+      <button class="btn btn-block" id="orderBtn" onclick="showOrderForm()" style="background:#E8521A;color:#fff;font-size:16px;padding:14px 16px;margin:12px 0;display:none">Оставить заявку</button>
       <div id="clientResult" class="price-display">
         <div class="final" id="clientTotal">—</div>
-        <div class="breakdown" id="clientBreakdown"></div>
       </div>
-      <button class="btn btn-block" id="orderBtn" onclick="showOrderForm()" style="background:#E8521A;color:#fff;font-size:16px;padding:14px 16px;margin:12px 0;display:none">Оставить заявку</button>
     </div>
   </div>
 </div>
@@ -1804,7 +1804,7 @@ function calcClientPrice(){
   const res=document.getElementById('clientResult');
   res.style.display='';
   document.getElementById('clientTotal').textContent=total.toLocaleString()+' руб.';
-  document.getElementById('clientBreakdown').innerHTML=lines.map(l=>'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:#666">'+l.label+'</span><span>'+l.value.toLocaleString()+' ₽</span></div>').join('')+'<div style="font-size:11px;color:#999;margin-top:6px">Ориентировочная стоимость, точная — после замера</div>';
+  document.getElementById('clientBreakdown').innerHTML=lines.map(l=>'<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid #f0f0f0"><span style="color:#555">'+l.label+'</span><span style="font-weight:600">'+l.value.toLocaleString()+' ₽</span></div>').join('');
   document.getElementById('orderBtn').style.display='';
   // Debug in console (F12)
   console.table(lines);
