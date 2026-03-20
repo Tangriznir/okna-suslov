@@ -235,7 +235,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:120px">
             <label style="font-size:12px;color:#888">Снаружи</label>
-            <select id="cLamOuter" onchange="drawPreview()" style="width:100%;margin-top:4px">
+            <div class="form-row"><select id="cLamOuter" onchange="drawPreview()" style="margin-top:4px">
               <option value="#f0f0ec" selected>Белая основа</option>
               <option value="#c8963c">Золотой дуб</option>
               <option value="#6b2226">Махагон</option>
@@ -252,11 +252,11 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
               <option value="#2c1608">Чёрно-коричневый 8518</option>
               <option value="#7b6b4e">Горная сосна (заказ)</option>
               <option value="#6b4423">Коричневый каштан 8099 (заказ)</option>
-            </select>
+            </select></div>
           </div>
           <div style="flex:1;min-width:120px">
             <label style="font-size:12px;color:#888">Внутри</label>
-            <select id="cLamInner" onchange="drawPreview()" style="width:100%;margin-top:4px">
+            <div class="form-row"><select id="cLamInner" onchange="drawPreview()" style="margin-top:4px">
               <option value="#f0f0ec" selected>Белая основа</option>
               <option value="#c8963c">Золотой дуб</option>
               <option value="#6b2226">Махагон</option>
@@ -273,7 +273,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
               <option value="#2c1608">Чёрно-коричневый 8518</option>
               <option value="#7b6b4e">Горная сосна (заказ)</option>
               <option value="#6b4423">Коричневый каштан 8099 (заказ)</option>
-            </select>
+            </select></div>
           </div>
         </div>
       </div>
@@ -1338,7 +1338,8 @@ function svgSash(gx,gy,gw,gh,sash,fw){
 
 function svgSlopes(x,y,w,h,depth){
   // Откосы — трапеции сверху, слева, справа (перспектива от стены к раме), всегда белые
-  const fc='#f5f5f0', sc='#c0c0c0', edge=3;
+  const fc='#f5f5f0', sc='#c0c0c0';
+  const fp=3; // F-профиль — толщина наличника
   let s='';
   // Верхний откос
   s+=`<polygon points="${x-depth},${y-depth} ${x+w+depth},${y-depth} ${x+w},${y} ${x},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
@@ -1346,18 +1347,14 @@ function svgSlopes(x,y,w,h,depth){
   s+=`<polygon points="${x-depth},${y-depth} ${x},${y} ${x},${y+h} ${x-depth},${y+h+depth}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
   // Правый откос
   s+=`<polygon points="${x+w+depth},${y-depth} ${x+w+depth},${y+h+depth} ${x+w},${y+h} ${x+w},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
-  // Торцы откосов (бледно-серая штриховка) — внешний край
-  // Верхний торец
-  s+=`<rect x="${x-depth}" y="${y-depth}" width="${w+2*depth}" height="${edge}" fill="#e8e8e8" stroke="${sc}" stroke-width="0.3"/>`;
-  // Левый торец
-  s+=`<rect x="${x-depth}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="#e8e8e8" stroke="${sc}" stroke-width="0.3"/>`;
-  // Правый торец
-  s+=`<rect x="${x+w+depth-edge}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="#e8e8e8" stroke="${sc}" stroke-width="0.3"/>`;
-  // Штриховка торцов
-  s+=`<defs><pattern id="slopeHatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#d0d0d0" stroke-width="0.5"/></pattern></defs>`;
-  s+=`<rect x="${x-depth}" y="${y-depth}" width="${w+2*depth}" height="${edge}" fill="url(#slopeHatch)" opacity="0.5"/>`;
-  s+=`<rect x="${x-depth}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="url(#slopeHatch)" opacity="0.5"/>`;
-  s+=`<rect x="${x+w+depth-edge}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="url(#slopeHatch)" opacity="0.5"/>`;
+  // F-профиль (наличник) — белая рамка по внешнему краю откосов, закрывает стык со стеной
+  const ffc='#ffffff', fsc='#b0b0b0';
+  // Верхний F-профиль
+  s+=`<rect x="${x-depth-fp}" y="${y-depth-fp}" width="${w+2*depth+2*fp}" height="${fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+  // Левый F-профиль
+  s+=`<rect x="${x-depth-fp}" y="${y-depth-fp}" width="${fp}" height="${h+2*depth+2*fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
+  // Правый F-профиль
+  s+=`<rect x="${x+w+depth}" y="${y-depth-fp}" width="${fp}" height="${h+2*depth+2*fp}" fill="${ffc}" stroke="${fsc}" stroke-width="0.4"/>`;
   return s;
 }
 function svgSill(x,y,w,depth,color){
