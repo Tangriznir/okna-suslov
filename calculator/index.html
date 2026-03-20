@@ -1431,11 +1431,11 @@ function drawPreview(){
     const slopeD=7, sillD=slopeD*2;
     const wallPad=20;
     const padBot=showSlopes?slopeD+12:wallPad;
-    const totalW=sw+mw; // полная ширина: дверь + импост + окно
-    let svg=`<svg width="${totalW+60+wallPad*2}" height="${sh+40+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${totalW+60+wallPad*2} ${sh+40+wallPad+padBot}">`;
+    const svgW=sw+mw; // полная ширина: дверь + импост + окно
+    let svg=`<svg width="${svgW+60+wallPad*2}" height="${sh+40+wallPad+padBot}" viewBox="${-30-wallPad} ${-5-wallPad} ${svgW+60+wallPad*2} ${sh+40+wallPad+padBot}">`;
     // Стена — фон с освещением от окна
     const wallColor=document.getElementById('cWallColor').value||'#f5f0e8';
-    const vbX=-30-wallPad, vbY=-5-wallPad, vbW=totalW+60+wallPad*2, vbH=sh+40+wallPad+padBot;
+    const vbX=-30-wallPad, vbY=-5-wallPad, vbW=svgW+60+wallPad*2, vbH=sh+40+wallPad+padBot;
     svg+=`<rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" fill="${wallColor}"/>`;
     svg+=`<defs><radialGradient id="winLight" cx="50%" cy="45%" r="70%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15"/>
@@ -1554,7 +1554,7 @@ function drawPreview(){
     }
     // Линия пола под дверью
     const floorY=dhPx+(showSlopes?slopeD:0)+3;
-    const vbX2=-30-wallPad, vbW2=totalW+60+wallPad*2;
+    const vbX2=-30-wallPad, vbW2=svgW+60+wallPad*2;
     svg+=`<line x1="${vbX2}" y1="${floorY}" x2="${vbX2+vbW2}" y2="${floorY}" stroke="#b0a898" stroke-width="1.5"/>`;
     svg+=`<line x1="${vbX2}" y1="${floorY+1}" x2="${vbX2+vbW2}" y2="${floorY+1}" stroke="#c8c0b4" stroke-width="0.5"/>`;
     // Dimensions
