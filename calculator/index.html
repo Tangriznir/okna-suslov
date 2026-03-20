@@ -1321,7 +1321,7 @@ function svgSash(gx,gy,gw,gh,sash,fw){
 
 function svgSlopes(x,y,w,h,depth){
   // Откосы — трапеции сверху, слева, справа (перспектива от стены к раме), всегда белые
-  const fc='#f5f5f0', sc='#c0c0c0';
+  const fc='#f5f5f0', sc='#c0c0c0', edge=3;
   let s='';
   // Верхний откос
   s+=`<polygon points="${x-depth},${y-depth} ${x+w+depth},${y-depth} ${x+w},${y} ${x},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
@@ -1329,21 +1329,28 @@ function svgSlopes(x,y,w,h,depth){
   s+=`<polygon points="${x-depth},${y-depth} ${x},${y} ${x},${y+h} ${x-depth},${y+h+depth}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
   // Правый откос
   s+=`<polygon points="${x+w+depth},${y-depth} ${x+w+depth},${y+h+depth} ${x+w},${y+h} ${x+w},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
-  // Диагональные линии на стыках (тени)
-  s+=`<line x1="${x-depth}" y1="${y-depth}" x2="${x}" y2="${y}" stroke="#ddd" stroke-width="0.5"/>`;
-  s+=`<line x1="${x+w+depth}" y1="${y-depth}" x2="${x+w}" y2="${y}" stroke="#ddd" stroke-width="0.5"/>`;
-  s+=`<line x1="${x-depth}" y1="${y+h+depth}" x2="${x}" y2="${y+h}" stroke="#ddd" stroke-width="0.5"/>`;
-  s+=`<line x1="${x+w+depth}" y1="${y+h+depth}" x2="${x+w}" y2="${y+h}" stroke="#ddd" stroke-width="0.5"/>`;
+  // Торцы откосов (бледно-серая штриховка) — внешний край
+  // Верхний торец
+  s+=`<rect x="${x-depth}" y="${y-depth}" width="${w+2*depth}" height="${edge}" fill="#e8e8e8" stroke="${sc}" stroke-width="0.3"/>`;
+  // Левый торец
+  s+=`<rect x="${x-depth}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="#e8e8e8" stroke="${sc}" stroke-width="0.3"/>`;
+  // Правый торец
+  s+=`<rect x="${x+w+depth-edge}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="#e8e8e8" stroke="${sc}" stroke-width="0.3"/>`;
+  // Штриховка торцов
+  s+=`<defs><pattern id="slopeHatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="4" stroke="#d0d0d0" stroke-width="0.5"/></pattern></defs>`;
+  s+=`<rect x="${x-depth}" y="${y-depth}" width="${w+2*depth}" height="${edge}" fill="url(#slopeHatch)" opacity="0.5"/>`;
+  s+=`<rect x="${x-depth}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="url(#slopeHatch)" opacity="0.5"/>`;
+  s+=`<rect x="${x+w+depth-edge}" y="${y-depth}" width="${edge}" height="${h+2*depth}" fill="url(#slopeHatch)" opacity="0.5"/>`;
   return s;
 }
 function svgSill(x,y,w,depth,color){
-  // Подоконник — снизу окна, толще откосов, с небольшим выступом вперёд
+  // Подоконник — снизу окна, выступ вперёд, толстый торец
   const fc=color||'#ffffff', sc='#b0b0b0';
-  const overhang=depth*0.3; // выступ за пределы откосов
+  const overhang=depth*0.15; // небольшой выступ за пределы откосов
   let s='';
   s+=`<polygon points="${x-depth-overhang},${y+depth} ${x+w+depth+overhang},${y+depth} ${x+w},${y} ${x},${y}" fill="${fc}" stroke="${sc}" stroke-width="0.7"/>`;
-  // Торец подоконника (передняя кромка)
-  s+=`<rect x="${x-depth-overhang}" y="${y+depth}" width="${w+2*depth+2*overhang}" height="${3}" rx="0.5" fill="${darken(fc,15)}" stroke="${sc}" stroke-width="0.5"/>`;
+  // Торец подоконника (передняя кромка) — толстый
+  s+=`<rect x="${x-depth-overhang}" y="${y+depth}" width="${w+2*depth+2*overhang}" height="${6}" rx="0.5" fill="${darken(fc,15)}" stroke="${sc}" stroke-width="0.5"/>`;
   return s;
 }
 function drawPreview(){
@@ -1366,7 +1373,7 @@ function drawPreview(){
     const bsl=getBalconySashLayout(selectedSashes, tp.parts);
     const showSlopes=document.getElementById('cSlopes').checked;
     const showSill=document.getElementById('cSill').checked;
-    const slopeD=14, sillD=slopeD*3;
+    const slopeD=7, sillD=slopeD*2;
     const pad=Math.max(showSlopes?slopeD+4:0, showSill?sillD+8:0);
     const padTop=showSlopes?slopeD+4:0;
     const padBot=showSill?sillD+12:0;
@@ -1454,7 +1461,7 @@ function drawPreview(){
     const sashes=getSashLayout(type,selectedSashes,parts);
     const showSlopes=document.getElementById('cSlopes').checked;
     const showSill=document.getElementById('cSill').checked;
-    const slopeD=14, sillD=slopeD*3; // глубина откосов и подоконника
+    const slopeD=7, sillD=slopeD*2; // глубина откосов и подоконника
     const pad=Math.max(showSlopes?slopeD+4:0, showSill?sillD+8:0);
     const padTop=showSlopes?slopeD+4:0;
     const padBot=showSill?sillD+12:0;
