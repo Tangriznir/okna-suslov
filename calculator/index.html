@@ -294,11 +294,11 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
           <input type="checkbox" id="cSill" onchange="document.getElementById('sillColorRow').style.display=this.checked?'':'none';drawPreview()"> Подоконник</label>
         <div id="sillColorRow" style="display:none;margin-left:28px;margin-top:2px">
           <select id="cSillColor" onchange="drawPreview()" style="font-size:13px">
-            <option value="#ffffff" selected>Белый</option>
-            <option value="#d4c4a0">Бежевый</option>
-            <option value="#b8860b">Дуб</option>
-            <option value="#808080">Серый</option>
-            <option value="#5c3a1e">Орех</option>
+            <option value="#ffffff" data-key="" selected>Белый</option>
+            <option value="#d4c4a0" data-key="windowsil_komfort_beige_150_1000">Бежевый</option>
+            <option value="#b8860b" data-key="windowsil_komfort_oak_150_1000">Дуб</option>
+            <option value="#808080" data-key="windowsil_komfort_grey_150_1000">Серый</option>
+            <option value="#5c3a1e" data-key="windowsil_komfort_nut_150_1000">Орех</option>
           </select>
         </div>
         <label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;cursor:pointer">
@@ -1818,8 +1818,9 @@ function calcClientPrice(){
     if(sp){lines.push({label:'Откосы ('+slopesLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
   if(sill){
-    const sillColor=document.getElementById('cSillColor').value;
-    const sillPm=sillColor==='#ffffff'?(data.sill_pm||0):(data.sill_color_pm||data.sill_pm||0);
+    const sillOpt=document.getElementById('cSillColor').selectedOptions[0];
+    const sillKey=sillOpt?sillOpt.dataset.key:'';
+    const sillPm=sillKey?(data[sillKey]||data.sill_pm||0):(data.sill_pm||0);
     const sp=Math.round(sillPm*sillLen);
     if(sp){lines.push({label:'Подоконник ('+sillLen.toFixed(1)+' п.м.)',value:sp});total+=sp;}
   }
