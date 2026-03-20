@@ -324,7 +324,8 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
         <div class="form-row"><select id="cRolls" onchange="updateBlindsSelector();drawPreview()"><option value="0">Нет</option></select></div>
         <div id="rollsColorRow" style="display:none;margin-top:6px">
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="rollsColors">
-            <label style="cursor:pointer" title="Белый"><input type="radio" name="rollColor" value="#ffffff" checked style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#ffffff;border:2px solid #ccc;transition:all .2s"></span></label>
+            <label style="cursor:pointer" title="Белый"><input type="radio" name="rollColor" value="white" data-color="#ffffff" checked style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#ffffff;border:2px solid #ccc;transition:all .2s"></span></label>
+            <label style="cursor:pointer" title="Блюз 29 (бежевый)"><input type="radio" name="rollColor" value="blues29" data-color="#c4a882" style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#c4a882;border:2px solid #ccc;transition:all .2s"></span></label>
           </div>
         </div>
       </div>
@@ -1568,7 +1569,7 @@ function drawPreview(){
     }
     if(bRolls>0){
       const rColor=document.querySelector('input[name="rollColor"]:checked');
-      const rc=rColor?rColor.value:'#ffffff';
+      const rc=rColor?(rColor.dataset.color||rColor.value):'#ffffff';
       for(let i=0;i<bRolls&&(bBlinds+i)<balcPanes.length;i++){
         const p=balcPanes[bBlinds+i];
         svg+=svgRollerShade(p.x,p.y,p.w,p.h,rc);
@@ -1659,7 +1660,7 @@ function drawPreview(){
     const rollsCount=parseInt(document.getElementById('cRolls').value)||0;
     if(rollsCount>0){
       const rColor=document.querySelector('input[name="rollColor"]:checked');
-      const rc=rColor?rColor.value:'#ffffff';
+      const rc=rColor?(rColor.dataset.color||rColor.value):'#ffffff';
       const rollStart=blindsCount; // шторы идут после жалюзи
       for(let i=0;i<Math.min(rollsCount,parts-rollStart);i++){
         svg+=svgRollerShade(fw+(rollStart+i)*(paneW+mw),fw,paneW,innerH,rc);
@@ -1739,9 +1740,11 @@ function calcClientPrice(){
   const blindsCost=blindsQty*blindsFullPrice;
   if(blindsCost) lines.push({label:'Жалюзи ×'+blindsQty,value:blindsCost});
 
-  // Рулонные шторы (цена с установкой из таблицы, фоллбек 1899)
+  // Рулонные шторы (цена по цвету из таблицы)
   const rollsQty=parseInt(document.getElementById('cRolls').value)||0;
-  const rollsFullPrice=data.rolls_price||1899;
+  const rollColorSel=document.querySelector('input[name="rollColor"]:checked');
+  const rollColorKey=rollColorSel?rollColorSel.value:'white';
+  const rollsFullPrice=data['rolls_price_'+rollColorKey]||data.rolls_price||1899;
   const rollsCost=rollsQty*rollsFullPrice;
   if(rollsCost) lines.push({label:'Шторы рулонные ×'+rollsQty,value:rollsCost});
 
