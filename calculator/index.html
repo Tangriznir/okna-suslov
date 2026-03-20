@@ -326,6 +326,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="rollsColors">
             <label style="cursor:pointer" title="Белый"><input type="radio" name="rollColor" value="white" data-color="#ffffff" checked style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#ffffff;border:2px solid #ccc;transition:all .2s"></span></label>
             <label style="cursor:pointer" title="Блюз 29 (бежевый)"><input type="radio" name="rollColor" value="blues29" data-color="#c4a882" style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#c4a882;border:2px solid #ccc;transition:all .2s"></span></label>
+            <label style="cursor:pointer" title="Атлантик 88 (блэкаут)"><input type="radio" name="rollColor" value="atlantic88" data-color="#9eaeb8" data-blackout="1" style="display:none"><span style="display:block;width:28px;height:28px;border-radius:4px;background:#9eaeb8;border:2px solid #ccc;transition:all .2s"></span></label>
           </div>
         </div>
       </div>
@@ -1303,12 +1304,12 @@ function svgBlinds(x,y,w,h,color){
   s+=`</g>`;
   return s;
 }
-function svgRollerShade(x,y,w,h,color){
+function svgRollerShade(x,y,w,h,color,blackout){
   // Рулонная штора — полотно сверху ~80% высоты
   const fill=color||'#ffffff';
   const shadeH=h*0.8;
   const stroke=fill==='#ffffff'?'#d0d0d0':'#00000020';
-  let s=`<g opacity="0.7">`;
+  let s=`<g opacity="${blackout?1:0.7}">`;
   // Кассета сверху
   s+=`<rect x="${x+1}" y="${y+1}" width="${w-2}" height="${5}" rx="1.5" fill="#b0b0b0" stroke="#999" stroke-width="0.3"/>`;
   // Полотно
@@ -1570,9 +1571,10 @@ function drawPreview(){
     if(bRolls>0){
       const rColor=document.querySelector('input[name="rollColor"]:checked');
       const rc=rColor?(rColor.dataset.color||rColor.value):'#ffffff';
+      const rBo=rColor&&rColor.dataset.blackout==='1';
       for(let i=0;i<bRolls&&(bBlinds+i)<balcPanes.length;i++){
         const p=balcPanes[bBlinds+i];
-        svg+=svgRollerShade(p.x,p.y,p.w,p.h,rc);
+        svg+=svgRollerShade(p.x,p.y,p.w,p.h,rc,rBo);
       }
     }
     // Линия пола под дверью
@@ -1661,9 +1663,10 @@ function drawPreview(){
     if(rollsCount>0){
       const rColor=document.querySelector('input[name="rollColor"]:checked');
       const rc=rColor?(rColor.dataset.color||rColor.value):'#ffffff';
+      const rBo=rColor&&rColor.dataset.blackout==='1';
       const rollStart=blindsCount; // шторы идут после жалюзи
       for(let i=0;i<Math.min(rollsCount,parts-rollStart);i++){
-        svg+=svgRollerShade(fw+(rollStart+i)*(paneW+mw),fw,paneW,innerH,rc);
+        svg+=svgRollerShade(fw+(rollStart+i)*(paneW+mw),fw,paneW,innerH,rc,rBo);
       }
     }
     // Dimensions outside
