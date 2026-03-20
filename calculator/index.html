@@ -1190,7 +1190,7 @@ function darken(hex,amt){
 function svgFrame(x,y,w,h,fw){
   // Frame with mitered corners (4 trapezoids) — outer side uses lamination color
   const lam=getLamColor();
-  const fc=lam.outer, sc=darken(fc,40), mc=darken(fc,20);
+  const fc=lam.inner, sc=darken(fc,40), mc=darken(fc,20);
   let s='';
   // Top
   s+=`<polygon points="${x},${y} ${x+w},${y} ${x+w-fw},${y+fw} ${x+fw},${y+fw}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
@@ -1219,7 +1219,7 @@ function svgGlass(x,y,w,h){
 }
 function svgMullion(x,y,w,h){
   const lam=getLamColor();
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${lam.outer}" stroke="${darken(lam.outer,40)}" stroke-width="0.5"/>`;
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${lam.inner}" stroke="${darken(lam.inner,40)}" stroke-width="0.5"/>`;
 }
 function svgMosquito(x,y,w,h){
   const sp=4; // grid spacing
@@ -1267,7 +1267,7 @@ function svgSash(gx,gy,gw,gh,sash,fw){
   const sf=5, ov=2; // sash frame width, overlap onto main frame
   const sx=gx-ov, sy=gy-ov, sw=gw+2*ov, sh=gh+2*ov;
   const lam=getLamColor();
-  const fc=lam.outer, sc=darken(fc,40), mc=darken(fc,20);
+  const fc=lam.inner, sc=darken(fc,40), mc=darken(fc,20);
   // Sash frame — 4 trapezoids with mitered corners (like svgFrame)
   s+=`<polygon points="${sx},${sy} ${sx+sw},${sy} ${sx+sw-sf},${sy+sf} ${sx+sf},${sy+sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
   s+=`<polygon points="${sx+sw},${sy} ${sx+sw},${sy+sh} ${sx+sw-sf},${sy+sh-sf} ${sx+sw-sf},${sy+sf}" fill="${fc}" stroke="${sc}" stroke-width="0.5"/>`;
