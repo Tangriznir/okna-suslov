@@ -149,7 +149,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
           </details>
         </div>
         <div class="control-section">
-          <h3>Наценка для клиента</h3>
+          <h3>Наценка для клиента на сайте</h3>
           <div class="form-row">
             <div class="inline">
               <input type="number" id="markupValue" value="30" min="0" onchange="saveSettings()">
@@ -157,6 +157,8 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
             </div></div>
         </div>
         <div class="control-section">
+          <button class="btn btn-block" id="saveToSheetBtn" onclick="savePricesToSheet()" style="background:#2a9d2a;color:#fff;font-size:14px;padding:10px 16px;margin-bottom:8px;display:none">&#9650; Сохранить в Google Таблицу</button>
+          <div id="saveToSheetMsg" style="font-size:12px;text-align:center;margin-bottom:8px;display:none"></div>
           <button class="btn btn-block" onclick="calcPrices()" style="background:#E8521A;color:#fff;font-size:15px;padding:12px 16px;margin-bottom:12px">Рассчитать</button>
           <div class="info-box" id="calcResult" style="display:none">
             <div class="info-row"><span class="label">Цена производства</span><span class="value" id="prodPrice">—</span></div>
@@ -958,7 +960,7 @@ function openSashDialog(d){
   const pane=d.selectedPanes[0];
   if(pane&&pane.sash){
     document.querySelector('input[name="sashDir"][value="'+pane.sash.direction+'"]').checked=true;
-    document.querySelector('input[name="sashType"][value="'+pane.sash.type+'"]').checked=true;
+    document.querySelector('input[name="sashType"]').value=pane.sash.type;
     document.getElementById('sashHardware').value=pane.sash.hardware;
     document.getElementById('sashHandleColor').value=pane.sash.handleColor||'white';
   }
@@ -970,7 +972,7 @@ function applySash(){
   if(!_sashD||!_sashD.selectedPanes.length)return;
   _sashD.addSash(_sashD.selectedPanes[0],{
     direction:document.querySelector('input[name="sashDir"]:checked').value,
-    type:document.querySelector('input[name="sashType"]:checked').value,
+    type:document.querySelector('input[name="sashType"]').value,
     hardware:document.getElementById('sashHardware').value,
     handleColor:document.getElementById('sashHandleColor').value
   });
@@ -1886,9 +1888,66 @@ function calcClientPrice(){
         extras:extras.join(', ')
       })
     });
+    // Save to localStorage for admin panel
+    const logEntry={
+      timestamp: new Date().toISOString(),
+      windowType: typeNames[type]||type,
+      width: type==='balcony'? (document.getElementById('cBwinW').value||1400) : (document.getElementById('cWidth').value||1400),
+      height: type==='balcony'? (document.getElementById('cBwinH').value||1400) : (document.getElementById('cHeight').value||1400),
+      profile: profile,
+      glass: glazNames[glazing]||glazing,
+      sashes: selectedSashes,
+      extras: extras.join(', '),
+      price: total,
+      ip: d.ip
+    };
+    const logs=JSON.parse(localStorage.getItem('windowCalcLogs')||'[]');
+    logs.push(logEntry);
+    localStorage.setItem('windowCalcLogs',JSON.stringify(logs));
   }).catch(()=>{});
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
+
+// ========== SAVE PRICES TO GOOGLE SHEETS ==========
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbx1Wj88dqY5pM4Wx_fGvbt1l0gNkAcTrztILpwSlGiVU7Yf8-rSeww9b_a6otmKwwaY/exec';
+
+function savePricesToSheet(){
+  const btn=document.getElementById('saveToSheetBtn');
+  const msg=document.getElementById('saveToSheetMsg');
+  btn.disabled=true; btn.textContent='Сохраняю...';
+  msg.style.display='none';
+
+  // Collect all prices from inputs
+  const prices={};
+  document.querySelectorAll('.cp:not([disabled])').forEach(inp=>{
+    const key=inp.dataset.key, val=parseFloat(inp.value);
+    if(key && !isNaN(val)) prices[key]=val;
+  });
+  // Add markup
+  prices.markup_percent=parseFloat(document.getElementById('markupValue').value)||0;
+
+  // Reverse-map keys back to Google Sheets format
+  const reverseKeyMap={
+    'base_Brusbox 60_4м1-16-4м1':'base_Brusbox 60_однокам',
+    'base_Brusbox 60_4м1-10-4м1-10-4м1':'base_Brusbox 60_двухкам',
+    'base_Brusbox 60_4м1-16-4м1(i)':'base_Brusbox 60_энерго'
+  };
+  const mapped={};
+  for(const k in prices){ mapped[reverseKeyMap[k]||k]=prices[k]; }
+
+  // Send via GET + payload param (most reliable with Apps Script)
+  const payload = encodeURIComponent(JSON.stringify({action:'update_prices', prices:mapped}));
+  const url = SCRIPT_URL + '?payload=' + payload;
+
+  // Use image trick — guaranteed to send GET, no CORS
+  const img = new Image();
+  img.onload = img.onerror = ()=>{
+    btn.textContent='Сохранено!'; btn.style.background='#1a7a1a';
+    msg.textContent='Цены отправлены в Google Таблицу'; msg.style.color='#2a9d2a'; msg.style.display='block';
+    setTimeout(()=>{btn.textContent='▲ Сохранить в Google Таблицу'; btn.style.background='#2a9d2a'; btn.disabled=false; msg.style.display='none';},3000);
+  };
+  img.src = url;
+}
 
 // ========== GOOGLE SHEETS PRICES ==========
 const SHEET_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRz-SO0rLEgvdcJx5MbILqQ9oacz3g8GYlFlFZYP5rvL7acplung7SJYBcRLXVuFVwxpV1gxIo2ARsw/pub?gid=0&single=true&output=csv';
@@ -1916,8 +1975,22 @@ function loadSheetPrices(){
       }
     });
     console.log('Цены из таблицы загружены:',sheetPrices);
+    // In admin mode: sync sheet prices into localStorage so training tab sees them
+    const isAdmin = new URLSearchParams(location.search).has('admin');
+    if(isAdmin && Object.keys(sheetPrices).length>0){
+      const existing = JSON.parse(localStorage.getItem('okna_components')||'{}');
+      Object.assign(existing, sheetPrices);
+      localStorage.setItem('okna_components', JSON.stringify(existing));
+      loadComponentPrices(); // refresh training tab inputs
+      // Hide calculator tab in admin mode — it's in the dashboard separately
+      const calcTab = document.querySelector('.tab[data-tab="calculator"]');
+      if(calcTab) calcTab.style.display='none';
+      // Show "Save to Google Sheets" button
+      const saveBtn = document.getElementById('saveToSheetBtn');
+      if(saveBtn) saveBtn.style.display='block';
+    }
     // If loaded from sheet, hide admin tab and show calculator
-    if(Object.keys(sheetPrices).length>0 && !location.protocol.startsWith('file')){
+    if(Object.keys(sheetPrices).length>0 && !location.protocol.startsWith('file') && !isAdmin){
       document.querySelector('.tabs').style.display='none';
       document.getElementById('tab-training').classList.remove('active');
       document.getElementById('tab-training').style.display='none';

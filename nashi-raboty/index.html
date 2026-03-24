@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Наши работы на карте — 2370+ выполненных заказов | Окна и Двери Малоярославец</title>
+  <meta name="description" content="Карта выполненных заказов по установке пластиковых окон в Малоярославце и районе. Более 2370 объектов с 2010 года. Сервис Центр Окна и Двери.">
+  <meta name="keywords" content="установка окон малоярославец, отзывы окна малоярославец, наши работы окна, выполненные заказы окна">
+  <link rel="canonical" href="https://okna-suslov.ru/nashi-raboty/">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Наши работы — карта выполненных заказов",
+    "description": "Более 2370 выполненных заказов на установку окон в Малоярославце и Малоярославецком районе",
+    "publisher": {
+      "@type": "LocalBusiness",
+      "name": "Сервис Центр Окна и Двери",
+      "telephone": "+74843990900"
+    }
+  }
+  </script>
+
+  <style>
+    :root{--blue-600:#2563eb;--blue-700:#1d4ed8;--n900:#111827;--n500:#6b7280;--n100:#f3f4f6;--r-xl:16px}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--n900);background:#fff}
+    a{text-decoration:none;color:inherit}
+
+    .header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.06)}
+    .container{max-width:1200px;margin:0 auto;padding:0 24px}
+    .header-top{display:flex;align-items:center;justify-content:space-between;height:56px}
+    .header-phone{font-weight:700;font-size:18px;color:var(--n900)}
+    .header-phone:hover{color:var(--blue-600)}
+    .nav{display:flex;gap:4px;padding:8px 0;overflow-x:auto;white-space:nowrap}
+    .nav a{padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;color:var(--n500);transition:.2s}
+    .nav a:hover,.nav a.active{background:var(--n100);color:var(--n900)}
+    .logo{font-weight:800;font-size:18px;letter-spacing:-.02em}
+
+    .hero-section{background:linear-gradient(135deg,#1e3a5f,#1a5cb8);color:#fff;padding:48px 0 32px;text-align:center}
+    .hero-section h1{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+    .hero-section p{font-size:18px;opacity:.8;max-width:600px;margin:0 auto}
+    .stats-row{display:flex;justify-content:center;gap:40px;margin-top:24px;flex-wrap:wrap}
+    .stat-item{text-align:center}
+    .stat-num{font-size:32px;font-weight:800;color:#fbbf24}
+    .stat-label{font-size:13px;opacity:.7;margin-top:2px}
+
+    .filters{background:#fff;border-bottom:1px solid #e5e7eb;padding:12px 0;position:sticky;top:56px;z-index:50}
+    .filters-inner{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .filter-btn{padding:8px 16px;border-radius:20px;border:1px solid #d1d5db;background:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:.2s;color:var(--n500)}
+    .filter-btn:hover{border-color:var(--blue-600);color:var(--blue-600)}
+    .filter-btn.active{background:var(--blue-600);color:#fff;border-color:var(--blue-600)}
+    .filter-label{font-size:12px;font-weight:600;color:var(--n500);text-transform:uppercase;letter-spacing:.06em}
+
+    #map{width:100%;height:calc(100vh - 240px);min-height:500px}
+
+    .footer{background:var(--n900);color:rgba(255,255,255,.5);padding:32px 0}
+    .footer-inner{display:flex;justify-content:space-between;align-items:center;font-size:14px}
+    .footer a{color:rgba(255,255,255,.7)}
+    .footer a:hover{color:#fff}
+
+    @media(max-width:768px){
+      .stats-row{gap:24px}
+      .stat-num{font-size:24px}
+      .nav{display:none}
+      #map{height:calc(100vh - 300px);min-height:400px}
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-top">
+    <a href="/" class="logo">Окна и Двери</a>
+    <a href="tel:84843990900" class="header-phone">8 (484) 399-09-00</a>
+  </div>
+  <nav class="nav container">
+    <a href="/plastikovye-okna/">Пластиковые окна</a>
+    <a href="/balkony-i-lodzhii/">Балконы и лоджии</a>
+    <a href="/osteklenie-kottedzhej/">Остекление коттеджей</a>
+    <a href="/dveri/">Двери</a>
+    <a href="/nashi-raboty/" class="active">Наши работы</a>
+    <a href="/#contacts">Контакты</a>
+  </nav>
+</header>
+
+<section class="hero-section">
+  <div class="container">
+    <h1>Наши работы на карте</h1>
+    <p>Каждая точка — реальный выполненный заказ с номером договора</p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-num" id="totalOrders">2 370</div>
+        <div class="stat-label">выполненных заказов</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">15+</div>
+        <div class="stat-label">лет на рынке</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="totalYears">2010–2022</div>
+        <div class="stat-label">период работы</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="filters">
+  <div class="container filters-inner">
+    <span class="filter-label">Год:</span>
+    <button class="filter-btn active" data-year="all">Все</button>
+    <button class="filter-btn" data-year="2010-2013">2010–2013</button>
+    <button class="filter-btn" data-year="2014-2017">2014–2017</button>
+    <button class="filter-btn" data-year="2018-2022">2018–2022</button>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <span>&copy; 2010–2026 Сервис Центр Окна и Двери, Малоярославец</span>
+    <a href="/">На главную</a>
+  </div>
+</footer>
+
+<script type="text/javascript" charset="utf-8" async src="https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Ac4db318b2182da1d2f30ea029e4738637814b2148edbbda539e7d583b850a69a&amp;width=100%25&amp;height=100%25&amp;lang=ru_RU&amp;scroll=true"></script>
+</body>
+</html>
