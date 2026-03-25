@@ -318,8 +318,8 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
       <div class="control-section">
         <h3>Стеклопакет</h3>
         <div class="form-row"><select id="cGlazing" onchange="drawPreview()">
-          <option value="single">Однокамерный</option>
-          <option value="double" selected>Двухкамерный</option>
+          <option value="single" selected>Однокамерный</option>
+          <option value="double">Двухкамерный</option>
           <option value="energy">Энергосберегающий</option>
         </select></div>
       </div>
@@ -1818,8 +1818,8 @@ function calcClientPrice(){
   let winPrice=basePrice+sashCost+mullionCost+netCost+lamCost;
 
   // Markup — from Google Sheet or admin settings (НЕ на жалюзи/шторы — они уже с наценкой)
-  const mT=sheetPrices?'percent':document.getElementById('markupType').value;
-  const mV=sheetPrices?(data.markup_percent||0):(parseFloat(document.getElementById('markupValue').value)||0);
+  const mT=document.getElementById('markupType').value;
+  const mV=parseFloat(document.getElementById('markupValue').value)||0;
   let profitAmount=0;
   if(mV>0){
     profitAmount=mT==='percent'?Math.round(winPrice*mV/100):mV;
@@ -1907,46 +1907,61 @@ function calcClientPrice(){
   if(rollsQty>0)extras.push('шторы: '+rollsQty);
   if(lamSides===1)extras.push('ламинация одност.');
   if(lamSides===2)extras.push('ламинация двуст.');
-  // Send log — always, IP/city — if available
-  function sendLog(ipStr, cityStr){
-    fetch('https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec',{
-      method:'POST', mode:'no-cors',
-      body:JSON.stringify({
-        ip:ipStr,
-        city:cityStr,
-        type:typeNames[type]||type,
-        size:sizeStr,
-        glazing:glazNames[glazing]||glazing,
-        sashes:selectedSashes,
-        nets:netCount,
-        price:total,
-        profit:profit,
-        extras:extras.join(', ')
-      })
-    }).catch(()=>{});
-    // Save to localStorage for admin panel
-    const logEntry={
-      timestamp: new Date().toISOString(),
-      windowType: typeNames[type]||type,
-      width: type==='balcony'? (document.getElementById('cBwinW').value||1400) : (document.getElementById('cWidth').value||1400),
-      height: type==='balcony'? (document.getElementById('cBwinH').value||1400) : (document.getElementById('cHeight').value||1400),
-      profile: profile,
-      glass: glazNames[glazing]||glazing,
-      sashes: selectedSashes,
-      extras: extras.join(', '),
-      price: total,
-      ip: ipStr,
-      city: cityStr
-    };
-    const logs=JSON.parse(localStorage.getItem('windowCalcLogs')||'[]');
-    logs.push(logEntry);
-    localStorage.setItem('windowCalcLogs',JSON.stringify(logs));
-  }
-  // Try to get IP + city, but send log regardless
-  fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
-    sendLog(d.ip||'', [d.city,d.region,d.country_name].filter(Boolean).join(', '));
-  }).catch(()=>sendLog('',''));
+  // Competitor price range (only window, like our winPrice with markup)
+  let compMin=0,compMax=0;
+  const myWinPrice=basePrice+sashCost+mullionCost+netCost+lamCost+profitAmount;
+  try{
+    const comps=getCompetitorData();
+    if(comps.length){
+      const compPrices=comps.map(c=>Math.round(c.pricePerM2*area+selectedSashes*(c.sashExtra||0)+mullionCount*(c.mullionExtra||0)));
+      compMin=Math.min(...compPrices);
+      compMax=Math.max(...compPrices);
+    }
+  }catch(e){}
+  // Debounced session log — one entry per 5s of inactivity
+  window._pendingLog={
+    type:typeNames[type]||type,
+    size:sizeStr,
+    glazing:glazNames[glazing]||glazing,
+    sashes:selectedSashes,
+    nets:netCount,
+    price:total,
+    profit:profit,
+    extras:extras.join(', '),
+    profile:profile,
+    width: type==='balcony'? (document.getElementById('cBwinW').value||1400) : (document.getElementById('cWidth').value||1400),
+    height: type==='balcony'? (document.getElementById('cBwinH').value||1400) : (document.getElementById('cHeight').value||1400),
+    winPrice:myWinPrice,
+    compMin:compMin,
+    compMax:compMax,
+  };
+  clearTimeout(window._logTimer);
+  window._logTimer=setTimeout(flushLog, 5000);
 }
+// --- Session-based logging (one log per config, not per click) ---
+var _visitorIp='', _visitorCity='';
+fetch('https://get.geojs.io/v1/ip/geo.json').then(r=>r.json()).then(d=>{
+  _visitorIp=d.ip||'';
+  _visitorCity=[d.city,d.region,d.country].filter(Boolean).join(', ');
+}).catch(()=>{});
+
+function flushLog(){
+  const p=window._pendingLog;
+  if(!p) return;
+  window._pendingLog=null;
+  // Send to Google Sheets
+  fetch('https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec',{
+    method:'POST', mode:'no-cors',
+    body:JSON.stringify({ip:_visitorIp,city:_visitorCity,type:p.type,size:p.size,glazing:p.glazing,sashes:p.sashes,nets:p.nets,price:p.price,profit:p.profit,extras:p.extras})
+  }).catch(()=>{});
+  // Save to localStorage for admin panel
+  const logs=JSON.parse(localStorage.getItem('windowCalcLogs')||'[]');
+  logs.push({timestamp:new Date().toISOString(),windowType:p.type,width:p.width,height:p.height,profile:p.profile,glass:p.glazing,sashes:p.sashes,extras:p.extras,price:p.price,winPrice:p.winPrice||0,compMin:p.compMin||0,compMax:p.compMax||0,ip:_visitorIp,city:_visitorCity});
+  localStorage.setItem('windowCalcLogs',JSON.stringify(logs));
+}
+// Also flush when user leaves the page
+window.addEventListener('beforeunload',flushLog);
+
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
 
 // ========== SAVE PRICES TO GOOGLE SHEETS ==========

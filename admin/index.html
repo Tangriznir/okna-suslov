@@ -107,6 +107,7 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
     </div>
     <button class="login-btn" id="loginBtn">Войти</button>
     <div class="login-error" id="loginError">Неверный логин или пароль</div>
+    <a href="/" style="display:block;text-align:center;margin-top:16px;color:#6b7280;font-size:14px;text-decoration:none">← Вернуться на сайт</a>
   </div>
 </div>
 
@@ -123,7 +124,7 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <h3>Окна и Двери</h3>
+      <h3>Okna Suslov</h3>
       <div class="user-info">Администратор</div>
     </div>
     <nav class="sidebar-nav">
@@ -132,9 +133,9 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
       <button class="nav-item" data-page="calculator"><span class="icon">&#128187;</span> Как у клиента</button>
       <button class="nav-item" data-page="window-logs"><span class="icon">&#128196;</span> Просчёты окон</button>
       <button class="nav-item" data-page="house-logs"><span class="icon">&#127968;</span> Просчёты домов</button>
-      <button class="nav-item" data-page="smeta"><span class="icon">&#128209;</span> Смета</button>
     </nav>
     <div class="sidebar-footer">
+      <a href="/" class="logout-btn" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px">← На сайт</a>
       <button class="logout-btn" id="logoutBtn">Выйти</button>
     </div>
   </aside>
@@ -200,11 +201,32 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
         <input type="text" id="wLogSearch" placeholder="Поиск...">
         <button class="filter-btn" onclick="loadWindowLogs()">Обновить</button>
         <button class="filter-btn" onclick="clearWindowLogs()">Очистить фильтры</button>
+        <button class="filter-btn" style="background:#dc2626" onclick="deleteAllWindowLogs()">Очистить записи</button>
+        <button class="filter-btn" style="background:#92400e" onclick="showBlacklist()">Чёрный список</button>
+      </div>
+      <div class="card" id="blacklistPanel" style="display:none;margin-bottom:12px;padding:12px">
+        <h4 style="margin:0 0 8px">Заблокированные IP</h4>
+        <div id="blacklistItems"></div>
+        <p style="font-size:12px;color:#9ca3af;margin:8px 0 0">Просчёты с этих IP будут помечены красным</p>
       </div>
       <div class="card" style="overflow-x:auto">
         <table class="log-table">
-          <thead><tr><th>#</th><th>Дата / время</th><th>Тип окна</th><th>Размер</th><th>Профиль</th><th>Стеклопакет</th><th>Цена</th><th>IP / город</th></tr></thead>
-          <tbody id="windowLogsBody"><tr><td class="empty" colspan="8">Загрузка...</td></tr></tbody>
+          <thead><tr>
+            <th>#</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('timestamp')">Дата / время ⇅</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('windowType')">Тип окна ⇅</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('size')">Размер ⇅</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('profile')">Профиль ⇅</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('glass')">Стеклопакет ⇅</th>
+            <th>Створки</th>
+            <th>Допы</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('price')">Итого ⇅</th>
+            <th>Окно vs конкуренты</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('ip')">IP ⇅</th>
+            <th style="cursor:pointer" onclick="sortWindowLogs('city')">Город ⇅</th>
+            <th>Спам</th>
+          </tr></thead>
+          <tbody id="windowLogsBody"><tr><td class="empty" colspan="13">Загрузка...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -227,16 +249,6 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
       </div>
     </div>
 
-    <!-- SMETA -->
-    <div class="page" id="page-smeta">
-      <h1 class="page-title">Смета — Приложение к договору</h1>
-      <p class="page-desc">Редактируй прямо здесь — формулы и связи сохранены как в Excel</p>
-      <div style="display:flex;gap:12px;margin-bottom:16px">
-        <a href="https://docs.google.com/spreadsheets/d/1wPKocqwH95Vx8N4z5gVyEx5fDcrHuCyf" target="_blank" class="filter-btn" style="text-decoration:none">Приложение к договору</a>
-        <a href="https://docs.google.com/spreadsheets/d/1WyBoguahUOufjSFMFydjI6ny-sDne9b7" target="_blank" class="filter-btn" style="text-decoration:none">Общий прайс лист</a>
-      </div>
-      <iframe src="https://docs.google.com/spreadsheets/d/1wPKocqwH95Vx8N4z5gVyEx5fDcrHuCyf/edit" class="calc-frame" style="height:calc(100vh - 200px)"></iframe>
-    </div>
 
   </div><!-- /main -->
 </div><!-- /dashboard -->
@@ -346,28 +358,81 @@ function loadStats(){
   }
 }
 
+function getBlacklist(){
+  try{ return JSON.parse(localStorage.getItem('ipBlacklist')||'[]'); }catch(e){ return []; }
+}
+function addToBlacklist(ip){
+  if(!ip||ip==='—') return;
+  const bl=getBlacklist();
+  if(!bl.includes(ip)){ bl.push(ip); localStorage.setItem('ipBlacklist',JSON.stringify(bl)); }
+  loadWindowLogs();
+}
+function removeFromBlacklist(ip){
+  let bl=getBlacklist();
+  bl=bl.filter(x=>x!==ip);
+  localStorage.setItem('ipBlacklist',JSON.stringify(bl));
+  loadWindowLogs(); showBlacklist();
+}
+function showBlacklist(){
+  const panel=document.getElementById('blacklistPanel');
+  panel.style.display = panel.style.display==='none'?'block':'none';
+  const bl=getBlacklist();
+  const el=document.getElementById('blacklistItems');
+  if(bl.length===0){ el.innerHTML='<span style="color:#6b7280">Пусто</span>'; return; }
+  el.innerHTML=bl.map(ip=>`<span style="display:inline-flex;align-items:center;gap:6px;background:#991b1b;padding:4px 10px;border-radius:6px;margin:3px;font-size:13px">${ip} <button onclick="removeFromBlacklist('${ip}')" style="background:none;border:none;color:#fca5a5;cursor:pointer;font-size:16px">&times;</button></span>`).join('');
+}
+function deleteAllWindowLogs(){
+  if(!confirm('Удалить ВСЕ записи просчётов окон?')) return;
+  localStorage.setItem('windowCalcLogs','[]');
+  loadWindowLogs();
+}
+var wSortCol='timestamp', wSortAsc=false;
+function sortWindowLogs(col){
+  if(wSortCol===col) wSortAsc=!wSortAsc;
+  else { wSortCol=col; wSortAsc=true; }
+  loadWindowLogs();
+}
 function loadWindowLogs(){
   let logs = getWindowLogs();
+  const bl = getBlacklist();
   const dateFilter = document.getElementById('wLogDate').value;
   const search = document.getElementById('wLogSearch').value.toLowerCase();
   if(dateFilter) logs = logs.filter(l=>(l.timestamp||'').slice(0,10)===dateFilter);
   if(search) logs = logs.filter(l=>JSON.stringify(l).toLowerCase().includes(search));
 
+  // Сортировка
+  logs.sort((a,b)=>{
+    let va,vb;
+    if(wSortCol==='price'){ va=a.price||0; vb=b.price||0; }
+    else if(wSortCol==='size'){ va=(a.width||0)*(a.height||0); vb=(b.width||0)*(b.height||0); }
+    else { va=(a[wSortCol]||'').toString().toLowerCase(); vb=(b[wSortCol]||'').toString().toLowerCase(); }
+    if(va<vb) return wSortAsc?-1:1;
+    if(va>vb) return wSortAsc?1:-1;
+    return 0;
+  });
+
   const tbody = document.getElementById('windowLogsBody');
   if(logs.length===0){
-    tbody.innerHTML='<tr><td class="empty" colspan="8">Нет данных</td></tr>';
+    tbody.innerHTML='<tr><td class="empty" colspan="13">Нет данных</td></tr>';
     return;
   }
-  tbody.innerHTML = logs.slice().reverse().map((l,i)=>`<tr>
-    <td>${logs.length-i}</td>
+  tbody.innerHTML = logs.map((l,i)=>{
+    const isSpam = l.ip && bl.includes(l.ip);
+    return `<tr style="${isSpam?'opacity:0.4;text-decoration:line-through':''}">
+    <td>${i+1}</td>
     <td>${formatDate(l.timestamp)}</td>
     <td>${l.windowType||'—'}</td>
     <td>${l.width||'?'}×${l.height||'?'}</td>
     <td><span class="badge badge-blue">${l.profile||'—'}</span></td>
     <td>${l.glass||'—'}</td>
+    <td>${l.sashes||'—'}</td>
+    <td style="max-width:200px;font-size:12px">${l.extras||'—'}</td>
     <td><b>${l.price? l.price.toLocaleString('ru-RU')+' ₽':'—'}</b></td>
-    <td>${l.ip||'—'}</td>
-  </tr>`).join('');
+    <td style="font-size:11px;white-space:nowrap">${l.compMin&&l.compMax? '<span style="color:#60a5fa">'+(l.winPrice||0).toLocaleString('ru-RU')+'</span> / '+ l.compMin.toLocaleString('ru-RU')+' — '+l.compMax.toLocaleString('ru-RU')+' ₽':'—'}</td>
+    <td style="font-size:12px">${l.ip||'—'}</td>
+    <td style="font-size:12px">${l.city||'—'}</td>
+    <td>${l.ip && l.ip!=='—' ? (isSpam ? '<span style="color:#f87171">спам</span>' : '<button onclick="addToBlacklist(\''+l.ip+'\')" style="background:#dc2626;border:none;color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px">спам</button>') : '—'}</td>
+  </tr>`}).join('');
 }
 
 function loadHouseLogs(){
