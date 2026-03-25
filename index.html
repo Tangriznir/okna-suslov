@@ -34,7 +34,7 @@
       "latitude": 55.0107,
       "longitude": 36.4617
     },
-    "openingHours": "Mo-Fr 09:00-18:00, Sa 10:00-16:00",
+    "openingHours": "Mo-Fr 10:00-16:30",
     "foundingDate": "2000",
     "aggregateRating": {
       "@type": "AggregateRating",
@@ -106,6 +106,9 @@
     .nav a:hover{color:var(--n900)}
     .nav a::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:2px;background:var(--blue-600);transform:scaleX(0);transition:transform .3s var(--ease)}
     .nav a:hover::after{transform:scaleX(1)}
+    .nav-cta{background:linear-gradient(135deg,var(--orange-500),var(--orange-600));color:#fff!important;border-radius:var(--r-md);padding:8px 20px!important;font-weight:600!important;margin-left:8px;box-shadow:0 2px 8px rgba(249,115,22,.3);transition:all .3s var(--ease)!important}
+    .nav-cta:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(249,115,22,.4)}
+    .nav-cta::after{display:none!important}
     .burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none}
     .burger span{width:22px;height:2px;background:var(--n900);border-radius:1px;transition:all .3s}
 
@@ -157,6 +160,15 @@
     .adv-card h3{font-size:17px;margin-bottom:10px;font-weight:700}
     .adv-card p{font-size:14px;color:var(--n500);line-height:1.6}
     .adv-num{position:absolute;top:20px;right:24px;font-size:64px;font-weight:900;color:var(--n100);line-height:1;pointer-events:none}
+
+    /* Partners */
+    .partners-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .partner-card{background:#fff;border:1px solid var(--n200);border-radius:var(--r-lg);padding:24px 20px;text-align:center;transition:all .4s var(--ease);position:relative;overflow:hidden}
+    .partner-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue-600),var(--blue-400));transform:scaleX(0);transition:transform .4s var(--ease)}
+    .partner-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08);border-color:transparent}
+    .partner-card:hover::after{transform:scaleX(1)}
+    .partner-logo{width:100%;height:40px;margin-bottom:12px}
+    .partner-desc{font-size:12px;color:var(--n500);line-height:1.5}
 
     /* Services */
     .services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
@@ -398,21 +410,21 @@
     <div class="header-right">
       <a href="#cta" style="font-size:13px;font-weight:600;color:var(--blue-600);letter-spacing:.02em">БЕСПЛАТНЫЙ ЗАМЕР</a>
       <a href="tel:84843990900" class="header-phone">8 (484) 399-09-00</a>
-      <a href="#cta" class="btn btn-primary" style="padding:10px 20px;font-size:14px">Заявка</a>
     </div>
     <button class="burger" onclick="document.querySelector('.nav').classList.toggle('nav-open')" aria-label="Меню">
       <span></span><span></span><span></span>
     </button>
   </div>
   <nav class="nav container">
-    <a href="/plastikovye-okna/">Пластиковые окна</a>
-    <a href="/alyuminievye-okna/">Алюминиевые окна</a>
-    <a href="/balkony-i-lodzhii/">Балконы и лоджии</a>
-    <a href="/osteklenie-kottedzhej/">Остекление коттеджей</a>
+    <a href="/plastikovye-okna/">Окна ПВХ</a>
+    <a href="/alyuminievye-okna/">Алюминий</a>
+    <a href="/balkony-i-lodzhii/">Балконы</a>
+    <a href="/osteklenie-kottedzhej/">Коттеджи</a>
     <a href="/dveri/">Двери</a>
     <a href="/zhalyuzi/">Жалюзи</a>
     <a href="#reviews">Отзывы</a>
     <a href="#contacts">Контакты</a>
+    <a href="/calculator/" class="nav-cta">Рассчитать</a>
   </nav>
 </header>
 
@@ -567,7 +579,7 @@
         <div class="adv-icon" style="background:linear-gradient(135deg,var(--blue-600),var(--blue-700))">
           <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <h3>25 лет на рынке</h3>
+        <h3>26 лет на рынке</h3>
         <p>Работаем с 2000 года. Более 2 000 выполненных объектов в Малоярославце и области</p>
       </div>
       <div class="adv-card reveal">
@@ -936,9 +948,9 @@
   <div class="container">
     <div class="calc-placeholder reveal">
       <div style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#f59e0b;background:rgba(245,158,11,.15);padding:4px 14px;border-radius:20px;margin-bottom:16px">Онлайн-калькулятор</div>
-      <h2>Рассчитайте стоимость окон REHAU</h2>
-      <p>Выберите тип окна, укажите размеры — получите точную цену за 30 секунд</p>
-      <a href="/okna-suslov/calculator/" class="btn btn-accent btn-lg" style="font-size:17px;padding:16px 40px">Открыть калькулятор &rarr;</a>
+      <h2>Рассчитайте стоимость окон онлайн</h2>
+      <p>Выберите тип окна, укажите размеры — получите точную цену под ключ за 30 секунд</p>
+      <a href="/calculator/" class="btn btn-accent btn-lg" style="font-size:17px;padding:16px 40px">Открыть калькулятор &rarr;</a>
     </div>
   </div>
 </section>
@@ -1007,6 +1019,83 @@
         <p><strong>Сервис Центр «Окна и Двери»</strong> — это семейный бизнес с 25-летней историей. Нас основал Сергей Михайлович Суслов, которого знают тысячи клиентов в Малоярославце и Калужской области.</p>
         <p>Мы работаем с конечным клиентом без посредников. Продаём окна и двери от ведущих заводов — REHAU, Brusbox, KBE, Montblanc, Novotex. Сами доставляем, сами устанавливаем, сами отвечаем за качество.</p>
         <p>Наш офис на ул. Герцена 15 — приходите, покажем образцы профилей, рассчитаем стоимость и ответим на все вопросы.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERS -->
+<section class="section" id="partners">
+  <div class="container">
+    <div class="section-header" style="text-align:center">
+      <div class="label" style="justify-content:center">Наши партнёры</div>
+      <h2>Работаем только с мировыми брендами</h2>
+      <p style="margin:12px auto 0;max-width:620px">Никакого переработанного профиля и локальных марок — только проверенные заводские бренды с сертификатами и гарантией</p>
+    </div>
+    <div class="partners-grid">
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="#009639" font-family="Arial,sans-serif">REHAU</text></svg>
+        <div class="partner-desc">Немецкий эталон оконного профиля. Гарантия 40 лет</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="28" text-anchor="middle" font-size="24" font-weight="900" fill="#003DA5" font-family="Arial,sans-serif">KBE</text></svg>
+        <div class="partner-desc">Берлинский профиль с 60-летней историей</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="18" font-weight="800" fill="#E84E0F" font-family="Arial,sans-serif">Brusbox</text></svg>
+        <div class="partner-desc">Надёжный профиль по честной цене. №1 в эконом-сегменте</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="16" font-weight="800" fill="#1B3C87" font-family="Arial,sans-serif">Montblanc</text></svg>
+        <div class="partner-desc">Морозостойкий профиль для российского климата</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="17" font-weight="800" fill="#0072BC" font-family="Arial,sans-serif">Novotex</text></svg>
+        <div class="partner-desc">Современный профиль с двойным уплотнением</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="16" font-weight="800" fill="#5B6770" font-family="Arial,sans-serif">Provedal</text></svg>
+        <div class="partner-desc">Алюминий для балконов и холодного остекления</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="#ED1C24" font-family="Arial,sans-serif" font-style="italic">Roto</text></svg>
+        <div class="partner-desc">Немецкая фурнитура премиум-класса с 1935 года</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="28" text-anchor="middle" font-size="20" font-weight="900" fill="#D4A900" font-family="Arial,sans-serif">MACO</text></svg>
+        <div class="partner-desc">Австрийская точность. Самая тихая фурнитура на рынке</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="15" font-weight="800" fill="#004F9F" font-family="Arial,sans-serif" letter-spacing="2">SIEGENIA</text></svg>
+        <div class="partner-desc">Инновации в проветривании и безопасности окон</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="16" font-weight="800" fill="#2E7D32" font-family="Arial,sans-serif">Futuruss</text></svg>
+        <div class="partner-desc">Российская фурнитура с гарантией 10 000 циклов</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="28" text-anchor="middle" font-size="20" font-weight="900" fill="#FF6600" font-family="Arial,sans-serif">Vorne</text></svg>
+        <div class="partner-desc">Турецкое качество. Лучший выбор цена/надёжность</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="28" text-anchor="middle" font-size="22" font-weight="900" fill="#1A237E" font-family="Arial,sans-serif">Verta</text></svg>
+        <div class="partner-desc">Усиленная фурнитура для тяжёлых конструкций</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="18" font-weight="800" fill="#8B4513" font-family="Georgia,serif" font-style="italic">Danke</text></svg>
+        <div class="partner-desc">Премиальные подоконники с покрытием Elesgo</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="17" font-weight="800" fill="#37474F" font-family="Arial,sans-serif">Moeller</text></svg>
+        <div class="partner-desc">Немецкие подоконники. Не желтеют, не царапаются</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="14" font-weight="800" fill="#546E7A" font-family="Arial,sans-serif" letter-spacing="1">Reachmont</text></svg>
+        <div class="partner-desc">Доступный профиль на базе Montblanc. Бюджетно и надёжно</div>
+      </div>
+      <div class="partner-card">
+        <svg class="partner-logo" viewBox="0 0 120 40"><text x="60" y="27" text-anchor="middle" font-size="17" font-weight="800" fill="#6A1B9A" font-family="Arial,sans-serif">Renolit</text></svg>
+        <div class="partner-desc">Немецкая плёнка для ламинации. 40+ декоров под дерево</div>
       </div>
     </div>
   </div>
@@ -1084,7 +1173,7 @@
         </div>
         <div class="contact-item">
           <div class="contact-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div><div class="contact-label">Режим работы</div><div class="contact-value">Пн–Пт: 9:00–18:00, Сб: 10:00–16:00</div></div>
+          <div><div class="contact-label">Режим работы</div><div class="contact-value">Пн–Пт: 10:00–16:30 (перерыв 13:00–14:00)</div></div>
         </div>
         <div class="socials">
           <a href="https://vk.com/okna_suslov" target="_blank" rel="noopener" class="social-link" title="ВКонтакте">
