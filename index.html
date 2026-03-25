@@ -472,12 +472,12 @@
       <!-- Main promo — dark, dominant -->
       <div class="promo-card promo-main reveal">
         <div>
-          <div class="promo-tag">Окно под ключ</div>
-          <div class="promo-price">19 999 <span>₽</span></div>
+          <div class="promo-tag">Окно 1350×1350 под ключ</div>
+          <div class="promo-price">... <span>₽</span></div>
           <div class="promo-name">Всё включено — от профиля до откосов</div>
           <ul class="promo-includes">
             <li>Профиль Brusbox 60</li>
-            <li>Двухкамерный стеклопакет</li>
+            <li>Однокамерный стеклопакет</li>
             <li>Подоконник</li>
             <li>Водоотлив</li>
             <li>Откосы</li>
@@ -992,6 +992,38 @@
   </div>
 </section>
 
+<!-- GEOGRAPHY MAP -->
+<section class="section" id="geography">
+  <div class="container">
+    <div class="section-header">
+      <div class="label">География работ</div>
+      <h2>Более 2 000 выполненных заказов</h2>
+      <p>Каждая точка на карте — реальный объект, где мы установили окна и двери. Малоярославец, Обнинск, Калуга, Боровск и вся Калужская область.</p>
+    </div>
+    <div style="position:relative;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xl);border:1px solid var(--n200)">
+      <iframe src="https://yandex.ru/map-widget/v1/?um=constructor%3Aaaf8606295ded2bc8746fb05f9a1641c88b55737a57a0130cafebd9cc95e2975&source=constructorLink" width="100%" height="500" frameborder="0" style="display:block" loading="lazy"></iframe>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px;margin-top:32px">
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:2.2rem;font-weight:800;color:var(--blue-600)">25+</div>
+        <div style="font-size:14px;color:var(--n500);margin-top:4px">лет на рынке</div>
+      </div>
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:2.2rem;font-weight:800;color:var(--blue-600)">2 000+</div>
+        <div style="font-size:14px;color:var(--n500);margin-top:4px">довольных клиентов</div>
+      </div>
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:2.2rem;font-weight:800;color:var(--orange-500)">50+ км</div>
+        <div style="font-size:14px;color:var(--n500);margin-top:4px">радиус обслуживания</div>
+      </div>
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:2.2rem;font-weight:800;color:var(--orange-500)">4.9 ★</div>
+        <div style="font-size:14px;color:var(--n500);margin-top:4px">рейтинг на Яндекс Картах</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section class="cta-section" id="cta">
   <div class="container">
@@ -1249,17 +1281,59 @@ document.addEventListener('DOMContentLoaded',function(){
         if(priceEl) priceEl.textContent=price.toLocaleString('ru-RU');
       }
     });
-    // Обновляем промо-цену (берём минимальную)
-    var allPrices=Object.values(prices).filter(function(v){return v>0});
-    if(allPrices.length>0){
-      var minPrice=Math.min.apply(null,allPrices);
-      var promoEl=document.querySelector('.promo-price');
-      if(promoEl){
-        promoEl.innerHTML=minPrice.toLocaleString('ru-RU')+' <span>\u20BD</span>';
-      }
-    }
     console.log('Цены на сайте обновлены из таблицы:',prices);
   }).catch(function(e){console.warn('Цены из таблицы не загружены:',e)});
+
+  // Промо-цена: окно под ключ 1350×1350, двухчастное, 1 створка п/о, однокамерный, белое
+  // откосы + подоконник + отлив + установка + доставка
+  var CALC_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vRz-SO0rLEgvdcJx5MbILqQ9oacz3g8GYlFlFZYP5rvL7acplung7SJYBcRLXVuFVwxpV1gxIo2ARsw/pub?gid=0&single=true&output=csv';
+  var keyMap={
+    'base_Brusbox 60_однокам':'base_Brusbox 60_4м1-16-4м1',
+    'base_Brusbox 60_двухкам':'base_Brusbox 60_4м1-10-4м1-10-4м1',
+    'base_Brusbox 60_энерго':'base_Brusbox 60_4м1-16-4м1(i)'
+  };
+  fetch(CALC_CSV).then(function(r){return r.text()}).then(function(csv){
+    var d={};
+    csv.split('\n').slice(1).forEach(function(line){
+      var p=line.split(',');
+      if(p.length>=2){
+        var k=p[0].trim(),v=parseFloat(p[1]);
+        if(k&&!isNaN(v)){d[keyMap[k]||k]=v}
+      }
+    });
+    // Расчёт: 1350×1350, Brusbox 60, однокамерный
+    var W=1350,H=1350,area=W*H/1e6;
+    var basePm2=d['base_Brusbox 60_4м1-16-4м1']||0;
+    var basePrice=Math.round(basePm2*area);
+    var sashCost=d['sash_tiltturn']||0; // 1 створка
+    var mullionCost=d['mullion']||0; // 1 импост (2 части - 1)
+    var winPrice=basePrice+sashCost+mullionCost;
+    // Наценка: markup_type=1 → проценты, markup_type=0 или нет → рубли
+    var markupVal=d['markup_percent']||0;
+    var markupIsPercent=d['markup_type']===1;
+    if(markupVal>0) winPrice+=markupIsPercent?Math.round(winPrice*markupVal/100):markupVal;
+    var total=winPrice;
+    // Откосы: 2*высота + ширина
+    var slopesLen=2*(H/1000)+(W/1000);
+    total+=Math.round((d['slopes_pm']||0)*slopesLen);
+    // Подоконник: ширина
+    total+=Math.round((d['sill_pm']||0)*(W/1000));
+    // Отлив: ширина
+    total+=Math.round((d['drip_pm']||0)*(W/1000));
+    // Установка: по площади
+    total+=Math.round((d['install_pm2']||0)*area);
+    // Доставка
+    total+=d['delivery']||0;
+    if(total>0){
+      // Округляем до красивого числа (вниз до 100)
+      total=Math.floor(total/100)*100;
+      var promoEl=document.querySelector('.promo-price');
+      if(promoEl){
+        promoEl.innerHTML=total.toLocaleString('ru-RU')+' <span>\u20BD</span>';
+      }
+    }
+    console.log('Промо-цена под ключ:',total);
+  }).catch(function(e){console.warn('Промо-цена не загружена:',e)});
 })();
 </script>
 </body>

@@ -102,11 +102,11 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
 </div>
 <div class="app">
   <div class="tabs">
-    <button class="tab active" data-tab="training">Обучение</button>
-    <button class="tab" data-tab="calculator">Калькулятор</button>
+    <button class="tab" data-tab="training">Обучение</button>
+    <button class="tab active" data-tab="calculator">Калькулятор</button>
   </div>
 
-  <div id="tab-training" class="tab-content active">
+  <div id="tab-training" class="tab-content">
     <div class="layout">
       <div id="sitePricesPanel" style="width:280px;flex-shrink:0;max-height:85vh;overflow-y:auto;display:none">
         <div class="control-section">
@@ -223,7 +223,7 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
     </div>
   </div>
 
-  <div id="tab-calculator" class="tab-content">
+  <div id="tab-calculator" class="tab-content active">
     <div style="max-width:700px;margin:0 auto">
       <div class="control-section">
         <h3>Тип окна</h3>
@@ -1981,6 +1981,7 @@ function savePricesToSheet(){
   });
   // Add markup
   prices.markup_percent=parseFloat(document.getElementById('markupValue').value)||0;
+  prices.markup_type=document.getElementById('markupType').value==='percent'?1:0;
 
   // Reverse-map keys back to Google Sheets format
   const reverseKeyMap={
@@ -2094,6 +2095,10 @@ function loadSheetPrices(){
       // Hide calculator tab in admin mode — it's in the dashboard separately
       const calcTab = document.querySelector('.tab[data-tab="calculator"]');
       if(calcTab) calcTab.style.display='none';
+      // Switch to training tab in admin mode
+      document.getElementById('tab-calculator').classList.remove('active');
+      document.getElementById('tab-training').classList.add('active');
+      document.querySelector('.tab[data-tab="training"]').classList.add('active');
       // Show "Save to Google Sheets" button
       const saveBtn = document.getElementById('saveToSheetBtn');
       if(saveBtn) saveBtn.style.display='block';
