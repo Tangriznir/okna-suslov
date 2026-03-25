@@ -132,6 +132,7 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
       <button class="nav-item" data-page="calculator"><span class="icon">&#128187;</span> Как у клиента</button>
       <button class="nav-item" data-page="window-logs"><span class="icon">&#128196;</span> Просчёты окон</button>
       <button class="nav-item" data-page="house-logs"><span class="icon">&#127968;</span> Просчёты домов</button>
+      <button class="nav-item" data-page="smeta"><span class="icon">&#128209;</span> Смета</button>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" id="logoutBtn">Выйти</button>
@@ -224,6 +225,17 @@ body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:
           <tbody id="houseLogsBody"><tr><td class="empty" colspan="7">Загрузка...</td></tr></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- SMETA -->
+    <div class="page" id="page-smeta">
+      <h1 class="page-title">Смета — Приложение к договору</h1>
+      <p class="page-desc">Редактируй прямо здесь — формулы и связи сохранены как в Excel</p>
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <a href="https://docs.google.com/spreadsheets/d/1wPKocqwH95Vx8N4z5gVyEx5fDcrHuCyf" target="_blank" class="filter-btn" style="text-decoration:none">Приложение к договору</a>
+        <a href="https://docs.google.com/spreadsheets/d/1WyBoguahUOufjSFMFydjI6ny-sDne9b7" target="_blank" class="filter-btn" style="text-decoration:none">Общий прайс лист</a>
+      </div>
+      <iframe src="https://docs.google.com/spreadsheets/d/1wPKocqwH95Vx8N4z5gVyEx5fDcrHuCyf/edit" class="calc-frame" style="height:calc(100vh - 200px)"></iframe>
     </div>
 
   </div><!-- /main -->

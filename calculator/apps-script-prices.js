@@ -82,6 +82,28 @@ function doProcess(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
+    // Обновление цен на сайте
+    if (data.action === 'update_site_prices') {
+      var sheet = ss.getSheetByName('Цены на сайте');
+      if (!sheet) return ContentService.createTextOutput(JSON.stringify({status:'error', message:'Лист "Цены на сайте" не найден'}));
+      var values = sheet.getDataRange().getValues();
+      var prices = data.prices;
+      var updated = 0;
+
+      for (var key in prices) {
+        for (var i = 1; i < values.length; i++) {
+          if (values[i][0].toString().trim() === key) {
+            sheet.getRange(i + 1, 2).setValue(prices[key]);
+            updated++;
+            break;
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({status:'ok', updated:updated}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     // Логирование просчётов
     var sheet = ss.getSheetByName('Просчёты') || ss.getSheets()[0];
     sheet.appendRow([new Date(),data.ip||'',data.type||'',data.size||'',data.glazing||'',data.sashes||'',data.nets||'',data.price||'',data.profit||'',data.extras||'',data.name||'',data.phone||'',data.total||'']);

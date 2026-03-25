@@ -7,7 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f2f5;color:#333}
-.app{max-width:1440px;margin:0 auto;padding:20px}
+.app{max-width:1600px;margin:0 auto;padding:20px}
 .tabs{display:flex;gap:2px}
 .tab{padding:12px 24px;border:none;background:#e0e0e0;cursor:pointer;border-radius:8px 8px 0 0;font-size:15px;transition:all .2s}
 .tab:hover{background:#d0d0d0}
@@ -108,6 +108,14 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
 
   <div id="tab-training" class="tab-content active">
     <div class="layout">
+      <div id="sitePricesPanel" style="width:280px;flex-shrink:0;max-height:85vh;overflow-y:auto;display:none">
+        <div class="control-section">
+          <h3 style="font-size:15px;margin-bottom:12px">Цены на сайте (руб./м²)</h3>
+          <div id="sitePricesTable" style="font-size:13px"></div>
+          <button class="btn btn-block" id="saveSitePricesBtn" onclick="saveSitePrices()" style="background:#2a9d2a;color:#fff;margin-top:12px;font-size:13px;padding:10px 16px">Сохранить в таблицу</button>
+          <div id="sitePricesMsg" style="font-size:12px;text-align:center;margin-top:6px;display:none"></div>
+        </div>
+      </div>
       <div class="canvas-wrap">
         <canvas id="canvas1" width="760" height="680"></canvas>
         <input id="dimInput1" class="dim-input hidden" type="number" step="10" min="100" max="5000">
@@ -147,9 +155,36 @@ input[name="blindColor"]:checked+span,input[name="rollColor"]:checked+span{borde
             <div class="form-row"><label>Установка (руб./м²)</label><input type="number" class="cp" data-key="install_pm2" step="50" placeholder="0"></div>
             <div class="form-row"><label>Доставка (руб. фикс.)</label><input type="number" class="cp" data-key="delivery" step="100" placeholder="0"></div>
           </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Жалюзи и рулонные шторы</summary>
+            <div class="form-row"><label>Жалюзи белые (руб./шт.)</label><input type="number" class="cp" data-key="blinds_price" step="50" placeholder="0"></div>
+            <div style="margin-top:6px;font-size:11px;font-weight:600;color:#555">Рулонные шторы (руб./шт.):</div>
+            <div class="form-row"><label>Белый</label><input type="number" class="cp" data-key="rolls_price_white" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Блюз 29 (бежевый)</label><input type="number" class="cp" data-key="rolls_price_blues29" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Атлантик 88 (блэкаут)</label><input type="number" class="cp" data-key="rolls_price_atlantic_bo_88" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Эко Блю 94</label><input type="number" class="cp" data-key="rolls_price_eco_blue_94" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Айс 97</label><input type="number" class="cp" data-key="rolls_price_ice_97" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Тефи 250 графит</label><input type="number" class="cp" data-key="rolls_price_tefi_250_0836_grafit" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Триумф 07 абрикос (блэкаут)</label><input type="number" class="cp" data-key="rolls_price_triumf_07_bo_abrikos" step="50" placeholder="0"></div>
+          </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Подоконники цветные (руб./шт.)</summary>
+            <div class="form-row"><label>Komfort Бежевый 150x1000</label><input type="number" class="cp" data-key="windowsil_komfort_beige_150_1000" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Komfort Дуб 150x1000</label><input type="number" class="cp" data-key="windowsil_komfort_oak_150_1000" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Komfort Серый 150x1000</label><input type="number" class="cp" data-key="windowsil_komfort_grey_150_1000" step="50" placeholder="0"></div>
+            <div class="form-row"><label>Komfort Орех 150x1000</label><input type="number" class="cp" data-key="windowsil_komfort_nut_150_1000" step="50" placeholder="0"></div>
+          </details>
+          <details><summary style="cursor:pointer;font-weight:600;font-size:12px;margin:8px 0 6px">Ламинация (% наценка)</summary>
+            <div style="margin-top:4px;font-size:11px;font-weight:600;color:#555">Односторонняя:</div>
+            <div class="form-row"><label>На м² рамы, %</label><input type="number" class="cp" data-key="lam_one_base_pct" step="0.1" placeholder="0"></div>
+            <div class="form-row"><label>На импост, %</label><input type="number" class="cp" data-key="lam_one_mullion_pct" step="0.1" placeholder="0"></div>
+            <div class="form-row"><label>На створку, %</label><input type="number" class="cp" data-key="lam_one_sash_pct" step="0.1" placeholder="0"></div>
+            <div style="margin-top:6px;font-size:11px;font-weight:600;color:#555">Двусторонняя:</div>
+            <div class="form-row"><label>На м² рамы, %</label><input type="number" class="cp" data-key="lam_two_base_pct" step="0.1" placeholder="0"></div>
+            <div class="form-row"><label>На импост, %</label><input type="number" class="cp" data-key="lam_two_mullion_pct" step="0.1" placeholder="0"></div>
+            <div class="form-row"><label>На створку, %</label><input type="number" class="cp" data-key="lam_two_sash_pct" step="0.1" placeholder="0"></div>
+          </details>
         </div>
         <div class="control-section">
-          <h3>Наценка для клиента на сайте</h3>
+          <h3>Наценка на окна для клиента</h3>
           <div class="form-row">
             <div class="inline">
               <input type="number" id="markupValue" value="30" min="0" onchange="saveSettings()">
@@ -1872,12 +1907,13 @@ function calcClientPrice(){
   if(rollsQty>0)extras.push('шторы: '+rollsQty);
   if(lamSides===1)extras.push('ламинация одност.');
   if(lamSides===2)extras.push('ламинация двуст.');
-  // Get IP and send
-  fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
+  // Send log — always, IP/city — if available
+  function sendLog(ipStr, cityStr){
     fetch('https://script.google.com/macros/s/AKfycbxfZfdjrNPdFSV36GtvB_cs3UBjfLy7iid0BjaBF2MHZIjMGdMKOpOWQhasUnI8hDlD2Q/exec',{
       method:'POST', mode:'no-cors',
       body:JSON.stringify({
-        ip:d.ip,
+        ip:ipStr,
+        city:cityStr,
         type:typeNames[type]||type,
         size:sizeStr,
         glazing:glazNames[glazing]||glazing,
@@ -1887,7 +1923,7 @@ function calcClientPrice(){
         profit:profit,
         extras:extras.join(', ')
       })
-    });
+    }).catch(()=>{});
     // Save to localStorage for admin panel
     const logEntry={
       timestamp: new Date().toISOString(),
@@ -1899,12 +1935,17 @@ function calcClientPrice(){
       sashes: selectedSashes,
       extras: extras.join(', '),
       price: total,
-      ip: d.ip
+      ip: ipStr,
+      city: cityStr
     };
     const logs=JSON.parse(localStorage.getItem('windowCalcLogs')||'[]');
     logs.push(logEntry);
     localStorage.setItem('windowCalcLogs',JSON.stringify(logs));
-  }).catch(()=>{});
+  }
+  // Try to get IP + city, but send log regardless
+  fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
+    sendLog(d.ip||'', [d.city,d.region,d.country_name].filter(Boolean).join(', '));
+  }).catch(()=>sendLog('',''));
 }
 function saveSettings(){localStorage.setItem('okna_settings',JSON.stringify({markupType:document.getElementById('markupType').value,markupValue:parseFloat(document.getElementById('markupValue').value)||0}));}
 
@@ -1947,6 +1988,59 @@ function savePricesToSheet(){
     setTimeout(()=>{btn.textContent='▲ Сохранить в Google Таблицу'; btn.style.background='#2a9d2a'; btn.disabled=false; msg.style.display='none';},3000);
   };
   img.src = url;
+}
+
+// ========== SITE PRICES (Цены на сайте) ==========
+const SITE_PRICES_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vRz-SO0rLEgvdcJx5MbILqQ9oacz3g8GYlFlFZYP5rvL7acplung7SJYBcRLXVuFVwxpV1gxIo2ARsw/pub?gid=155518867&single=true&output=csv';
+let sitePricesData=[];
+
+function loadSitePrices(){
+  if(SITE_PRICES_CSV_URL.includes('SITE_PRICES_GID')) return;
+  fetch(SITE_PRICES_CSV_URL).then(r=>r.text()).then(csv=>{
+    sitePricesData=[];
+    const el=document.getElementById('sitePricesTable');
+    let html='';
+    csv.split('\n').slice(1).forEach(line=>{
+      const parts=line.split(',');
+      if(parts.length>=2){
+        const profile=parts[0].trim(), price=parseFloat(parts[1]);
+        if(profile&&!isNaN(price)){
+          sitePricesData.push({profile,price});
+          html+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">'
+            +'<span style="flex:1;font-size:13px" title="'+profile+'">'+profile+'</span>'
+            +'<input type="number" class="sp" data-profile="'+profile+'" value="'+price+'" step="100" style="width:80px;padding:5px 6px;font-size:14px;border:1px solid #ddd;border-radius:4px;text-align:right">'
+            +'</div>';
+        }
+      }
+    });
+    if(html){
+      el.innerHTML=html;
+      document.getElementById('sitePricesPanel').style.display='block';
+    }
+  }).catch(()=>{});
+}
+
+function saveSitePrices(){
+  const btn=document.getElementById('saveSitePricesBtn');
+  const msg=document.getElementById('sitePricesMsg');
+  btn.disabled=true; btn.textContent='Сохраняю...';
+  msg.style.display='none';
+
+  const prices={};
+  document.querySelectorAll('.sp').forEach(inp=>{
+    const p=inp.dataset.profile, v=parseFloat(inp.value);
+    if(p&&!isNaN(v)) prices[p]=v;
+  });
+
+  const payload=encodeURIComponent(JSON.stringify({action:'update_site_prices', prices:prices}));
+  const url=SCRIPT_URL+'?payload='+payload;
+  const img=new Image();
+  img.onload=img.onerror=()=>{
+    btn.textContent='Сохранено!'; btn.style.background='#1a7a1a';
+    msg.textContent='Цены обновлены'; msg.style.color='#2a9d2a'; msg.style.display='block';
+    setTimeout(()=>{btn.textContent='Сохранить в таблицу'; btn.style.background='#2a9d2a'; btn.disabled=false; msg.style.display='none';},3000);
+  };
+  img.src=url;
 }
 
 // ========== GOOGLE SHEETS PRICES ==========
@@ -2349,6 +2443,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadSettings(); loadComponentPrices();
   loadSheetPrices();
   loadSheetCompetitors();
+  loadSitePrices();
   // Auto-save component prices on any input change
   document.addEventListener('input',e=>{if(e.target.classList.contains('cp'))saveComponentPrices();});
   // Перерисовка при смене цвета жалюзи/штор
