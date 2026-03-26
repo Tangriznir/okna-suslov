@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Конфигуратор алюминиевого остекления — Окна Суслов</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;overflow:hidden;height:100vh}
+
+.topbar{display:flex;align-items:center;gap:16px;padding:8px 20px;background:#1a1a2e;color:#fff;height:48px;z-index:100}
+.topbar a{color:rgba(255,255,255,.7);text-decoration:none;font-size:14px;transition:color .2s}
+.topbar a:hover{color:#fff}
+.topbar .logo{font-size:16px;font-weight:700;letter-spacing:1px}
+.topbar .phone{margin-left:auto;font-size:14px;color:rgba(255,255,255,.8)}
+
+.app{display:flex;height:calc(100vh - 48px)}
+
+/* Sidebar */
+.sidebar{width:280px;background:#fff;border-right:1px solid #e0e0e0;overflow-y:auto;flex-shrink:0;padding:16px}
+.sidebar h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:16px 0 8px;font-weight:600}
+.sidebar h3:first-child{margin-top:0}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:#666;margin-bottom:4px;font-weight:500}
+.form-group select,.form-group input{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fafafa;transition:border-color .2s}
+.form-group select:focus,.form-group input:focus{outline:none;border-color:#4a90d9}
+
+.color-options{display:flex;gap:8px}
+.color-btn{width:48px;height:36px;border:2px solid #ddd;border-radius:6px;cursor:pointer;transition:all .2s}
+.color-btn:hover{border-color:#999}
+.color-btn.active{border-color:#4a90d9;box-shadow:0 0 0 2px rgba(74,144,217,.3)}
+.siding-options{display:flex;gap:6px;flex-wrap:wrap}
+.siding-btn{width:56px;height:40px;border:2px solid #ddd;border-radius:6px;cursor:pointer;overflow:hidden;transition:all .2s}
+.siding-btn:hover{border-color:#999}
+.siding-btn.active{border-color:#4a90d9;box-shadow:0 0 0 2px rgba(74,144,217,.3)}
+.color-btn.white-c{background:linear-gradient(135deg,#f5f5f0,#e8e8e0)}
+.color-btn.brown-c{background:linear-gradient(135deg,#6b4a38,#44322d)}
+
+.mode-toggle{display:flex;border:1px solid #ddd;border-radius:8px;overflow:hidden}
+.mode-btn{flex:1;padding:8px 4px;text-align:center;font-size:12px;cursor:pointer;background:#fafafa;transition:all .2s;border:none;font-weight:500}
+.mode-btn:first-child{border-right:1px solid #ddd}
+.mode-btn.active{background:#4a90d9;color:#fff}
+.mode-btn:hover:not(.active){background:#f0f0f0}
+
+.info-card{background:#f8f9ff;border:1px solid #e0e4f0;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:#555;line-height:1.5}
+.info-card b{color:#333}
+
+/* Viewport */
+.viewport{flex:1;position:relative;background:#dce8f0;overflow:hidden}
+.viewport canvas{width:100%!important;height:100%!important;display:block}
+
+/* Side panel */
+.side-panel{width:300px;background:#fff;border-left:1px solid #e0e0e0;overflow-y:auto;flex-shrink:0;padding:16px;display:none}
+.side-panel.active{display:block}
+.side-tabs{display:flex;gap:4px;margin-bottom:16px}
+.side-tab{flex:1;padding:8px;text-align:center;border:2px solid #e0e0e0;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;transition:all .2s;background:#fafafa}
+.side-tab:hover{border-color:#999}
+.side-tab.active{border-color:#4a90d9;background:#eef4fb;color:#4a90d9}
+.section-title{font-size:14px;font-weight:600;margin-bottom:12px;color:#333}
+
+/* Presets */
+.presets-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px;font-weight:600}
+.preset-btns{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.preset-btn{padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer;background:#fafafa;transition:all .2s;white-space:nowrap}
+.preset-btn:hover{border-color:#999;background:#f0f0f0}
+.preset-btn.active{border-color:#4a90d9;background:#eef4fb;color:#4a90d9;font-weight:600}
+
+/* Frame visual */
+.frames-visual{display:flex;gap:3px;margin-bottom:16px;padding:10px;background:#f5f5f5;border-radius:8px;align-items:stretch;min-height:80px}
+.frame-vis{border:2px solid #b0b0b0;border-radius:4px;display:flex;gap:1px;padding:2px;background:#e0e0e0;flex:1}
+.frame-vis.active-frame{border-color:#4a90d9}
+.sash-vis{flex:1;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;font-weight:600;cursor:pointer;transition:all .15s;min-height:60px}
+.sash-vis.sliding{background:#d4f0ff;color:#2980b9;border:1px solid #7ec8e3}
+.sash-vis.fixed{background:#e8f4fd;color:#4a90d9;border:1px solid #b0d4f1}
+.sash-vis.sandwich{background:#c8e6c9;color:#388e3c;border:1px solid #81c784}
+.sash-vis:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.sash-vis .arrow{font-size:14px;margin-bottom:2px}
+.sash-vis .label{font-size:8px;text-transform:uppercase;letter-spacing:.5px}
+
+/* Side B options */
+.side-b-options{margin-top:12px}
+.side-b-options label{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;margin-bottom:6px;cursor:pointer;font-size:13px;transition:all .15s;background:#fafafa}
+.side-b-options label:hover{border-color:#999}
+.side-b-options label.active{border-color:#4a90d9;background:#eef4fb}
+.side-b-options input{display:none}
+
+/* Schematic */
+.schematic{margin-top:16px;padding:12px;background:#f0f4f8;border-radius:8px}
+.schematic-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:8px;font-weight:600}
+.schematic-view{position:relative;width:100%;padding-bottom:50%;background:#fff;border-radius:6px;border:1px solid #ddd;overflow:hidden}
+.schematic svg{position:absolute;top:0;left:0;width:100%;height:100%}
+
+@media(max-width:1100px){.sidebar{width:240px}.side-panel{width:260px}}
+@media(max-width:900px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;max-height:180px;border-right:none;border-bottom:1px solid #e0e0e0}
+  .viewport{height:50vh}
+  .side-panel{width:100%;position:fixed;bottom:0;left:0;right:0;max-height:45vh;border-left:none;border-top:1px solid #e0e0e0;z-index:50}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/okna-suslov/alyuminievye-okna/">← Назад</a>
+  <div class="logo">OKNA SUSLOV</div>
+  <div class="phone">☎ 8 (910) 602-07-84</div>
+</div>
+
+<div class="app">
+  <div class="sidebar">
+    <h3>Тип конструкции</h3>
+    <div class="form-group">
+      <select id="balconyType" onchange="changeType(this.value)">
+        <option value="g-right">Балкон Г-образный (угол слева)</option>
+        <option value="g-left">Балкон Г-образный (угол справа)</option>
+        <option value="p-shape">Балкон П-образный</option>
+        <option value="loggia-3500">Лоджия до 3500</option>
+        <option value="loggia-6100">Лоджия до 6100</option>
+        <option value="veranda">Веранда</option>
+      </select>
+    </div>
+
+    <h3>Вариант остекления</h3>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="cladding" onclick="changeMode('cladding')">С обшивкой</button>
+      <button class="mode-btn" data-mode="panoramic" onclick="changeMode('panoramic')">Панорамный</button>
+    </div>
+
+    <h3>Цвет профиля</h3>
+    <div class="color-options">
+      <div class="color-btn white-c active" data-color="white" onclick="changeColor('white')" title="Белый"></div>
+      <div class="color-btn brown-c" data-color="brown" onclick="changeColor('brown')" title="Коричневый"></div>
+    </div>
+
+    <h3>Доп. элементы</h3>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="chkOtliv" checked onchange="toggleExtra('otliv',this.checked)"> Отлив (водоотлив)
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="chkKozyrek" checked onchange="toggleExtra('kozyrek',this.checked)"> Козырёк
+    </label>
+
+    <h3>Отделка</h3>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="chkFloor" onchange="toggleExtra('floor',this.checked)"> Пол
+    </label>
+    <div id="floorTypeWrap" style="display:none;margin-left:24px;margin-bottom:6px">
+      <select id="floorType" onchange="S.floorType=this.value;rebuild()" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px">
+        <option value="board">Доска</option>
+        <option value="laminate">Ламинат</option>
+        <option value="linoleum">Линолеум</option>
+      </select>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="chkCeiling" onchange="toggleExtra('ceiling',this.checked)"> Потолок
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="chkInnerSiding" onchange="toggleExtra('innerSiding',this.checked)"> Обшивка изнутри
+    </label>
+
+    <h3>Цвет обшивки</h3>
+    <div class="siding-options" id="sidingOptions">
+      <div class="siding-btn active" data-siding="sayding_1" onclick="changeSiding('sayding_1')" title="Бежевый"><img src="textures/sayding_1.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
+      <div class="siding-btn" data-siding="sayding_2" onclick="changeSiding('sayding_2')" title="Серый"><img src="textures/sayding_2.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
+      <div class="siding-btn" data-siding="sayding_3" onclick="changeSiding('sayding_3')" title="Сливочный"><img src="textures/sayding_3.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
+      <div class="siding-btn" data-siding="sayding_4" onclick="changeSiding('sayding_4')" title="Зелёный"><img src="textures/sayding_4.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
+    </div>
+
+    <div class="info-card">
+      <b>Provedal C640</b><br>
+      Профиль: 60 мм • Стекло: 4 мм (Al)<br>
+      Створки: раздвижные на направляющих
+    </div>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <canvas id="canvas3d"></canvas>
+  </div>
+
+  <div class="side-panel" id="sidePanel">
+    <div class="side-tabs" id="sideTabs"></div>
+    <div class="section-title" id="sidePanelTitle">Сторона A — Фасад</div>
+    <div id="presetsArea"></div>
+    <div class="frames-visual" id="framesVis"></div>
+    <div id="sideOptions"></div>
+    <div class="schematic">
+      <div class="schematic-title">Вид сверху</div>
+      <div class="schematic-view"><svg id="schematicSvg" viewBox="0 0 200 120"></svg></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ========== CONSTANTS ========== */
+const SC = 0.001;
+const RAILING_H = 1000;   // высота ограждения
+const GLAZING_H = 1600;   // высота створки (фиксированная)
+const PLATE_H = 200;
+const FRAME_P = 60;        // профиль рамы Provedal C640 (мм)
+const CONN_GAP = 3;        // зазор соединения между рамами (мм)
+const CORNER_SZ = 60;      // соединительный угол (мм)
+const IMPOST_W = 32;       // ширина импоста (мм)
+const TRACK_H = 20;        // высота направляющей (мм)
+
+/* ========== STATE ========== */
+/*
+  Каждая сторона: массив рам (frames).
+  Рама: {sashes: ['sliding'|'fixed'|'sandwich', ...]}
+  - sliding: раздвижная створка (стекло + ручка, на треке)
+  - fixed: глухая створка (стекло, не двигается)
+  - sandwich: сэндвич-панель (глухая, непрозрачная)
+*/
+const S = {
+  type: 'g-right',
+  mode: 'cladding',
+  width: 3000,
+  depth: 1100,
+  color: 'white',
+  activeSide: 'A',
+  sides: {
+    A: [{sashes:['sliding','sliding']}, {sashes:['sliding','sliding']}],
+    B: [{sashes:['fixed']}]
+  },
+  // Нижние панели для панорамного режима (glass / sandwich), по одной на каждую створку
+  lower: {
+    A: ['glass','glass','glass','glass'],
+    B: ['glass']
+  },
+  otliv: true,
+  kozyrek: true,
+  siding: 'sayding_1',
+  floor: false,
+  floorType: 'board',
+  ceiling: false,
+  innerSiding: false
+};
+
+/* ========== PRESETS ========== */
+const SIDE_A_PRESETS = [
+  {name:'4 створки', frames:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}]},
+  {name:'По центру', frames:[{sashes:['fixed']},{sashes:['sliding','sliding']},{sashes:['fixed']}]},
+  {name:'Слева', frames:[{sashes:['sliding','sliding']},{sashes:['fixed']}]},
+  {name:'Справа', frames:[{sashes:['fixed']},{sashes:['sliding','sliding']}]},
+];
+
+const SIDE_B_PRESETS = [
+  {name:'Глухое стекло', frames:[{sashes:['fixed']}]},
+  {name:'Сэндвич', frames:[{sashes:['sandwich']}]},
+  {name:'Раздвижная', frames:[{sashes:['sliding','sliding']}]},
+];
+
+/* ========== THREE.JS ========== */
+let scene, camera, renderer, canvas;
+let meshes = [];
+const orbit = {theta:-0.5, phi:0.85, dist:5.5, targetY:1.0, drag:false, lastX:0, lastY:0, moved:false};
+
+const PAL = {
+  white:{frame:0xe8e8e0, sandwich:0xf0efe8},
+  brown:{frame:0x44322d, sandwich:0x5a4030}
+};
+
+let mFrame, mGlass, mSandwich, mSiding, mPlate, mWall, mRail, mGround, mCorner, mTrack, mOtliv, mKozyrek;
+
+const texLoader = new THREE.TextureLoader();
+const texCache = {};
+
+function loadTex(path, repeatX, repeatY){
+  const key = path + '_' + repeatX + '_' + repeatY;
+  if(texCache[key]) return texCache[key];
+  const t = texLoader.load(path);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeatX || 1, repeatY || 1);
+  texCache[key] = t;
+  return t;
+}
+
+function updateMats(){
+  const p = PAL[S.color];
+  mFrame = new THREE.MeshStandardMaterial({color:p.frame, roughness:0.3, metalness:0.05});
+  mGlass = new THREE.MeshPhysicalMaterial({color:0x88ddee, transparent:true, opacity:0.3, roughness:0, metalness:0.15, side:THREE.DoubleSide});
+  mSandwich = new THREE.MeshStandardMaterial({color:p.sandwich, roughness:0.5});
+
+  // Сайдинг с текстурой
+  const sidingTex = loadTex('textures/' + S.siding + '.jpg', 2, 3);
+  mSiding = new THREE.MeshStandardMaterial({map:sidingTex, roughness:0.7});
+
+  // Плиты — серый бетон
+  mPlate = new THREE.MeshStandardMaterial({color:0x888888, roughness:0.9});
+
+  // Стена — кирпич с текстурой
+  const brickTex = loadTex('textures/brick.jpg', 4, 4);
+  mWall = new THREE.MeshStandardMaterial({map:brickTex, roughness:0.85});
+
+  mRail = new THREE.MeshStandardMaterial({color:0xdddddd, roughness:0.4, metalness:0.3});
+  mGround = new THREE.MeshStandardMaterial({color:0x8ab060, roughness:1});
+  mCorner = new THREE.MeshStandardMaterial({color:p.frame, roughness:0.25, metalness:0.08});
+  mTrack = new THREE.MeshStandardMaterial({color:p.frame, roughness:0.35, metalness:0.1});
+  mOtliv = new THREE.MeshStandardMaterial({color:p.frame, roughness:0.3, metalness:0.15});
+  mKozyrek = new THREE.MeshStandardMaterial({color:p.frame, roughness:0.3, metalness:0.15});
+}
+
+/* Helpers */
+function bx(w,h,d,x,y,z,mat,sd){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true;
+  if(sd) m.userData.side=sd;
+  return m;
+}
+function addM(m){scene.add(m);meshes.push(m);return m}
+function clearScene(){meshes.forEach(m=>{scene.remove(m);if(m.geometry)m.geometry.dispose()});meshes=[]}
+
+/* ========== INIT ========== */
+function init3D(){
+  canvas=document.getElementById('canvas3d');
+  const vp=document.getElementById('viewport');
+  const w=vp.clientWidth, h=vp.clientHeight;
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color('#dce8f0');
+  camera=new THREE.PerspectiveCamera(40,w/h,0.1,100);
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  renderer.setSize(w,h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  scene.add(new THREE.AmbientLight(0xffffff,0.45));
+  const sun=new THREE.DirectionalLight(0xffffff,0.6);
+  sun.position.set(5,10,8);sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.left=-8;sun.shadow.camera.right=8;
+  sun.shadow.camera.top=8;sun.shadow.camera.bottom=-8;
+  scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0x87ceeb,0x556b2f,0.2));
+}
+
+/* ========== BUILD SCENE ========== */
+function buildBalcony(){
+  clearScene();
+  updateMats();
+
+  const W = S.width*SC, D = S.depth*SC;
+  const rH = RAILING_H*SC, gH = GLAZING_H*SC, pH = PLATE_H*SC;
+  const fp = FRAME_P*SC, gap = CONN_GAP*SC, cs = CORNER_SZ*SC;
+  const totalH = rH + gH + fp*2; // ограждение + рама (верх+низ профиль) + стекло
+
+  // Ground
+  addM(bx(20,0.02,20, 0,-pH-0.01,0, mGround));
+
+  // Balcony plate (пол)
+  addM(bx(W+0.02, pH, D+0.02, 0,-pH/2, D/2, mPlate));
+
+  // Ceiling plate (потолок — плита верхнего этажа)
+  const ceilY = rH + gH + fp*2;
+  addM(bx(W+0.02, pH*0.5, D+0.02, 0, ceilY+pH*0.25, D/2, mPlate));
+
+  // Building back wall (с проёмом по ширине балкона)
+  const wallH = ceilY + pH + 1.2;
+  const wallT = 0.25;
+  const wallExt = 0.6; // выступ стены за балкон с каждой стороны
+  const totalWallW = W + wallExt*2;
+  // Левая часть стены
+  addM(bx(wallExt, wallH, wallT, -W/2-wallExt/2, wallH/2-pH-0.3, -wallT/2, mWall));
+  // Правая часть стены
+  addM(bx(wallExt, wallH, wallT, W/2+wallExt/2, wallH/2-pH-0.3, -wallT/2, mWall));
+  // Верхняя часть (над потолочной плитой)
+  const aboveH = wallH - (ceilY + pH*0.5) - pH*0.3;
+  addM(bx(W, aboveH, wallT, 0, ceilY+pH*0.5+aboveH/2, -wallT/2, mWall));
+  // Нижняя часть (под балконной плитой)
+  const belowH = pH + 0.3;
+  addM(bx(W, belowH, wallT, 0, -pH-0.3+belowH/2, -wallT/2, mWall));
+
+  // Building side wall
+  const sx = S.type==='g-left' ? W/2+0.125 : -W/2-0.125;
+  addM(bx(0.25, wallH, D+0.6, sx, wallH/2-pH-0.3, D/2, mWall));
+
+  const upperH = gH + fp*2; // высота верхних рам (профиль + стекло + профиль)
+  const lowerH = rH;        // высота нижних рам (= высота ограждения)
+  const connH = fp * 0.5;   // подставочный профиль между рядами
+
+  if(S.mode === 'cladding'){
+    // === С ОБШИВКОЙ ===
+    buildRailing(W, D, rH);
+    buildSiding(W, D, rH);
+    // Верхние рамы на ограждении
+    buildSideGlazing('A', W, D, rH, upperH, 'front');
+    buildSideGlazing('B', W, D, rH, upperH, 'front_b');
+
+    // Нащельник — уголок 40×40 на стыке обшивки и рам
+    buildNaschelnik(W, D, rH);
+
+    // Угол — только на высоту верхних рам
+    buildCorner(W, D, fp, rH, upperH);
+  } else {
+    // === ПАНОРАМНЫЙ ===
+    // Нижний ряд рам (стекло/сэндвич)
+    buildSideGlazing('A', W, D, 0, lowerH, 'front', 'lower');
+    buildSideGlazing('B', W, D, 0, lowerH, 'front_b', 'lower');
+
+    // Соединительный профиль между рядами
+    const connY = lowerH + connH/2;
+    // (он встроен в рамы, визуально просто стык)
+
+    // Верхний ряд рам (створки)
+    buildSideGlazing('A', W, D, lowerH, upperH, 'front');
+    buildSideGlazing('B', W, D, lowerH, upperH, 'front_b');
+
+    // Угол — на ВСЮ высоту (от плиты до потолка)
+    buildCorner(W, D, fp, 0, lowerH + upperH);
+  }
+
+  // Отлив
+  if(S.otliv){
+    const otlivY = S.mode==='cladding' ? rH : 0;
+    buildOtliv(W, D, otlivY);
+  }
+
+  // Козырёк
+  if(S.kozyrek){
+    buildKozyrek(W, D, ceilY);
+  }
+
+  // Пол (ламинат / линолеум)
+  if(S.floor){
+    buildFloor(W, D);
+  }
+
+  // Потолок
+  if(S.ceiling){
+    buildCeiling(W, D, ceilY);
+  }
+
+  // Обшивка изнутри (внутренняя сторона ограждения)
+  if(S.innerSiding && S.mode==='cladding'){
+    buildInnerSiding(W, D, rH);
+  }
+}
+
+/* ========== CORNER CONNECTOR ========== */
+function buildCorner(W, D, fp, startY, height){
+  const cLeft = S.type==='g-left';
+  const cxBase = cLeft ? -W/2 : W/2;
+  const cy = startY + height/2;
+  const barAx = cLeft ? cxBase + fp/2 : cxBase - fp/2;
+  addM(bx(fp, height, fp*0.7, barAx, cy, D, mCorner.clone()));
+  addM(bx(fp*0.7, height, fp, cxBase, cy, D - fp/2, mCorner.clone()));
+}
+
+/* ========== RAILING ========== */
+function buildRailing(W, D, rH){
+  const bw=0.012, th=0.04, sp=0.13;
+
+  // Side A
+  addM(bx(W, th, th, 0, rH-th/2, D, mRail));
+  addM(bx(W, th*0.6, th, 0, 0.015, D, mRail));
+  const nA=Math.max(2, Math.round(W/sp));
+  for(let i=0;i<=nA;i++) addM(bx(bw, rH, bw, -W/2+(W/nA)*i, rH/2, D, mRail));
+
+  // Side B
+  const bxPos = S.type==='g-left' ? -W/2 : W/2;
+  addM(bx(th, th, D, bxPos, rH-th/2, D/2, mRail));
+  addM(bx(th, th*0.6, D, bxPos, 0.015, D/2, mRail));
+  const nB=Math.max(2, Math.round(D/sp));
+  for(let i=0;i<=nB;i++) addM(bx(bw, rH, bw, bxPos, rH/2, (D/nB)*i, mRail));
+}
+
+/* ========== SIDING ========== */
+function buildSiding(W, D, rH){
+  const t=0.025;
+  addM(bx(W, rH-0.04, t, 0, rH/2, D+t/2, mSiding));
+  const bxPos = S.type==='g-left' ? -W/2-t/2 : W/2+t/2;
+  addM(bx(t, rH-0.04, D, bxPos, rH/2, D/2, mSiding));
+}
+
+/* ========== SIDE GLAZING ========== */
+function buildSideGlazing(side, W, D, startY, totalFrameH, pos, rowType){
+  // rowType: undefined/'upper' = створки из S.sides, 'lower' = панели из S.lower
+  const upperFrames = S.sides[side];
+  if(!upperFrames) return;
+  const isActive = S.activeSide===side;
+
+  // For lower row: create matching frame structure from S.lower
+  let frames;
+  if(rowType === 'lower'){
+    const lp = S.lower[side] || [];
+    let idx = 0;
+    frames = upperFrames.map(f => ({
+      sashes: f.sashes.map(() => {
+        const t = lp[idx] || 'glass';
+        idx++;
+        return t === 'sandwich' ? 'sandwich' : 'fixed';
+      })
+    }));
+  } else {
+    frames = upperFrames;
+  }
+
+  const fp = FRAME_P*SC, gap = CONN_GAP*SC;
+
+  // Determine actual pos for Side B
+  let actualPos = pos;
+  if(pos === 'front_b') actualPos = S.type==='g-left' ? 'left' : 'right';
+
+  // Side length
+  let sideLen = (actualPos==='front') ? W : D;
+
+  // Available length (minus corner connector bar = 1 frame profile width)
+  const avail = sideLen - fp;
+
+  // Count total sashes across all frames
+  let totalSashes = 0;
+  frames.forEach(f => totalSashes += f.sashes.length);
+
+  // Total frame profiles: each frame has 2 outer posts (left+right)
+  const totalProfiles = frames.length * 2 * fp;
+  // Total gaps between frames
+  const totalGaps = Math.max(0, frames.length-1) * gap;
+  // Sash width (equal for all)
+  const sashW = (avail - totalProfiles - totalGaps) / totalSashes;
+
+  // Build each frame — start from building wall, go towards corner
+  let curX;
+  if(actualPos==='front'){
+    curX = S.type==='g-left' ? sideLen/2 - fp : -sideLen/2;
+  } else {
+    curX = -sideLen/2; // start from building wall (z=0 end)
+  }
+  const dir = (actualPos==='front' && S.type==='g-left') ? -1 : 1;
+
+  for(let fi=0; fi<frames.length; fi++){
+    const frame = frames[fi];
+    const nSash = frame.sashes.length;
+    const frameW = nSash * sashW + 2 * fp;
+    const frameCenterLocal = curX + dir * frameW/2;
+
+    buildFrame(side, frame, frameCenterLocal, startY, totalFrameH, frameW, sashW, fp, actualPos, W, D, isActive);
+
+    curX += dir * (frameW + gap);
+  }
+}
+
+/* ========== SINGLE FRAME ========== */
+function buildFrame(side, frame, centerLocal, startY, height, frameW, sashW, fp, pos, W, D, isActive){
+  const group = new THREE.Group();
+  const nSash = frame.sashes.length;
+  const glassH = height - fp*2;
+  const trackH = TRACK_H*SC;
+
+  // Frame perimeter (4 bars)
+  group.add(bx(fp, height, fp*0.7, -frameW/2+fp/2, height/2, 0, mFrame.clone())); // left post
+  group.add(bx(fp, height, fp*0.7, frameW/2-fp/2, height/2, 0, mFrame.clone()));  // right post
+  group.add(bx(frameW, fp, fp*0.7, 0, height-fp/2, 0, mFrame.clone()));           // top rail
+  group.add(bx(frameW, fp, fp*0.7, 0, fp/2, 0, mFrame.clone()));                  // bottom rail
+
+  const impW = IMPOST_W * SC; // ширина импоста
+
+  // Determine if this frame has any sliding sashes
+  const hasSliding = frame.sashes.some(t => t==='sliding');
+
+  // Tracks (направляющие) — only for frames with sliding створки
+  if(hasSliding && nSash > 1){
+    group.add(bx(frameW-fp*2, trackH, fp*0.3, 0, fp+trackH/2, 0, mTrack.clone()));
+    group.add(bx(frameW-fp*2, trackH, fp*0.3, 0, height-fp-trackH/2, 0, mTrack.clone()));
+  }
+
+  // Vertical импосты between sashes (for non-sliding frames)
+  if(!hasSliding && nSash > 1){
+    for(let i=1; i<nSash; i++){
+      const ix = -frameW/2 + fp + sashW*i;
+      group.add(bx(impW, glassH+0.002, fp*0.6, ix, height/2, 0, mFrame.clone()));
+    }
+  }
+
+  // Build each sash
+  for(let si=0; si<nSash; si++){
+    const type = frame.sashes[si];
+    const sx = -frameW/2 + fp + sashW/2 + si*sashW;
+
+    if(type === 'sandwich'){
+      // Сэндвич-панель — в одной плоскости (z=0), с учётом импостов
+      const panelW = nSash > 1 ? sashW - impW/2 - 0.002 : sashW - 0.004;
+      const panel = bx(panelW, glassH-0.004, 0.02, sx, height/2, 0, mSandwich.clone());
+      panel.userData.side = side;
+      group.add(panel);
+
+    } else if(type === 'fixed'){
+      // Глухое стекло — в одной плоскости (z=0), с учётом импостов
+      const glW = nSash > 1 ? sashW - impW/2 - 0.004 : sashW - 0.006;
+      const g = bx(glW, glassH-0.006, 0.005, sx, height/2, 0, mGlass.clone());
+      g.userData.side = side;
+      group.add(g);
+
+    } else {
+      // Раздвижная створка — на треках, со смещением по Z (внахлёст)
+      const zOff = nSash > 1 ? (si===0 ? -0.008 : 0.008) : 0;
+      const sG = new THREE.Group();
+      const sfw = 0.018;
+
+      sG.add(bx(sashW-0.004, sfw, 0.02, 0, glassH/2-sfw/2, 0, mFrame.clone()));
+      sG.add(bx(sashW-0.004, sfw, 0.02, 0, -glassH/2+sfw/2, 0, mFrame.clone()));
+      sG.add(bx(sfw, glassH-sfw*2-0.004, 0.02, -(sashW-0.004)/2+sfw/2, 0, 0, mFrame.clone()));
+      sG.add(bx(sfw, glassH-sfw*2-0.004, 0.02, (sashW-0.004)/2-sfw/2, 0, 0, mFrame.clone()));
+
+      const gw = sashW - 0.004 - sfw*2;
+      const gh = glassH - sfw*2 - 0.008;
+      const g = bx(gw, gh, 0.004, 0, 0, 0, mGlass.clone());
+      g.userData.side = side;
+      sG.add(g);
+
+      const hSide = (si===0) ? 1 : -1;
+      const hx = hSide * ((sashW-0.004)/2 - sfw - 0.006);
+      sG.add(bx(0.006, 0.04, 0.014, hx, 0, 0.012, mFrame.clone()));
+
+      sG.position.set(sx, height/2, zOff);
+      group.add(sG);
+    }
+  }
+
+  // Invisible click plane
+  const cp = new THREE.Mesh(
+    new THREE.PlaneGeometry(frameW, height),
+    new THREE.MeshBasicMaterial({visible:false, side:THREE.DoubleSide})
+  );
+  cp.position.set(0, height/2, 0.06);
+  cp.userData.side = side;
+  group.add(cp);
+
+  // World position
+  let wx,wy,wz,ry;
+  if(pos==='front'){
+    wx=centerLocal; wy=startY; wz=D; ry=0;
+  } else if(pos==='right'){
+    wx=W/2; wy=startY; wz=D/2+centerLocal; ry=Math.PI/2;
+  } else {
+    wx=-W/2; wy=startY; wz=D/2-centerLocal; ry=-Math.PI/2;
+  }
+  group.position.set(wx,wy,wz);
+  group.rotation.y=ry;
+
+  // Highlight
+  if(isActive){
+    group.traverse(ch=>{
+      if(ch.isMesh && ch.material && ch.material.visible!==false && !ch.userData.side){
+        if(ch.material.transparent && ch.material.opacity<0.5) return;
+        const m=ch.material.clone();
+        m.emissive=new THREE.Color(0x2266aa);
+        m.emissiveIntensity=0.1;
+        ch.material=m;
+      }
+    });
+  }
+
+  group.traverse(ch=>{if(ch.isMesh) meshes.push(ch)});
+  scene.add(group);
+  meshes.push(group);
+}
+
+/* ========== НАЩЕЛЬНИК (стыковой уголок) ========== */
+function buildNaschelnik(W, D, rH){
+  // Вертикальный L-уголок 40×40мм на стыке бокового и фасадного сайдинга
+  const sz = 0.04;    // 40мм полка
+  const t = 0.002;    // толщина металла
+  const cLeft = S.type==='g-left';
+  const bxSign = cLeft ? -1 : 1;
+  const cx = bxSign * W/2;
+
+  const st = 0.025; // толщина сайдинга
+  const gap = 0.002; // зазор от сайдинга
+  const h = rH - 0.04;
+  // Ребро уголка = внешний угол обшивки + зазор
+  const ex = cx + bxSign * (st + gap);
+  const ez = D + st + gap;
+  // Полка наезжает на фасадный сайдинг (от ребра внутрь по X)
+  addM(bx(sz, h, t, ex - bxSign*sz/2, rH/2, ez - t/2, mFrame.clone()));
+  // Полка наезжает на боковой сайдинг (от ребра к стене по Z)
+  addM(bx(t, h, sz, ex - bxSign*t/2, rH/2, ez - sz/2, mFrame.clone()));
+}
+
+/* ========== ОТЛИВ (drip tray) ========== */
+function buildOtliv(W, D, startY){
+  const oh = 0.06;
+  const thick = 0.005;
+  const drop = 0.04;
+  const cLeft = S.type==='g-left';
+  const bxSign = cLeft ? -1 : 1;
+
+  const a = bx(W+0.02, thick, oh, 0, startY-drop/2, D+oh/2, mOtliv.clone());
+  a.rotation.x = Math.atan2(drop, oh);
+  addM(a);
+
+  const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), startY-drop/2, D/2, mOtliv.clone());
+  b.rotation.z = -bxSign * Math.atan2(drop, oh);
+  addM(b);
+
+  const edgeH = 0.015;
+  addM(bx(W+0.02, edgeH, thick, 0, startY-drop-edgeH/2, D+oh, mOtliv.clone()));
+  addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), startY-drop-edgeH/2, D/2, mOtliv.clone()));
+
+}
+
+/* ========== КОЗЫРЁК (canopy) ========== */
+function buildKozyrek(W, D, topY){
+  const oh = 0.15;
+  const thick = 0.005;
+  const drop = 0.04;
+  const cLeft = S.type==='g-left';
+  const bxSign = cLeft ? -1 : 1;
+
+  const a = bx(W+0.02, thick, oh, 0, topY-drop/2, D+oh/2, mKozyrek.clone());
+  a.rotation.x = Math.atan2(drop, oh);
+  addM(a);
+
+  const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), topY-drop/2, D/2, mKozyrek.clone());
+  b.rotation.z = -bxSign * Math.atan2(drop, oh);
+  addM(b);
+
+  const edgeH = 0.015;
+  addM(bx(W+0.02, edgeH, thick, 0, topY-drop-edgeH/2, D+oh, mKozyrek.clone()));
+  addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), topY-drop-edgeH/2, D/2, mKozyrek.clone()));
+
+}
+
+/* ========== ПОЛ ========== */
+function buildFloor(W, D){
+  const brH = 0.05;  // брусок 50мм высота
+  const brW = 0.05;  // брусок 50мм ширина
+  const matBrus = new THREE.MeshStandardMaterial({color:0xc8a060, roughness:0.7});
+  const matPenoplex = new THREE.MeshStandardMaterial({color:0xf0a0b0, roughness:0.8});
+
+  // Бруски поперёк балкона (вдоль Z/глубины), раскладка по X каждый метр
+  const step = 1.0 * SC * 1000; // 1 метр в world units
+  const nBrus = Math.max(2, Math.floor(W / step) + 1);
+  const stepX = W / (nBrus - 1);
+
+  for(let i=0; i<nBrus; i++){
+    const x = -W/2 + stepX * i;
+    addM(bx(brW, brH, D-0.02, x, brH/2, D/2, matBrus.clone()));
+  }
+
+  // Розовый пенополистирол между брусками
+  for(let i=0; i<nBrus-1; i++){
+    const x1 = -W/2 + stepX * i + brW/2;
+    const x2 = -W/2 + stepX * (i+1) - brW/2;
+    const px = (x1+x2)/2;
+    const pw = x2-x1;
+    addM(bx(pw, brH-0.005, D-0.04, px, brH/2, D/2, matPenoplex.clone()));
+  }
+
+  // Половая доска 30×100 сверху — всегда (поперёк балкона, вдоль Z)
+  const boardH = 0.03;  // 30мм толщина
+  const boardW = 0.1;   // 100мм ширина доски
+  const topY = brH + boardH/2;
+  const floorTex = loadTex('textures/wood_floor.png', 1, 3);
+  floorTex.rotation = Math.PI/2;
+  floorTex.center.set(0.5, 0.5);
+  const matBoard = new THREE.MeshStandardMaterial({map:floorTex, roughness:0.45});
+
+  // Раскладка досок по X (каждая доска вдоль Z)
+  const nBoards = Math.floor(W / boardW);
+  for(let i=0; i<nBoards; i++){
+    addM(bx(boardW-0.002, boardH, D-0.02, -W/2 + boardW/2 + i*boardW, topY, D/2, matBoard.clone()));
+  }
+
+  // Покрытие поверх досок
+  if(S.floorType==='laminate'){
+    const covH = 0.01; // 10мм
+    const matLam = new THREE.MeshStandardMaterial({color:0xb08050, roughness:0.35});
+    addM(bx(W-0.01, covH, D-0.01, 0, brH+boardH+covH/2, D/2, matLam));
+  } else if(S.floorType==='linoleum'){
+    const covH = 0.01; // 10мм
+    const matLino = new THREE.MeshStandardMaterial({color:0x999999, roughness:0.6});
+    addM(bx(W-0.01, covH, D-0.01, 0, brH+boardH+covH/2, D/2, matLino));
+  }
+  // 'board' — только доски, без покрытия
+}
+
+/* ========== ПОТОЛОК ========== */
+function buildCeiling(W, D, ceilY){
+  // Белые ПВХ-панели под верхней плитой
+  const t = 0.01;
+  const mat = new THREE.MeshStandardMaterial({color:0xf0f0f0, roughness:0.5});
+  addM(bx(W-0.01, t, D-0.01, 0, ceilY-t/2, D/2, mat));
+}
+
+/* ========== ОБШИВКА ИЗНУТРИ ========== */
+function buildInnerSiding(W, D, rH){
+  // Панели ПВХ на внутренней стороне ограждения
+  const t = 0.01;
+  const mat = new THREE.MeshStandardMaterial({color:0xf5f5f0, roughness:0.5});
+  const cLeft = S.type==='g-left';
+  const bxSign = cLeft ? -1 : 1;
+  // Side A (фасад) — внутренняя сторона
+  addM(bx(W-0.02, rH-0.06, t, 0, rH/2, D-t/2, mat.clone()));
+  // Side B (бок) — внутренняя сторона
+  addM(bx(t, rH-0.06, D-0.02, bxSign*(W/2-t/2), rH/2, D/2, mat.clone()));
+}
+
+function toggleExtra(key, val){
+  S[key] = val;
+  if(key==='floor') document.getElementById('floorTypeWrap').style.display = val ? 'block' : 'none';
+  rebuild();
+}
+
+/* ========== CAMERA ========== */
+function updateCamera(){
+  const x=orbit.dist*Math.sin(orbit.phi)*Math.cos(orbit.theta);
+  const y=orbit.dist*Math.cos(orbit.phi)+orbit.targetY;
+  const z=orbit.dist*Math.sin(orbit.phi)*Math.sin(orbit.theta);
+  camera.position.set(x,y,z);
+  camera.lookAt(0,orbit.targetY,S.depth*SC/2);
+}
+
+function animate(){requestAnimationFrame(animate);updateCamera();renderer.render(scene,camera)}
+
+function initOrbit(){
+  const vp=document.getElementById('viewport');
+  vp.addEventListener('pointerdown',e=>{orbit.drag=true;orbit.lastX=e.clientX;orbit.lastY=e.clientY;orbit.moved=false});
+  window.addEventListener('pointermove',e=>{
+    if(!orbit.drag)return;
+    const dx=e.clientX-orbit.lastX, dy=e.clientY-orbit.lastY;
+    if(Math.abs(dx)+Math.abs(dy)>3)orbit.moved=true;
+    orbit.theta-=dx*0.008;
+    orbit.phi=Math.max(0.3,Math.min(1.4,orbit.phi+dy*0.006));
+    orbit.lastX=e.clientX;orbit.lastY=e.clientY;
+  });
+  window.addEventListener('pointerup',()=>{orbit.drag=false});
+  vp.addEventListener('wheel',e=>{e.preventDefault();orbit.dist=Math.max(2.5,Math.min(12,orbit.dist+e.deltaY*0.003))},{passive:false});
+}
+
+function initClick(){
+  document.getElementById('viewport').addEventListener('click',e=>{
+    if(orbit.moved)return;
+    const rect=e.currentTarget.getBoundingClientRect();
+    const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
+    const rc=new THREE.Raycaster();
+    rc.setFromCamera(mouse,camera);
+    const cl=[];
+    scene.traverse(o=>{if(o.isMesh&&o.userData&&o.userData.side)cl.push(o)});
+    const hits=rc.intersectObjects(cl);
+    if(hits.length>0) selectSide(hits[0].object.userData.side);
+  });
+}
+
+function selectSide(side){
+  S.activeSide=side;
+  document.getElementById('sidePanel').classList.add('active');
+  buildBalcony();
+  updateSidePanel();
+}
+
+/* ========== UI ========== */
+function changeType(val){
+  S.type=val;
+  // Default frames per type
+  if(val==='p-shape'){
+    S.sides={
+      A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}],
+      B:[{sashes:['sandwich']}],
+      C:[{sashes:['sandwich']}]
+    };
+  } else if(val.startsWith('loggia')){
+    S.width = val==='loggia-3500' ? 3500 : 6100;
+    S.sides={A:[{sashes:['fixed']},{sashes:['sliding','sliding']},{sashes:['fixed']}]};
+  } else if(val==='veranda'){
+    S.sides={
+      A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}],
+      B:[{sashes:['sliding','sliding']}],
+      C:[{sashes:['sliding','sliding']}]
+    };
+  } else {
+    S.sides={
+      A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}],
+      B:[{sashes:['fixed']}]
+    };
+  }
+  // Sync lower panels for all sides
+  Object.keys(S.sides).forEach(syncLower);
+  if(S.activeSide && !S.sides[S.activeSide]) S.activeSide='A';
+  rebuild();
+}
+
+function changeMode(m){
+  S.mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  rebuild();
+}
+
+function changeSize(){
+  S.width=parseInt(document.getElementById('inpWidth').value)||3000;
+  S.depth=parseInt(document.getElementById('inpDepth').value)||1100;
+  orbit.dist=Math.max(4,(S.width*SC+S.depth*SC)*1.2+2);
+  rebuild();
+}
+
+function changeColor(c){
+  S.color=c;
+  document.querySelectorAll('.color-btn').forEach(b=>b.classList.toggle('active',b.dataset.color===c));
+  rebuild();
+}
+
+function changeSiding(val){
+  S.siding=val;
+  document.querySelectorAll('.siding-btn').forEach(b=>b.classList.toggle('active',b.dataset.siding===val));
+  // Сбрасываем кеш текстуры сайдинга
+  Object.keys(texCache).forEach(k=>{if(k.includes('sayding'))delete texCache[k]});
+  rebuild();
+}
+
+function rebuild(){buildBalcony();updateSidePanel();updateSchematic()}
+
+/* ========== SIDE PANEL ========== */
+function getPresets(side){
+  if(side==='A') return SIDE_A_PRESETS;
+  return SIDE_B_PRESETS;
+}
+
+function matchPreset(side){
+  const presets = getPresets(side);
+  const current = JSON.stringify(S.sides[side]);
+  return presets.findIndex(p=>JSON.stringify(p.frames)===current);
+}
+
+function applyPreset(idx){
+  const presets = getPresets(S.activeSide);
+  if(!presets[idx]) return;
+  S.sides[S.activeSide] = JSON.parse(JSON.stringify(presets[idx].frames));
+  syncLower(S.activeSide);
+  rebuild();
+}
+
+// Sync S.lower array to match total sashes count of S.sides[side]
+function syncLower(side){
+  const frames = S.sides[side];
+  if(!frames) return;
+  let count = 0;
+  frames.forEach(f => count += f.sashes.length);
+  const old = S.lower[side] || [];
+  S.lower[side] = [];
+  for(let i=0; i<count; i++) S.lower[side][i] = old[i] || 'glass';
+}
+
+function toggleLower(side, idx){
+  if(!S.lower[side]) return;
+  S.lower[side][idx] = S.lower[side][idx]==='sandwich' ? 'glass' : 'sandwich';
+  rebuild();
+}
+
+function updateSidePanel(){
+  if(!S.activeSide) return;
+  const panel=document.getElementById('sidePanel');
+  panel.classList.add('active');
+
+  // Tabs
+  const tabs=document.getElementById('sideTabs');
+  tabs.innerHTML='';
+  Object.keys(S.sides).forEach(side=>{
+    const t=document.createElement('div');
+    t.className='side-tab'+(side===S.activeSide?' active':'');
+    t.textContent=side;
+    t.onclick=()=>selectSide(side);
+    tabs.appendChild(t);
+  });
+
+  // Title
+  const names={A:'Фасад',B:'Бок (правый)',C:'Бок (левый)'};
+  if(S.type==='g-left') names.B='Бок (левый)';
+  if(S.type==='p-shape'){names.B='Бок (правый)';names.C='Бок (левый)'}
+  document.getElementById('sidePanelTitle').textContent=`Сторона ${S.activeSide} — ${names[S.activeSide]||'Бок'}`;
+
+  // Presets
+  const pa=document.getElementById('presetsArea');
+  const presets=getPresets(S.activeSide);
+  const activeP=matchPreset(S.activeSide);
+  pa.innerHTML=`
+    <div class="presets-title">Раскладка</div>
+    <div class="preset-btns">
+      ${presets.map((p,i)=>`<div class="preset-btn${activeP===i?' active':''}" onclick="applyPreset(${i})">${p.name}</div>`).join('')}
+    </div>
+  `;
+
+  // Frames visual — upper row (створки)
+  const fv=document.getElementById('framesVis');
+  fv.innerHTML='';
+  const frames=S.sides[S.activeSide]||[];
+  const side = S.activeSide;
+
+  // Wrapper for upper + lower
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText='width:100%';
+
+  // Upper row label
+  if(S.mode==='panoramic'){
+    const lbl = document.createElement('div');
+    lbl.style.cssText='font-size:10px;color:#888;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px';
+    lbl.textContent='Верх — створки';
+    wrapper.appendChild(lbl);
+  }
+
+  // Upper frames
+  const upperRow = document.createElement('div');
+  upperRow.style.cssText='display:flex;gap:3px;margin-bottom:8px';
+  frames.forEach((frame,fi)=>{
+    const fDiv=document.createElement('div');
+    fDiv.className='frame-vis';
+    frame.sashes.forEach((type,si)=>{
+      const sDiv=document.createElement('div');
+      sDiv.className='sash-vis '+type;
+      if(type==='sliding'){
+        sDiv.innerHTML=`<div class="arrow">${si===0?'→':'←'}</div><div class="label">Створка</div>`;
+      } else if(type==='fixed'){
+        sDiv.innerHTML=`<div class="arrow">▪</div><div class="label">Стекло</div>`;
+        sDiv.title='Клик → сэндвич';
+        sDiv.onclick=()=>{frame.sashes[si]='sandwich';rebuild()};
+      } else {
+        sDiv.innerHTML=`<div class="arrow">■</div><div class="label">Сэндвич</div>`;
+        sDiv.title='Клик → стекло';
+        sDiv.onclick=()=>{frame.sashes[si]='fixed';rebuild()};
+      }
+      fDiv.appendChild(sDiv);
+    });
+    upperRow.appendChild(fDiv);
+  });
+  wrapper.appendChild(upperRow);
+
+  // Lower row (panoramic only)
+  if(S.mode==='panoramic'){
+    syncLower(side);
+    const lbl2 = document.createElement('div');
+    lbl2.style.cssText='font-size:10px;color:#888;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px';
+    lbl2.textContent='Низ — заполнение (клик для смены)';
+    wrapper.appendChild(lbl2);
+
+    const lowerRow = document.createElement('div');
+    lowerRow.style.cssText='display:flex;gap:3px';
+    let idx = 0;
+    frames.forEach((frame)=>{
+      const fDiv=document.createElement('div');
+      fDiv.className='frame-vis';
+      frame.sashes.forEach(()=>{
+        const lType = S.lower[side][idx] || 'glass';
+        const sDiv=document.createElement('div');
+        sDiv.className='sash-vis '+(lType==='sandwich'?'sandwich':'fixed');
+        sDiv.style.minHeight='40px';
+        const curIdx = idx;
+        if(lType==='sandwich'){
+          sDiv.innerHTML=`<div class="arrow">■</div><div class="label">Сэндвич</div>`;
+          sDiv.title='Клик → стекло';
+          sDiv.onclick=()=>{toggleLower(side, curIdx)};
+        } else {
+          sDiv.innerHTML=`<div class="arrow">▪</div><div class="label">Стекло</div>`;
+          sDiv.title='Клик → сэндвич';
+          sDiv.onclick=()=>{toggleLower(side, curIdx)};
+        }
+        fDiv.appendChild(sDiv);
+        idx++;
+      });
+      lowerRow.appendChild(fDiv);
+    });
+    wrapper.appendChild(lowerRow);
+  }
+
+  fv.innerHTML='';
+  fv.appendChild(wrapper);
+
+  updateSchematic();
+}
+
+/* ========== SCHEMATIC ========== */
+function updateSchematic(){
+  const svg=document.getElementById('schematicSvg');
+  const w=160, d=80, ox=20, oy=15;
+  let h='';
+
+  // Building walls
+  h+=`<rect x="${ox}" y="${oy}" width="${w}" height="6" fill="#999" rx="1"/>`;
+  if(S.type!=='g-left') h+=`<rect x="${ox}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  if(S.type==='g-left') h+=`<rect x="${ox+w-6}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+
+  // Plate
+  h+=`<rect x="${ox+6}" y="${oy+6}" width="${w-12}" height="${d-6}" fill="#ddd" stroke="#bbb" stroke-width="1" rx="2"/>`;
+
+  // Side A
+  const aC=S.activeSide==='A'?'#4a90d9':'#888';
+  h+=`<rect x="${ox+6}" y="${oy+d-2}" width="${w-12}" height="4" fill="${aC}" rx="1"/>`;
+  h+=`<text x="${ox+w/2}" y="${oy+d+14}" text-anchor="middle" font-size="10" font-weight="bold" fill="${aC}">A</text>`;
+
+  // Side B
+  if(S.sides.B){
+    const bC=S.activeSide==='B'?'#4a90d9':'#888';
+    if(S.type==='g-left'){
+      h+=`<rect x="${ox+4}" y="${oy+6}" width="4" height="${d-6}" fill="${bC}" rx="1"/>`;
+      h+=`<text x="${ox-6}" y="${oy+d/2+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${bC}">B</text>`;
+    } else {
+      h+=`<rect x="${ox+w-8}" y="${oy+6}" width="4" height="${d-6}" fill="${bC}" rx="1"/>`;
+      h+=`<text x="${ox+w+6}" y="${oy+d/2+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${bC}">B</text>`;
+    }
+  }
+  if(S.sides.C){
+    const cC=S.activeSide==='C'?'#4a90d9':'#888';
+    h+=`<rect x="${ox+4}" y="${oy+6}" width="4" height="${d-6}" fill="${cC}" rx="1"/>`;
+    h+=`<text x="${ox-6}" y="${oy+d/2+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${cC}">C</text>`;
+  }
+
+  h+=`<text x="${ox+w/2}" y="${oy+d+26}" text-anchor="middle" font-size="9" fill="#999">${S.width} мм</text>`;
+  svg.innerHTML=h;
+}
+
+/* ========== RESIZE ========== */
+function onResize(){
+  const vp=document.getElementById('viewport');
+  camera.aspect=vp.clientWidth/vp.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(vp.clientWidth,vp.clientHeight);
+}
+
+/* ========== START ========== */
+function init(){
+  init3D();initOrbit();initClick();
+  buildBalcony();updateSidePanel();
+  animate();
+  window.addEventListener('resize',onResize);
+}
+init();
+</script>
+</body>
+</html>
