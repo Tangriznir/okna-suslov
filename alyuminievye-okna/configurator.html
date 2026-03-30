@@ -146,11 +146,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;o
       <input type="checkbox" id="chkFloor" onchange="toggleExtra('floor',this.checked)"> Пол
     </label>
     <div id="floorTypeWrap" style="display:none;margin-left:24px;margin-bottom:6px">
-      <select id="floorType" onchange="S.floorType=this.value;rebuild()" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px">
+      <select id="floorType" onchange="S.floorType=this.value;document.getElementById('floorTexWrap').style.display=(this.value==='board'?'none':'block');updateFloorTexButtons();rebuild()" style="padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-size:12px">
         <option value="board">Доска</option>
         <option value="laminate">Ламинат</option>
         <option value="linoleum">Линолеум</option>
       </select>
+      <div id="floorTexWrap" style="display:none;margin-top:6px">
+        <div class="siding-options" id="floorTexOptions"></div>
+      </div>
     </div>
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
       <input type="checkbox" id="chkCeiling" onchange="toggleExtra('ceiling',this.checked)"> Потолок
@@ -158,13 +161,41 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;o
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
       <input type="checkbox" id="chkInnerSiding" onchange="toggleExtra('innerSiding',this.checked)"> Обшивка изнутри
     </label>
+    <div id="plinthWrap" style="display:none;margin-left:24px;margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:4px">
+        <input type="checkbox" id="chkPlinth" onchange="toggleExtra('plinth',this.checked)"> Плинтус
+      </label>
+      <div id="plinthColorWrap" style="display:none;margin-left:24px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="siding-btn active" data-plinth="0xffffff" onclick="changePlinthColor(0xffffff)" title="Белый" style="width:32px;height:24px;background:#ffffff;border:2px solid #4a90d9;border-radius:4px;cursor:pointer"></div>
+          <div class="siding-btn" data-plinth="0xd2b48c" onclick="changePlinthColor(0xd2b48c)" title="Дуб" style="width:32px;height:24px;background:#d2b48c;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+          <div class="siding-btn" data-plinth="0x8b7355" onclick="changePlinthColor(0x8b7355)" title="Орех" style="width:32px;height:24px;background:#8b7355;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+          <div class="siding-btn" data-plinth="0x4a4a4a" onclick="changePlinthColor(0x4a4a4a)" title="Тёмно-серый" style="width:32px;height:24px;background:#4a4a4a;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+          <div class="siding-btn" data-plinth="0x2b1810" onclick="changePlinthColor(0x2b1810)" title="Венге" style="width:32px;height:24px;background:#2b1810;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+        </div>
+      </div>
+    </div>
 
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="chkBlinds" onchange="toggleExtra('blinds',this.checked)"> Жалюзи
+    </label>
+    <div id="blindsColorWrap" style="display:none;margin-left:24px;margin-bottom:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="siding-btn active" data-blinds="0xf5f5f0" onclick="changeBlindsColor(0xf5f5f0)" title="Белый" style="width:32px;height:24px;background:#f5f5f0;border:2px solid #4a90d9;border-radius:4px;cursor:pointer"></div>
+        <div class="siding-btn" data-blinds="0xe8dcc8" onclick="changeBlindsColor(0xe8dcc8)" title="Бежевый" style="width:32px;height:24px;background:#e8dcc8;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+        <div class="siding-btn" data-blinds="0xc0c0c0" onclick="changeBlindsColor(0xc0c0c0)" title="Серебро" style="width:32px;height:24px;background:#c0c0c0;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+        <div class="siding-btn" data-blinds="0x8b7355" onclick="changeBlindsColor(0x8b7355)" title="Орех" style="width:32px;height:24px;background:#8b7355;border:2px solid #ddd;border-radius:4px;cursor:pointer"></div>
+      </div>
+    </div>
+
+    <div id="sidingWrap">
     <h3>Цвет обшивки</h3>
     <div class="siding-options" id="sidingOptions">
       <div class="siding-btn active" data-siding="sayding_1" onclick="changeSiding('sayding_1')" title="Бежевый"><img src="textures/sayding_1.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
       <div class="siding-btn" data-siding="sayding_2" onclick="changeSiding('sayding_2')" title="Серый"><img src="textures/sayding_2.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
       <div class="siding-btn" data-siding="sayding_3" onclick="changeSiding('sayding_3')" title="Сливочный"><img src="textures/sayding_3.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
       <div class="siding-btn" data-siding="sayding_4" onclick="changeSiding('sayding_4')" title="Зелёный"><img src="textures/sayding_4.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>
+    </div>
     </div>
 
     <div class="info-card">
@@ -233,8 +264,28 @@ const S = {
   siding: 'sayding_1',
   floor: false,
   floorType: 'board',
+  floorTex: 'laminate-3-1',
   ceiling: false,
-  innerSiding: false
+  innerSiding: false,
+  plinth: false,
+  plinthColor: 0xffffff,
+  blinds: false,
+  blindsColor: 0xf5f5f0
+};
+
+const FLOOR_TEXTURES = {
+  laminate: [
+    {id:'laminate-3-1', name:'Ламинат 1', file:'textures/laminate-3-1.jpg'},
+    {id:'laminate-6',   name:'Ламинат 2', file:'textures/laminate-6.jpg'},
+    {id:'laminate-8',   name:'Ламинат 3', file:'textures/laminate-8.jpg'},
+    {id:'laminate-2',   name:'Ламинат 4', file:'textures/laminate-2.jpg'}
+  ],
+  linoleum: [
+    {id:'linoleum-1',   name:'Линолеум 1', file:'textures/linoleum-1.jpg'},
+    {id:'linoleum-4',   name:'Линолеум 2', file:'textures/linoleum-4.jpg'},
+    {id:'linoleum-5',   name:'Линолеум 3', file:'textures/linoleum-5.jpg'},
+    {id:'linoleum-7-3', name:'Линолеум 4', file:'textures/linoleum-7-3.jpg'}
+  ]
 };
 
 /* ========== PRESETS ========== */
@@ -289,9 +340,8 @@ function updateMats(){
   // Плиты — серый бетон
   mPlate = new THREE.MeshStandardMaterial({color:0x888888, roughness:0.9});
 
-  // Стена — кирпич с текстурой
-  const brickTex = loadTex('textures/brick.jpg', 4, 4);
-  mWall = new THREE.MeshStandardMaterial({map:brickTex, roughness:0.85});
+  // Стена — кирпич с текстурой (базовый материал, repeat задаётся через bxWall)
+  mWall = null; // используем bxWall() для каждого меша с правильным масштабом
 
   mRail = new THREE.MeshStandardMaterial({color:0xdddddd, roughness:0.4, metalness:0.3});
   mGround = new THREE.MeshStandardMaterial({color:0x8ab060, roughness:1});
@@ -302,6 +352,15 @@ function updateMats(){
 }
 
 /* Helpers */
+// Кирпич: реальный размер ~250×65мм → в world units 0.25×0.065
+const BRICK_W = 0.25, BRICK_H = 0.065;
+function bxWall(w,h,d,x,y,z){
+  const rx = w/BRICK_W, ry = h/BRICK_H;
+  const tex = loadTex('textures/brick.jpg', rx, ry);
+  const mat = new THREE.MeshStandardMaterial({map:tex, roughness:0.85});
+  return bx(w,h,d,x,y,z,mat);
+}
+
 function bx(w,h,d,x,y,z,mat,sd){
   const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
   m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true;
@@ -354,59 +413,61 @@ function buildBalcony(){
   const ceilY = rH + gH + fp*2;
   addM(bx(W+0.02, pH*0.5, D+0.02, 0, ceilY+pH*0.25, D/2, mPlate));
 
-  // Building back wall (с проёмом по ширине балкона)
+  // Building back wall
   const wallH = ceilY + pH + 1.2;
   const wallT = 0.25;
-  const wallExt = 0.6; // выступ стены за балкон с каждой стороны
-  const totalWallW = W + wallExt*2;
-  // Левая часть стены
-  addM(bx(wallExt, wallH, wallT, -W/2-wallExt/2, wallH/2-pH-0.3, -wallT/2, mWall));
-  // Правая часть стены
-  addM(bx(wallExt, wallH, wallT, W/2+wallExt/2, wallH/2-pH-0.3, -wallT/2, mWall));
-  // Верхняя часть (над потолочной плитой)
+  const wallExt = 0.6;
+
+  // Задняя стена с проёмом — и для Г, и для П
+  addM(bxWall(wallExt, wallH, wallT, -W/2-wallExt/2, wallH/2-pH-0.3, -wallT/2));
+  addM(bxWall(wallExt, wallH, wallT,  W/2+wallExt/2, wallH/2-pH-0.3, -wallT/2));
   const aboveH = wallH - (ceilY + pH*0.5) - pH*0.3;
-  addM(bx(W, aboveH, wallT, 0, ceilY+pH*0.5+aboveH/2, -wallT/2, mWall));
-  // Нижняя часть (под балконной плитой)
+  addM(bxWall(W, aboveH, wallT, 0, ceilY+pH*0.5+aboveH/2, -wallT/2));
   const belowH = pH + 0.3;
-  addM(bx(W, belowH, wallT, 0, -pH-0.3+belowH/2, -wallT/2, mWall));
+  addM(bxWall(W, belowH, wallT, 0, -pH-0.3+belowH/2, -wallT/2));
 
-  // Building side wall
-  const sx = S.type==='g-left' ? W/2+0.125 : -W/2-0.125;
-  addM(bx(0.25, wallH, D+0.6, sx, wallH/2-pH-0.3, D/2, mWall));
+  const upperH = gH + fp*2;
+  const lowerH = rH;
+  const connH = fp * 0.5;
 
-  const upperH = gH + fp*2; // высота верхних рам (профиль + стекло + профиль)
-  const lowerH = rH;        // высота нижних рам (= высота ограждения)
-  const connH = fp * 0.5;   // подставочный профиль между рядами
-
-  if(S.mode === 'cladding'){
-    // === С ОБШИВКОЙ ===
-    buildRailing(W, D, rH);
-    buildSiding(W, D, rH);
-    // Верхние рамы на ограждении
-    buildSideGlazing('A', W, D, rH, upperH, 'front');
-    buildSideGlazing('B', W, D, rH, upperH, 'front_b');
-
-    // Нащельник — уголок 40×40 на стыке обшивки и рам
-    buildNaschelnik(W, D, rH);
-
-    // Угол — только на высоту верхних рам
-    buildCorner(W, D, fp, rH, upperH);
+  if(S.type === 'p-shape'){
+    // === П-ОБРАЗНЫЙ: боковых стен нет, три стороны алюминия ===
+    if(S.mode === 'cladding'){
+      buildRailing(W, D, rH);
+      buildSidingP(W, D, rH);
+      buildSideGlazing('A', W, D, rH, upperH, 'front');
+      buildSideGlazing('B', W, D, rH, upperH, 'right');
+      buildSideGlazing('C', W, D, rH, upperH, 'left');
+      buildCornerP(W, D, fp, rH, upperH);
+    } else {
+      buildSideGlazing('A', W, D, 0, lowerH, 'front', 'lower');
+      buildSideGlazing('B', W, D, 0, lowerH, 'right', 'lower');
+      buildSideGlazing('C', W, D, 0, lowerH, 'left', 'lower');
+      buildSideGlazing('A', W, D, lowerH, upperH, 'front');
+      buildSideGlazing('B', W, D, lowerH, upperH, 'right');
+      buildSideGlazing('C', W, D, lowerH, upperH, 'left');
+      buildCornerP(W, D, fp, 0, lowerH + upperH);
+    }
   } else {
-    // === ПАНОРАМНЫЙ ===
-    // Нижний ряд рам (стекло/сэндвич)
-    buildSideGlazing('A', W, D, 0, lowerH, 'front', 'lower');
-    buildSideGlazing('B', W, D, 0, lowerH, 'front_b', 'lower');
+    // === Г-ОБРАЗНЫЙ ===
+    // Building side wall
+    const sx = S.type==='g-left' ? W/2+0.125 : -W/2-0.125;
+    addM(bxWall(0.25, wallH, D+0.6, sx, wallH/2-pH-0.3, D/2));
 
-    // Соединительный профиль между рядами
-    const connY = lowerH + connH/2;
-    // (он встроен в рамы, визуально просто стык)
-
-    // Верхний ряд рам (створки)
-    buildSideGlazing('A', W, D, lowerH, upperH, 'front');
-    buildSideGlazing('B', W, D, lowerH, upperH, 'front_b');
-
-    // Угол — на ВСЮ высоту (от плиты до потолка)
-    buildCorner(W, D, fp, 0, lowerH + upperH);
+    if(S.mode === 'cladding'){
+      buildRailing(W, D, rH);
+      buildSiding(W, D, rH);
+      buildSideGlazing('A', W, D, rH, upperH, 'front');
+      buildSideGlazing('B', W, D, rH, upperH, 'front_b');
+      buildNaschelnik(W, D, rH);
+      buildCorner(W, D, fp, rH, upperH);
+    } else {
+      buildSideGlazing('A', W, D, 0, lowerH, 'front', 'lower');
+      buildSideGlazing('B', W, D, 0, lowerH, 'front_b', 'lower');
+      buildSideGlazing('A', W, D, lowerH, upperH, 'front');
+      buildSideGlazing('B', W, D, lowerH, upperH, 'front_b');
+      buildCorner(W, D, fp, 0, lowerH + upperH);
+    }
   }
 
   // Отлив
@@ -430,9 +491,9 @@ function buildBalcony(){
     buildCeiling(W, D, ceilY);
   }
 
-  // Обшивка изнутри (внутренняя сторона ограждения)
-  if(S.innerSiding && S.mode==='cladding'){
-    buildInnerSiding(W, D, rH);
+  // Обшивка изнутри
+  if(S.innerSiding){
+    buildInnerSiding(W, D, rH, ceilY);
   }
 }
 
@@ -456,12 +517,20 @@ function buildRailing(W, D, rH){
   const nA=Math.max(2, Math.round(W/sp));
   for(let i=0;i<=nA;i++) addM(bx(bw, rH, bw, -W/2+(W/nA)*i, rH/2, D, mRail));
 
-  // Side B
+  // Side B (правый)
   const bxPos = S.type==='g-left' ? -W/2 : W/2;
   addM(bx(th, th, D, bxPos, rH-th/2, D/2, mRail));
   addM(bx(th, th*0.6, D, bxPos, 0.015, D/2, mRail));
   const nB=Math.max(2, Math.round(D/sp));
   for(let i=0;i<=nB;i++) addM(bx(bw, rH, bw, bxPos, rH/2, (D/nB)*i, mRail));
+
+  // Side C (левый) — только для П-образного
+  if(S.type==='p-shape'){
+    const bxPosC = -W/2;
+    addM(bx(th, th, D, bxPosC, rH-th/2, D/2, mRail));
+    addM(bx(th, th*0.6, D, bxPosC, 0.015, D/2, mRail));
+    for(let i=0;i<=nB;i++) addM(bx(bw, rH, bw, bxPosC, rH/2, (D/nB)*i, mRail));
+  }
 }
 
 /* ========== SIDING ========== */
@@ -470,6 +539,31 @@ function buildSiding(W, D, rH){
   addM(bx(W, rH-0.04, t, 0, rH/2, D+t/2, mSiding));
   const bxPos = S.type==='g-left' ? -W/2-t/2 : W/2+t/2;
   addM(bx(t, rH-0.04, D, bxPos, rH/2, D/2, mSiding));
+}
+
+/* ========== SIDING П-ОБРАЗНЫЙ (3 стороны) ========== */
+function buildSidingP(W, D, rH){
+  const t = 0.025;
+  // Фасад
+  addM(bx(W, rH-0.04, t, 0, rH/2, D+t/2, mSiding));
+  // Правый бок
+  addM(bx(t, rH-0.04, D, W/2+t/2, rH/2, D/2, mSiding));
+  // Левый бок
+  addM(bx(t, rH-0.04, D, -W/2-t/2, rH/2, D/2, mSiding));
+}
+
+/* ========== CORNERS П-ОБРАЗНЫЙ (два угла) ========== */
+function buildCornerP(W, D, fp, startY, height){
+  const sz = fp;        // ширина полки = ширина профиля рамы
+  const thick = fp*0.7; // глубина профиля
+
+  // Правый угол: x=W/2, z=D
+  addM(bx(sz, height, thick, W/2-sz/2, startY+height/2, D,          mFrame.clone())); // фасадная полка
+  addM(bx(thick, height, sz, W/2,      startY+height/2, D-sz/2,     mFrame.clone())); // боковая полка
+
+  // Левый угол: x=-W/2, z=D
+  addM(bx(sz, height, thick, -W/2+sz/2, startY+height/2, D,         mFrame.clone())); // фасадная полка
+  addM(bx(thick, height, sz, -W/2,      startY+height/2, D-sz/2,    mFrame.clone())); // боковая полка
 }
 
 /* ========== SIDE GLAZING ========== */
@@ -504,8 +598,10 @@ function buildSideGlazing(side, W, D, startY, totalFrameH, pos, rowType){
   // Side length
   let sideLen = (actualPos==='front') ? W : D;
 
-  // Available length (minus corner connector bar = 1 frame profile width)
-  const avail = sideLen - fp;
+  // Available length: для П-образного боковые рамы на полную глубину, угол отдельный
+  const isP = S.type === 'p-shape';
+  const isSidePanelP = isP && (actualPos === 'left' || actualPos === 'right');
+  const avail = isSidePanelP ? sideLen : sideLen - fp;
 
   // Count total sashes across all frames
   let totalSashes = 0;
@@ -519,28 +615,37 @@ function buildSideGlazing(side, W, D, startY, totalFrameH, pos, rowType){
   const sashW = (avail - totalProfiles - totalGaps) / totalSashes;
 
   // Build each frame — start from building wall, go towards corner
-  let curX;
+  let curX, dir;
   if(actualPos==='front'){
-    curX = S.type==='g-left' ? sideLen/2 - fp : -sideLen/2;
+    curX = S.type==='g-left' ? sideLen/2 : -sideLen/2;
+    dir = S.type==='g-left' ? -1 : 1;
+  } else if(actualPos==='left'){
+    // g-left боковая: стена при z=0, угол при z=D
+    curX = sideLen/2;
+    dir = -1;
   } else {
-    curX = -sideLen/2; // start from building wall (z=0 end)
+    // g-right боковая: стена при z=0, угол при z=D
+    curX = -sideLen/2;
+    dir = 1;
   }
-  const dir = (actualPos==='front' && S.type==='g-left') ? -1 : 1;
 
-  for(let fi=0; fi<frames.length; fi++){
-    const frame = frames[fi];
+  // Для g-left фасад: реверс порядка рам чтобы UI совпадал с 3D
+  const renderFrames = (actualPos==='front' && S.type==='g-left') ? [...frames].reverse() : frames;
+
+  for(let fi=0; fi<renderFrames.length; fi++){
+    const frame = renderFrames[fi];
     const nSash = frame.sashes.length;
     const frameW = nSash * sashW + 2 * fp;
     const frameCenterLocal = curX + dir * frameW/2;
 
-    buildFrame(side, frame, frameCenterLocal, startY, totalFrameH, frameW, sashW, fp, actualPos, W, D, isActive);
+    buildFrame(side, frame, frameCenterLocal, startY, totalFrameH, frameW, sashW, fp, actualPos, W, D, isActive, rowType);
 
     curX += dir * (frameW + gap);
   }
 }
 
 /* ========== SINGLE FRAME ========== */
-function buildFrame(side, frame, centerLocal, startY, height, frameW, sashW, fp, pos, W, D, isActive){
+function buildFrame(side, frame, centerLocal, startY, height, frameW, sashW, fp, pos, W, D, isActive, rowType){
   const group = new THREE.Group();
   const nSash = frame.sashes.length;
   const glassH = height - fp*2;
@@ -578,14 +683,14 @@ function buildFrame(side, frame, centerLocal, startY, height, frameW, sashW, fp,
 
     if(type === 'sandwich'){
       // Сэндвич-панель — в одной плоскости (z=0), с учётом импостов
-      const panelW = nSash > 1 ? sashW - impW/2 - 0.002 : sashW - 0.004;
+      const panelW = sashW - 0.004;
       const panel = bx(panelW, glassH-0.004, 0.02, sx, height/2, 0, mSandwich.clone());
       panel.userData.side = side;
       group.add(panel);
 
     } else if(type === 'fixed'){
       // Глухое стекло — в одной плоскости (z=0), с учётом импостов
-      const glW = nSash > 1 ? sashW - impW/2 - 0.004 : sashW - 0.006;
+      const glW = sashW - 0.006;
       const g = bx(glW, glassH-0.006, 0.005, sx, height/2, 0, mGlass.clone());
       g.userData.side = side;
       group.add(g);
@@ -614,6 +719,27 @@ function buildFrame(side, frame, centerLocal, startY, height, frameW, sashW, fp,
       sG.position.set(sx, height/2, zOff);
       group.add(sG);
     }
+  }
+
+  // Жалюзи горизонтальные
+  // Показываем: на раздвижке, на глухом стекле, на нижнем ряду панорамы (rowType==='lower')
+  const hasFixed = frame.sashes.some(t => t==='fixed');
+  const showBlinds = S.blinds && (hasSliding || hasFixed || rowType==='lower');
+  if(showBlinds){
+    const matBl = new THREE.MeshStandardMaterial({color:S.blindsColor, roughness:0.4, side:THREE.DoubleSide});
+    const blW = frameW - fp*2 - 0.01;
+    const blH = glassH - 0.02;
+    const slat = 0.025;
+    const slatH = 0.001;
+    const gapSl = 0.003;
+    const nSlats = Math.floor(blH / (slat + gapSl));
+    const startSlat = height/2 + blH/2 - slat/2;
+    for(let j=0; j<nSlats; j++){
+      const y = startSlat - j*(slat+gapSl);
+      group.add(bx(blW, slatH, slat, 0, y, -0.04, matBl.clone()));
+    }
+    // Карниз сверху
+    group.add(bx(blW+0.01, 0.02, 0.025, 0, height-fp-0.01, -0.04, matBl.clone()));
   }
 
   // Invisible click plane
@@ -678,50 +804,81 @@ function buildNaschelnik(W, D, rH){
 
 /* ========== ОТЛИВ (drip tray) ========== */
 function buildOtliv(W, D, startY){
-  const oh = 0.06;
-  const thick = 0.005;
-  const drop = 0.04;
+  const oh = 0.06, thick = 0.005, drop = 0.04;
+  const edgeH = 0.015;
+  const isP = S.type==='p-shape';
   const cLeft = S.type==='g-left';
   const bxSign = cLeft ? -1 : 1;
 
+  // Фасад — всегда
   const a = bx(W+0.02, thick, oh, 0, startY-drop/2, D+oh/2, mOtliv.clone());
   a.rotation.x = Math.atan2(drop, oh);
   addM(a);
-
-  const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), startY-drop/2, D/2, mOtliv.clone());
-  b.rotation.z = -bxSign * Math.atan2(drop, oh);
-  addM(b);
-
-  const edgeH = 0.015;
   addM(bx(W+0.02, edgeH, thick, 0, startY-drop-edgeH/2, D+oh, mOtliv.clone()));
-  addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), startY-drop-edgeH/2, D/2, mOtliv.clone()));
 
+  if(isP){
+    // П: оба бока
+    const bR = bx(oh, thick, D+0.02, W/2+oh/2, startY-drop/2, D/2, mOtliv.clone());
+    bR.rotation.z = -Math.atan2(drop, oh);
+    addM(bR);
+    addM(bx(thick, edgeH, D+0.02, W/2+oh, startY-drop-edgeH/2, D/2, mOtliv.clone()));
+    const bL = bx(oh, thick, D+0.02, -W/2-oh/2, startY-drop/2, D/2, mOtliv.clone());
+    bL.rotation.z = Math.atan2(drop, oh);
+    addM(bL);
+    addM(bx(thick, edgeH, D+0.02, -W/2-oh, startY-drop-edgeH/2, D/2, mOtliv.clone()));
+  } else {
+    // Г: один бок
+    const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), startY-drop/2, D/2, mOtliv.clone());
+    b.rotation.z = -bxSign * Math.atan2(drop, oh);
+    addM(b);
+    addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), startY-drop-edgeH/2, D/2, mOtliv.clone()));
+  }
 }
 
 /* ========== КОЗЫРЁК (canopy) ========== */
 function buildKozyrek(W, D, topY){
-  const oh = 0.15;
-  const thick = 0.005;
-  const drop = 0.04;
+  const oh = 0.15, thick = 0.005, drop = 0.04;
+  const edgeH = 0.015;
+  const isP = S.type==='p-shape';
   const cLeft = S.type==='g-left';
   const bxSign = cLeft ? -1 : 1;
 
+  // Фасад — всегда
   const a = bx(W+0.02, thick, oh, 0, topY-drop/2, D+oh/2, mKozyrek.clone());
   a.rotation.x = Math.atan2(drop, oh);
   addM(a);
-
-  const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), topY-drop/2, D/2, mKozyrek.clone());
-  b.rotation.z = -bxSign * Math.atan2(drop, oh);
-  addM(b);
-
-  const edgeH = 0.015;
   addM(bx(W+0.02, edgeH, thick, 0, topY-drop-edgeH/2, D+oh, mKozyrek.clone()));
-  addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), topY-drop-edgeH/2, D/2, mKozyrek.clone()));
 
+  if(isP){
+    // П: оба бока
+    const bR = bx(oh, thick, D+0.02, W/2+oh/2, topY-drop/2, D/2, mKozyrek.clone());
+    bR.rotation.z = -Math.atan2(drop, oh);
+    addM(bR);
+    addM(bx(thick, edgeH, D+0.02, W/2+oh, topY-drop-edgeH/2, D/2, mKozyrek.clone()));
+    const bL = bx(oh, thick, D+0.02, -W/2-oh/2, topY-drop/2, D/2, mKozyrek.clone());
+    bL.rotation.z = Math.atan2(drop, oh);
+    addM(bL);
+    addM(bx(thick, edgeH, D+0.02, -W/2-oh, topY-drop-edgeH/2, D/2, mKozyrek.clone()));
+  } else {
+    // Г: один бок
+    const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), topY-drop/2, D/2, mKozyrek.clone());
+    b.rotation.z = -bxSign * Math.atan2(drop, oh);
+    addM(b);
+    addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), topY-drop-edgeH/2, D/2, mKozyrek.clone()));
+  }
 }
 
 /* ========== ПОЛ ========== */
 function buildFloor(W, D){
+  const fD = D - 0.01; // глубина пола (−30мм с фасада)
+  const fZ = D/2 - 0.015; // сдвиг от фасада
+  const isLeft = S.type === 'g-left';
+  const isP = S.type === 'p-shape';
+  // П-образный: подрезка только с фасада, боки впритык
+  // Г-образный: подрезка с открытого бока на 30мм
+  const fW = isP ? W - 0.01 : W - 0.01;
+  const fX = isP ? 0 : (isLeft ? 0.015 : -0.015);
+
   const brH = 0.05;  // брусок 50мм высота
   const brW = 0.05;  // брусок 50мм ширина
   const matBrus = new THREE.MeshStandardMaterial({color:0xc8a060, roughness:0.7});
@@ -729,47 +886,44 @@ function buildFloor(W, D){
 
   // Бруски поперёк балкона (вдоль Z/глубины), раскладка по X каждый метр
   const step = 1.0 * SC * 1000; // 1 метр в world units
-  const nBrus = Math.max(2, Math.floor(W / step) + 1);
-  const stepX = W / (nBrus - 1);
+  const nBrus = Math.max(2, Math.floor(fW / step) + 1);
+  const stepX = fW / (nBrus - 1);
 
   for(let i=0; i<nBrus; i++){
-    const x = -W/2 + stepX * i;
-    addM(bx(brW, brH, D-0.02, x, brH/2, D/2, matBrus.clone()));
+    const x = fX - fW/2 + stepX * i;
+    addM(bx(brW, brH, fD, x, brH/2, fZ, matBrus.clone()));
   }
 
   // Розовый пенополистирол между брусками
   for(let i=0; i<nBrus-1; i++){
-    const x1 = -W/2 + stepX * i + brW/2;
-    const x2 = -W/2 + stepX * (i+1) - brW/2;
+    const x1 = fX - fW/2 + stepX * i + brW/2;
+    const x2 = fX - fW/2 + stepX * (i+1) - brW/2;
     const px = (x1+x2)/2;
     const pw = x2-x1;
-    addM(bx(pw, brH-0.005, D-0.04, px, brH/2, D/2, matPenoplex.clone()));
+    addM(bx(pw, brH-0.005, fD-0.02, px, brH/2, fZ, matPenoplex.clone()));
   }
 
   // Половая доска 30×100 сверху — всегда (поперёк балкона, вдоль Z)
   const boardH = 0.03;  // 30мм толщина
   const boardW = 0.1;   // 100мм ширина доски
   const topY = brH + boardH/2;
-  const floorTex = loadTex('textures/wood_floor.png', 1, 3);
+  const floorTex = loadTex('textures/wood_floor.png', 0.5, 0.25);
   floorTex.rotation = Math.PI/2;
   floorTex.center.set(0.5, 0.5);
   const matBoard = new THREE.MeshStandardMaterial({map:floorTex, roughness:0.45});
 
-  // Раскладка досок по X (каждая доска вдоль Z)
-  const nBoards = Math.floor(W / boardW);
-  for(let i=0; i<nBoards; i++){
-    addM(bx(boardW-0.002, boardH, D-0.02, -W/2 + boardW/2 + i*boardW, topY, D/2, matBoard.clone()));
-  }
+  // Одна цельная плоскость пола вместо отдельных досок
+  addM(bx(fW, boardH, fD, fX, topY, fZ, matBoard));
 
-  // Покрытие поверх досок
-  if(S.floorType==='laminate'){
+  // Покрытие поверх досок (ламинат / линолеум с текстурой)
+  if(S.floorType==='laminate' || S.floorType==='linoleum'){
     const covH = 0.01; // 10мм
-    const matLam = new THREE.MeshStandardMaterial({color:0xb08050, roughness:0.35});
-    addM(bx(W-0.01, covH, D-0.01, 0, brH+boardH+covH/2, D/2, matLam));
-  } else if(S.floorType==='linoleum'){
-    const covH = 0.01; // 10мм
-    const matLino = new THREE.MeshStandardMaterial({color:0x999999, roughness:0.6});
-    addM(bx(W-0.01, covH, D-0.01, 0, brH+boardH+covH/2, D/2, matLino));
+    const texInfo = (FLOOR_TEXTURES[S.floorType]||[]).find(t=>t.id===S.floorTex);
+    const texFile = texInfo ? texInfo.file : 'textures/laminate_light.jpg';
+    const covTex = loadTex(texFile, 1.5, 1.5);
+    const rough = S.floorType==='laminate' ? 0.35 : 0.6;
+    const matCov = new THREE.MeshStandardMaterial({map:covTex, roughness:rough});
+    addM(bx(fW, covH, fD, fX, brH+boardH+covH/2, fZ, matCov));
   }
   // 'board' — только доски, без покрытия
 }
@@ -783,21 +937,84 @@ function buildCeiling(W, D, ceilY){
 }
 
 /* ========== ОБШИВКА ИЗНУТРИ ========== */
-function buildInnerSiding(W, D, rH){
-  // Панели ПВХ на внутренней стороне ограждения
-  const t = 0.01;
+function buildInnerSiding(W, D, rH, ceilY){
+  const t = 0.01;  // толщина панели 10мм
   const mat = new THREE.MeshStandardMaterial({color:0xf5f5f0, roughness:0.5});
   const cLeft = S.type==='g-left';
   const bxSign = cLeft ? -1 : 1;
-  // Side A (фасад) — внутренняя сторона
-  addM(bx(W-0.02, rH-0.06, t, 0, rH/2, D-t/2, mat.clone()));
-  // Side B (бок) — внутренняя сторона
-  addM(bx(t, rH-0.06, D-0.02, bxSign*(W/2-t/2), rH/2, D/2, mat.clone()));
+
+  // Высота пола (если есть деревянный пол — панели стоят на нём)
+  const floorTop = S.floor ? 0.08 : 0; // брусок 50мм + доска 30мм
+  const covTop = (S.floor && S.floorType!=='board') ? 0.01 : 0; // покрытие 10мм
+  const baseY = floorTop + covTop;
+
+  // Обшивка ограждения — только в режиме с обшивкой
+  if(S.mode === 'cladding'){
+    const panelH = rH - baseY;
+    // Фасад (Side A) — внутренняя сторона ограждения
+    addM(bx(W-0.02, panelH, t, 0, baseY+panelH/2, D-t/2, mat.clone()));
+    // Бок (Side B) — внутренняя сторона ограждения
+    addM(bx(t, panelH, D-0.02, bxSign*(W/2-t/2), baseY+panelH/2, D/2, mat.clone()));
+
+    // Подоконник 100мм из-под рамы
+    const sillD = 0.10, sillH = 0.02;
+    const sillY = rH - sillH/2;
+    addM(bx(W-0.02, sillH, sillD, 0, sillY, D-sillD/2, mat.clone()));
+    addM(bx(sillD, sillH, D-0.02, bxSign*(W/2-sillD/2), sillY, D/2, mat.clone()));
+  }
+
+  // Боковая кирпичная стена — только для Г-образного (у П нет боковых стен)
+  if(S.type !== 'p-shape'){
+    const wallPanelH = ceilY - baseY;
+    const wallX = cLeft ? W/2 - t/2 : -W/2 + t/2;
+    addM(bx(t, wallPanelH, D, wallX, baseY + wallPanelH/2, D/2, mat.clone()));
+  }
+
+  // Плинтус
+  if(S.plinth){
+    const pH = 0.06;  // высота 60мм
+    const pT = 0.015; // толщина 15мм
+    const matP = new THREE.MeshStandardMaterial({color:S.plinthColor, roughness:0.4});
+
+    if(S.mode === 'cladding'){
+      // По ограждению (фасад)
+      addM(bx(W-0.02, pH, pT, 0, baseY+pH/2, D-t-pT/2, matP.clone()));
+      // По ограждению (бок)
+      addM(bx(pT, pH, D-0.02, bxSign*(W/2-t-pT/2), baseY+pH/2, D/2, matP.clone()));
+    }
+    // По кирпичной стене — только для Г-образного
+    if(S.type !== 'p-shape'){
+      addM(bx(pT, pH, D, wallX+(cLeft?-1:1)*pT/2, baseY+pH/2, D/2, matP.clone()));
+    }
+  }
 }
 
 function toggleExtra(key, val){
   S[key] = val;
   if(key==='floor') document.getElementById('floorTypeWrap').style.display = val ? 'block' : 'none';
+  if(key==='innerSiding'){
+    document.getElementById('plinthWrap').style.display = val ? 'block' : 'none';
+    if(!val){ S.plinth=false; document.getElementById('chkPlinth').checked=false; document.getElementById('plinthColorWrap').style.display='none'; }
+  }
+  if(key==='plinth') document.getElementById('plinthColorWrap').style.display = val ? 'block' : 'none';
+  if(key==='blinds') document.getElementById('blindsColorWrap').style.display = val ? 'block' : 'none';
+  rebuild();
+}
+
+function changePlinthColor(c){
+  S.plinthColor=c;
+  const hex='#'+c.toString(16).padStart(6,'0');
+  document.querySelectorAll('[data-plinth]').forEach(b=>{
+    b.style.borderColor = parseInt(b.dataset.plinth)===c ? '#4a90d9' : '#ddd';
+  });
+  rebuild();
+}
+
+function changeBlindsColor(c){
+  S.blindsColor=c;
+  document.querySelectorAll('[data-blinds]').forEach(b=>{
+    b.style.borderColor = parseInt(b.dataset.blinds)===c ? '#4a90d9' : '#ddd';
+  });
   rebuild();
 }
 
@@ -882,6 +1099,7 @@ function changeType(val){
 function changeMode(m){
   S.mode=m;
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  document.getElementById('sidingWrap').style.display = m==='cladding' ? 'block' : 'none';
   rebuild();
 }
 
@@ -901,9 +1119,26 @@ function changeColor(c){
 function changeSiding(val){
   S.siding=val;
   document.querySelectorAll('.siding-btn').forEach(b=>b.classList.toggle('active',b.dataset.siding===val));
-  // Сбрасываем кеш текстуры сайдинга
   Object.keys(texCache).forEach(k=>{if(k.includes('sayding'))delete texCache[k]});
   rebuild();
+}
+
+function changeFloorTex(id){
+  S.floorTex=id;
+  document.querySelectorAll('#floorTexOptions .siding-btn').forEach(b=>b.classList.toggle('active',b.dataset.floortex===id));
+  Object.keys(texCache).forEach(k=>{if(k.includes('laminate_')||k.includes('linoleum_'))delete texCache[k]});
+  rebuild();
+}
+
+function updateFloorTexButtons(){
+  const wrap=document.getElementById('floorTexOptions');
+  const texs=FLOOR_TEXTURES[S.floorType]||[];
+  if(!texs.length){wrap.innerHTML='';return}
+  // Если текущая текстура не из этой категории — ставим первую
+  if(!texs.find(t=>t.id===S.floorTex)) S.floorTex=texs[0].id;
+  wrap.innerHTML=texs.map(t=>
+    `<div class="siding-btn${t.id===S.floorTex?' active':''}" data-floortex="${t.id}" onclick="changeFloorTex('${t.id}')" title="${t.name}"><img src="${t.file}" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>`
+  ).join('');
 }
 
 function rebuild(){buildBalcony();updateSidePanel();updateSchematic()}
@@ -925,6 +1160,11 @@ function applyPreset(idx){
   if(!presets[idx]) return;
   S.sides[S.activeSide] = JSON.parse(JSON.stringify(presets[idx].frames));
   syncLower(S.activeSide);
+  // Если пресет содержит только fixed/sandwich — нижний ряд тоже обновляем
+  const allFixed = presets[idx].frames.every(f => f.sashes.every(s => s==='fixed'));
+  const allSandwich = presets[idx].frames.every(f => f.sashes.every(s => s==='sandwich'));
+  if(allFixed) S.lower[S.activeSide] = S.lower[S.activeSide].map(()=>'glass');
+  if(allSandwich) S.lower[S.activeSide] = S.lower[S.activeSide].map(()=>'sandwich');
   rebuild();
 }
 
@@ -996,7 +1236,7 @@ function updateSidePanel(){
     wrapper.appendChild(lbl);
   }
 
-  // Upper frames
+  // Upper frames (для g-left отзеркаливаем порядок отображения)
   const upperRow = document.createElement('div');
   upperRow.style.cssText='display:flex;gap:3px;margin-bottom:8px';
   frames.forEach((frame,fi)=>{
@@ -1071,15 +1311,17 @@ function updateSchematic(){
   const w=160, d=80, ox=20, oy=15;
   let h='';
 
+  const isP = S.type==='p-shape';
+
   // Building walls
   h+=`<rect x="${ox}" y="${oy}" width="${w}" height="6" fill="#999" rx="1"/>`;
-  if(S.type!=='g-left') h+=`<rect x="${ox}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
-  if(S.type==='g-left') h+=`<rect x="${ox+w-6}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  if(!isP && S.type!=='g-left') h+=`<rect x="${ox}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  if(!isP && S.type==='g-left') h+=`<rect x="${ox+w-6}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
 
   // Plate
   h+=`<rect x="${ox+6}" y="${oy+6}" width="${w-12}" height="${d-6}" fill="#ddd" stroke="#bbb" stroke-width="1" rx="2"/>`;
 
-  // Side A
+  // Side A (фасад — всегда снизу)
   const aC=S.activeSide==='A'?'#4a90d9':'#888';
   h+=`<rect x="${ox+6}" y="${oy+d-2}" width="${w-12}" height="4" fill="${aC}" rx="1"/>`;
   h+=`<text x="${ox+w/2}" y="${oy+d+14}" text-anchor="middle" font-size="10" font-weight="bold" fill="${aC}">A</text>`;
@@ -1087,14 +1329,17 @@ function updateSchematic(){
   // Side B
   if(S.sides.B){
     const bC=S.activeSide==='B'?'#4a90d9':'#888';
-    if(S.type==='g-left'){
-      h+=`<rect x="${ox+4}" y="${oy+6}" width="4" height="${d-6}" fill="${bC}" rx="1"/>`;
-      h+=`<text x="${ox-6}" y="${oy+d/2+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${bC}">B</text>`;
-    } else {
+    if(isP || S.type==='g-right'){
+      // П-образный и g-right: B = правый бок
       h+=`<rect x="${ox+w-8}" y="${oy+6}" width="4" height="${d-6}" fill="${bC}" rx="1"/>`;
       h+=`<text x="${ox+w+6}" y="${oy+d/2+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${bC}">B</text>`;
+    } else {
+      // g-left: B = левый бок
+      h+=`<rect x="${ox+4}" y="${oy+6}" width="4" height="${d-6}" fill="${bC}" rx="1"/>`;
+      h+=`<text x="${ox-6}" y="${oy+d/2+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="${bC}">B</text>`;
     }
   }
+  // Side C (П-образный: C = левый бок)
   if(S.sides.C){
     const cC=S.activeSide==='C'?'#4a90d9':'#888';
     h+=`<rect x="${ox+4}" y="${oy+6}" width="4" height="${d-6}" fill="${cC}" rx="1"/>`;
@@ -1116,6 +1361,7 @@ function onResize(){
 /* ========== START ========== */
 function init(){
   init3D();initOrbit();initClick();
+  updateFloorTexButtons();
   buildBalcony();updateSidePanel();
   animate();
   window.addEventListener('resize',onResize);
