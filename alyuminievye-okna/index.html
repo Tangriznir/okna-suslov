@@ -137,10 +137,27 @@
     .adv-num{font-size:clamp(2rem,4vw,2.8rem);font-weight:900;color:var(--alu-dark);margin-bottom:4px}
     .adv-label{font-size:14px;color:var(--n500)}
 
-    /* Price placeholder */
-    .price-placeholder{background:linear-gradient(135deg,var(--n50),#e8eaf6);border:2px dashed var(--n300);border-radius:var(--r-xl);padding:48px 32px;text-align:center}
-    .price-placeholder h3{color:var(--n600);margin-bottom:8px}
-    .price-placeholder p{color:var(--n400);font-size:15px}
+    /* Configurator teaser */
+    .cfg-teaser{background:linear-gradient(135deg,var(--alu-dark) 0%,#263238 60%,#1a237e 100%);position:relative;overflow:hidden}
+    .cfg-teaser::before{content:'';position:absolute;inset:0;opacity:.04;background:repeating-linear-gradient(45deg,transparent,transparent 40px,#fff 40px,#fff 41px)}
+    .cfg-layout{position:relative;z-index:1;display:flex;align-items:center;gap:48px}
+    .cfg-text{flex:1;color:#fff;min-width:260px}
+    .cfg-label{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .cfg-label::before{content:'';width:24px;height:2px;background:rgba(255,255,255,.5);border-radius:1px}
+    .cfg-title{font-size:clamp(1.5rem,3vw,2rem);font-weight:800;line-height:1.2;color:#fff;margin-bottom:16px}
+    .cfg-list{list-style:none;font-size:14px;opacity:.8;margin-bottom:28px;line-height:2.2}
+    .cfg-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .cfg-note{margin-top:14px;font-size:12px;opacity:.45}
+    .cfg-screen{flex:1.3;position:relative}
+    .cfg-glow{position:absolute;bottom:-24px;left:10%;right:10%;height:48px;background:rgba(74,144,217,.25);filter:blur(24px);border-radius:50%}
+    .cfg-browser{background:#1a1a2e;border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.65);transform:perspective(1000px) rotateY(-6deg) rotateX(2deg)}
+    .cfg-browser-bar{background:#1a1a2e;height:32px;display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .cfg-browser-dot{width:10px;height:10px;border-radius:50%}
+    .cfg-browser-url{flex:1;background:rgba(255,255,255,.08);border-radius:4px;height:16px;margin:0 8px}
+    .cfg-browser-label{font-size:10px;color:rgba(255,255,255,.35);font-weight:700;letter-spacing:1px}
+    .cfg-browser img{width:100%;display:block;object-fit:cover;object-position:center top;max-height:256px}
+    .cfg-badge{position:absolute;top:-12px;right:-12px;background:var(--orange-500);color:#fff;font-size:11px;font-weight:700;padding:6px 14px;border-radius:20px;box-shadow:0 4px 12px rgba(249,115,22,.45);white-space:nowrap}
+    @media(max-width:768px){.cfg-layout{flex-direction:column}.cfg-screen{width:100%;max-width:500px}.cfg-browser{transform:none}}
 
     /* Gallery */
     .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -293,14 +310,14 @@
         </div>
       </div>
       <div class="type-card reveal">
-        <div class="type-img"><img src="photos/alyuminievaya-konstrukciya-1.jpg" alt="Алюминиевое остекление лоджии" width="400" height="200" loading="lazy"></div>
+        <div class="type-img"><img src="photos/photo_5359547938037766583_y.jpg" alt="Алюминиевое остекление лоджии" width="400" height="200" loading="lazy"></div>
         <div class="type-body">
           <h3>Лоджии</h3>
           <p>Остекление по&nbsp;периметру или только фасадной части. Раздвижные створки от&nbsp;стены до&nbsp;стены — максимум света, минимум рам.</p>
         </div>
       </div>
       <div class="type-card reveal">
-        <div class="type-img"><img src="photos/alyuminievaya-konstrukciya-3.jpg" alt="Панорамное остекление террасы алюминием" width="400" height="200" loading="lazy"></div>
+        <div class="type-img"><img src="photos/alyuminievaya-konstrukciya-3.jpg" alt="Панорамное остекление террасы алюминием" width="400" height="200" loading="lazy" style="object-position:right 20%"></div>
         <div class="type-body">
           <h3>Террасы</h3>
           <p>Панорамное остекление террас загородных домов. Летом&nbsp;— открыли и&nbsp;наслаждаетесь свежим воздухом. Зимой&nbsp;— закрыли и&nbsp;защитили мебель.</p>
@@ -314,14 +331,14 @@
         </div>
       </div>
       <div class="type-card reveal">
-        <div class="type-img"><img src="photos/tambur-alyuminij-2.jpg" alt="Алюминиевые перегородки в офисе" width="400" height="200" loading="lazy"></div>
+        <div class="type-img"><img src="photos/photo_5359547938037766582_y.jpg" alt="Алюминиевые перегородки в офисе" width="400" height="200" loading="lazy"></div>
         <div class="type-body">
           <h3>Офисные перегородки</h3>
           <p>Зонирование офисов, кафе, торговых площадей. Стильно, быстро, без капитального ремонта. Глухие, со&nbsp;стеклом или комбинированные.</p>
         </div>
       </div>
       <div class="type-card reveal">
-        <div class="type-img"><img src="photos/konstrukciya-s640-korichnevaya.png" alt="Нестандартная алюминиевая конструкция Provedal С640" width="400" height="200" loading="lazy"></div>
+        <div class="type-img"><img src="photos/photo_5359547938037766584_y.jpg" alt="Нестандартная алюминиевая конструкция Provedal С640" width="400" height="200" loading="lazy"></div>
         <div class="type-body">
           <h3>Нестандартные проекты</h3>
           <p>Остекление сложных проёмов, эркеров, козырьков. Проектируем по&nbsp;вашим размерам — без&nbsp;ограничений по&nbsp;конфигурации.</p>
@@ -402,18 +419,45 @@
   </div>
 </section>
 
-<!-- PRICES -->
-<section class="section" id="prices">
+<!-- CONFIGURATOR TEASER -->
+<section class="section cfg-teaser" id="configurator">
   <div class="container">
-    <div style="text-align:center;margin-bottom:40px">
-      <div class="label" style="justify-content:center">Стоимость</div>
-      <h2>Цены на алюминиевое остекление</h2>
-    </div>
-    <!-- TODO: Здесь будут цены. Нужно решить формат: карточки с типовыми размерами или калькулятор -->
-    <div class="price-placeholder">
-      <h3>Цены рассчитываются индивидуально</h3>
-      <p>Стоимость зависит от размеров, количества створок и конфигурации.<br>Вызовите замерщика — он рассчитает точную цену на месте.</p>
-      <a href="tel:84843990900" class="btn btn-primary" style="margin-top:20px">Узнать стоимость</a>
+    <div class="cfg-layout">
+
+      <!-- Текст слева -->
+      <div class="cfg-text">
+        <div class="cfg-label">3D Конфигуратор</div>
+        <h2 class="cfg-title">Собери свою конфигурацию<br>и получи расчёт</h2>
+        <ul class="cfg-list">
+          <li>✓ Балконы, лоджии, террасы, веранды</li>
+          <li>✓ Белый или коричневый профиль Provedal</li>
+          <li>✓ Отправь конфигурацию — расчёт за 30 минут</li>
+        </ul>
+        <div class="cfg-actions">
+          <a href="configurator.html" class="btn btn-accent btn-lg">Открыть конфигуратор →</a>
+          <a href="#gallery" class="btn btn-glass">Смотреть примеры</a>
+        </div>
+        <p class="cfg-note">Займёт 2–3 минуты · Без регистрации</p>
+      </div>
+
+      <!-- Скриншот справа -->
+      <div class="cfg-screen">
+        <div class="cfg-glow"></div>
+        <div class="cfg-browser">
+          <div class="cfg-browser-bar">
+            <div class="cfg-browser-dot" style="background:#ff5f56"></div>
+            <div class="cfg-browser-dot" style="background:#ffbd2e"></div>
+            <div class="cfg-browser-dot" style="background:#27c93f"></div>
+            <div class="cfg-browser-url"></div>
+            <div class="cfg-browser-label">OKNA SUSLOV</div>
+          </div>
+          <img src="photos/configurator-preview.png"
+               alt="3D конфигуратор алюминиевого остекления Provedal"
+               width="800" height="256" loading="lazy">
+        </div>
+        <div class="cfg-badge">3D · Интерактивно</div>
+      </div>
+
     </div>
   </div>
 </section>

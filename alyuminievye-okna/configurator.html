@@ -38,7 +38,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;o
 
 .mode-toggle{display:flex;border:1px solid #ddd;border-radius:8px;overflow:hidden}
 .mode-btn{flex:1;padding:8px 4px;text-align:center;font-size:12px;cursor:pointer;background:#fafafa;transition:all .2s;border:none;font-weight:500}
-.mode-btn:first-child{border-right:1px solid #ddd}
+.mode-btn:not(:last-child){border-right:1px solid #ddd}
 .mode-btn.active{background:#4a90d9;color:#fff}
 .mode-btn:hover:not(.active){background:#f0f0f0}
 
@@ -117,7 +117,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;o
         <option value="p-shape">Балкон П-образный</option>
         <option value="loggia-3500">Лоджия до 3500</option>
         <option value="loggia-6100">Лоджия до 6100</option>
-        <option value="veranda">Веранда</option>
       </select>
     </div>
 
@@ -203,10 +202,36 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;o
       Профиль: 60 мм • Стекло: 4 мм (Al)<br>
       Створки: раздвижные на направляющих
     </div>
+
+    <button onclick="openQuoteModal()" style="width:100%;margin-top:16px;padding:12px;background:#e8421a;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.5px">
+      📋 Получить просчёт
+    </button>
+  </div>
+
+  <!-- Модальное окно просчёта -->
+  <div id="quoteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:12px;padding:24px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+      <h2 style="font-size:18px;margin-bottom:6px;color:#1a1a2e">Получить просчёт</h2>
+      <p style="font-size:13px;color:#666;margin-bottom:16px">Мы свяжемся с вами и рассчитаем стоимость</p>
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;font-weight:500">Ваше имя *</label>
+        <input id="quoteName" type="text" placeholder="Иван Иванов" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:12px;color:#666;margin-bottom:4px;font-weight:500">Телефон *</label>
+        <input id="quotePhone" type="tel" placeholder="+7 (900) 000-00-00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box">
+      </div>
+      <div id="quoteStatus" style="display:none;padding:8px 12px;border-radius:6px;font-size:13px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="closeQuoteModal()" style="flex:1;padding:10px;background:#f0f0f0;border:none;border-radius:6px;font-size:14px;cursor:pointer">Отмена</button>
+        <button onclick="submitQuote()" id="quoteSubmitBtn" style="flex:2;padding:10px;background:#e8421a;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer">Отправить заявку</button>
+      </div>
+    </div>
   </div>
 
   <div class="viewport" id="viewport">
     <canvas id="canvas3d"></canvas>
+    <div id="errBox" style="display:none;position:absolute;top:8px;left:8px;background:rgba(200,0,0,.9);color:#fff;padding:10px;border-radius:6px;font-size:12px;white-space:pre;max-width:600px;z-index:999"></div>
   </div>
 
   <div class="side-panel" id="sidePanel">
@@ -227,6 +252,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f2f5;color:#333;o
 /* ========== CONSTANTS ========== */
 const SC = 0.001;
 const RAILING_H = 1000;   // высота ограждения
+const LOGGIA_PAR_H = 850; // высота парапета лоджии (ниже, чтобы рама стояла на нём)
 const GLAZING_H = 1600;   // высота створки (фиксированная)
 const PLATE_H = 200;
 const FRAME_P = 60;        // профиль рамы Provedal C640 (мм)
@@ -296,6 +322,13 @@ const SIDE_A_PRESETS = [
   {name:'Справа', frames:[{sashes:['fixed']},{sashes:['sliding','sliding']}]},
 ];
 
+const SIDE_A_PRESETS_6100 = [
+  {name:'6 створок', frames:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}]},
+  {name:'По центру', frames:[{sashes:['fixed']},{sashes:['sliding','sliding']},{sashes:['sliding','sliding']},{sashes:['fixed']}]},
+  {name:'Слева', frames:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']},{sashes:['fixed']}]},
+  {name:'Справа', frames:[{sashes:['fixed']},{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}]},
+];
+
 const SIDE_B_PRESETS = [
   {name:'Глухое стекло', frames:[{sashes:['fixed']}]},
   {name:'Сэндвич', frames:[{sashes:['sandwich']}]},
@@ -352,10 +385,13 @@ function updateMats(){
 }
 
 /* Helpers */
-// Кирпич: реальный размер ~250×65мм → в world units 0.25×0.065
-const BRICK_W = 0.25, BRICK_H = 0.065;
+// Кирпич РФ с швом: 260×75мм. Текстура brick.jpg ≈ 6 кирпичей × 8 рядов
+const BRICK_TILE_W = 6 * 0.26;  // 1.56м — тайл по длинной грани
+const BRICK_TILE_H = 8 * 0.075; // 0.60м — тайл по высоте
 function bxWall(w,h,d,x,y,z){
-  const rx = w/BRICK_W, ry = h/BRICK_H;
+  // Масштаб текстуры по длинной видимой грани стены
+  const mainW = Math.max(w, d);
+  const rx = mainW / BRICK_TILE_W, ry = h / BRICK_TILE_H;
   const tex = loadTex('textures/brick.jpg', rx, ry);
   const mat = new THREE.MeshStandardMaterial({map:tex, roughness:0.85});
   return bx(w,h,d,x,y,z,mat);
@@ -395,6 +431,14 @@ function init3D(){
 
 /* ========== BUILD SCENE ========== */
 function buildBalcony(){
+  try{ _buildBalcony(); } catch(e){
+    document.getElementById('errBox').textContent = 'ERR: '+e.message+'\n'+e.stack;
+    document.getElementById('errBox').style.display='block';
+    console.error(e);
+  }
+}
+function _buildBalcony(){
+  document.getElementById('errBox').style.display='none';
   clearScene();
   updateMats();
 
@@ -402,6 +446,7 @@ function buildBalcony(){
   const rH = RAILING_H*SC, gH = GLAZING_H*SC, pH = PLATE_H*SC;
   const fp = FRAME_P*SC, gap = CONN_GAP*SC, cs = CORNER_SZ*SC;
   const totalH = rH + gH + fp*2; // ограждение + рама (верх+низ профиль) + стекло
+  const lpH = LOGGIA_PAR_H * SC; // высота парапета лоджии (850мм)
 
   // Ground
   addM(bx(20,0.02,20, 0,-pH-0.01,0, mGround));
@@ -448,6 +493,27 @@ function buildBalcony(){
       buildSideGlazing('C', W, D, lowerH, upperH, 'left');
       buildCornerP(W, D, fp, 0, lowerH + upperH);
     }
+  } else if(S.type.startsWith('loggia')){
+    // === ЛОДЖИЯ: только фасад, обе боковые стены кирпичные ===
+    // Боковые кирпичные стены (вдоль глубины лоджии)
+    addM(bxWall(0.25, wallH, D, -W/2-0.125, wallH/2-pH-0.3, D/2));
+    addM(bxWall(0.25, wallH, D,  W/2+0.125, wallH/2-pH-0.3, D/2));
+
+    // Рама стартует на fp выше парапета — отлив ложится между парапетом и рамой
+    const loggiaFrameStart = lpH + fp;
+    const loggiaUpperH = upperH + (rH - lpH) - fp; // высота рамы до потолка
+    if(S.mode === 'no-cladding'){
+      addM(bxWall(W+0.5, lpH, fp, 0, lpH/2, D+fp/2));
+      buildSideGlazing('A', W, D, loggiaFrameStart, loggiaUpperH, 'front');
+    } else if(S.mode === 'cladding'){
+      addM(bxWall(W+0.5, lpH, fp, 0, lpH/2, D+fp/2));
+      buildSidingLoggia(W, D, lpH);
+      buildSideGlazing('A', W, D, loggiaFrameStart, loggiaUpperH, 'front');
+    } else {
+      buildSideGlazing('A', W, D, 0, lpH, 'front', 'lower');
+      buildSideGlazing('A', W, D, lpH, loggiaUpperH + fp, 'front');
+    }
+
   } else {
     // === Г-ОБРАЗНЫЙ ===
     // Building side wall
@@ -472,7 +538,8 @@ function buildBalcony(){
 
   // Отлив
   if(S.otliv){
-    const otlivY = S.mode==='cladding' ? rH : 0;
+    const isLoggiaMode = S.type.startsWith('loggia') && S.mode !== 'panoramic';
+    const otlivY = (S.mode==='cladding' || S.mode==='no-cladding') ? (isLoggiaMode ? lpH + fp : rH) : 0;
     buildOtliv(W, D, otlivY);
   }
 
@@ -493,7 +560,8 @@ function buildBalcony(){
 
   // Обшивка изнутри
   if(S.innerSiding){
-    buildInnerSiding(W, D, rH, ceilY);
+    const innerRH = S.type.startsWith('loggia') && S.mode !== 'panoramic' ? lpH + fp : rH;
+    buildInnerSiding(W, D, innerRH, ceilY);
   }
 }
 
@@ -517,12 +585,15 @@ function buildRailing(W, D, rH){
   const nA=Math.max(2, Math.round(W/sp));
   for(let i=0;i<=nA;i++) addM(bx(bw, rH, bw, -W/2+(W/nA)*i, rH/2, D, mRail));
 
-  // Side B (правый)
-  const bxPos = S.type==='g-left' ? -W/2 : W/2;
-  addM(bx(th, th, D, bxPos, rH-th/2, D/2, mRail));
-  addM(bx(th, th*0.6, D, bxPos, 0.015, D/2, mRail));
   const nB=Math.max(2, Math.round(D/sp));
-  for(let i=0;i<=nB;i++) addM(bx(bw, rH, bw, bxPos, rH/2, (D/nB)*i, mRail));
+
+  // Side B/C — не для лоджии (боковые стены кирпичные)
+  if(!S.type.startsWith('loggia')){
+    const bxPos = S.type==='g-left' ? -W/2 : W/2;
+    addM(bx(th, th, D, bxPos, rH-th/2, D/2, mRail));
+    addM(bx(th, th*0.6, D, bxPos, 0.015, D/2, mRail));
+    for(let i=0;i<=nB;i++) addM(bx(bw, rH, bw, bxPos, rH/2, (D/nB)*i, mRail));
+  }
 
   // Side C (левый) — только для П-образного
   if(S.type==='p-shape'){
@@ -539,6 +610,14 @@ function buildSiding(W, D, rH){
   addM(bx(W, rH-0.04, t, 0, rH/2, D+t/2, mSiding));
   const bxPos = S.type==='g-left' ? -W/2-t/2 : W/2+t/2;
   addM(bx(t, rH-0.04, D, bxPos, rH/2, D/2, mSiding));
+}
+
+/* ========== SIDING ЛОДЖИЯ (только фасад, снаружи тонкого парапета) ========== */
+function buildSidingLoggia(W, D, rH){
+  const fp = FRAME_P*SC;
+  const t = 0.025;
+  // Парапет теперь fp толщиной, внешняя грань = D + fp
+  addM(bx(W, rH-0.04, t, 0, rH/2, D+fp+t/2, mSiding));
 }
 
 /* ========== SIDING П-ОБРАЗНЫЙ (3 стороны) ========== */
@@ -599,9 +678,11 @@ function buildSideGlazing(side, W, D, startY, totalFrameH, pos, rowType){
   let sideLen = (actualPos==='front') ? W : D;
 
   // Available length: для П-образного боковые рамы на полную глубину, угол отдельный
+  // Для лоджии фронт тоже на полную ширину (боки — кирпичные стены, не угловой профиль)
   const isP = S.type === 'p-shape';
   const isSidePanelP = isP && (actualPos === 'left' || actualPos === 'right');
-  const avail = isSidePanelP ? sideLen : sideLen - fp;
+  const isLoggiaFront = S.type.startsWith('loggia') && actualPos === 'front';
+  const avail = (isSidePanelP || isLoggiaFront) ? sideLen : sideLen - fp;
 
   // Count total sashes across all frames
   let totalSashes = 0;
@@ -826,13 +907,14 @@ function buildOtliv(W, D, startY){
     bL.rotation.z = Math.atan2(drop, oh);
     addM(bL);
     addM(bx(thick, edgeH, D+0.02, -W/2-oh, startY-drop-edgeH/2, D/2, mOtliv.clone()));
-  } else {
+  } else if(!S.type.startsWith('loggia')){
     // Г: один бок
     const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), startY-drop/2, D/2, mOtliv.clone());
     b.rotation.z = -bxSign * Math.atan2(drop, oh);
     addM(b);
     addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), startY-drop-edgeH/2, D/2, mOtliv.clone()));
   }
+  // Лоджия: только фасад (бока — кирпичные стены)
 }
 
 /* ========== КОЗЫРЁК (canopy) ========== */
@@ -859,13 +941,14 @@ function buildKozyrek(W, D, topY){
     bL.rotation.z = Math.atan2(drop, oh);
     addM(bL);
     addM(bx(thick, edgeH, D+0.02, -W/2-oh, topY-drop-edgeH/2, D/2, mKozyrek.clone()));
-  } else {
+  } else if(!S.type.startsWith('loggia')){
     // Г: один бок
     const b = bx(oh, thick, D+0.02, bxSign*(W/2+oh/2), topY-drop/2, D/2, mKozyrek.clone());
     b.rotation.z = -bxSign * Math.atan2(drop, oh);
     addM(b);
     addM(bx(thick, edgeH, D+0.02, bxSign*(W/2+oh), topY-drop-edgeH/2, D/2, mKozyrek.clone()));
   }
+  // Лоджия: только фасад
 }
 
 /* ========== ПОЛ ========== */
@@ -874,10 +957,11 @@ function buildFloor(W, D){
   const fZ = D/2 - 0.015; // сдвиг от фасада
   const isLeft = S.type === 'g-left';
   const isP = S.type === 'p-shape';
-  // П-образный: подрезка только с фасада, боки впритык
+  const isLoggia = S.type.startsWith('loggia');
+  // Лоджия/П: подрезка только с фасада, боки впритык к стенам
   // Г-образный: подрезка с открытого бока на 30мм
-  const fW = isP ? W - 0.01 : W - 0.01;
-  const fX = isP ? 0 : (isLeft ? 0.015 : -0.015);
+  const fW = (isP || isLoggia) ? W - 0.01 : W - 0.01;
+  const fX = (isP || isLoggia) ? 0 : (isLeft ? 0.015 : -0.015);
 
   const brH = 0.05;  // брусок 50мм высота
   const brW = 0.05;  // брусок 50мм ширина
@@ -939,6 +1023,7 @@ function buildCeiling(W, D, ceilY){
 /* ========== ОБШИВКА ИЗНУТРИ ========== */
 function buildInnerSiding(W, D, rH, ceilY){
   const t = 0.01;  // толщина панели 10мм
+  const fp = FRAME_P * SC; // глубина профиля — отступ от внешней грани
   const mat = new THREE.MeshStandardMaterial({color:0xf5f5f0, roughness:0.5});
   const cLeft = S.type==='g-left';
   const bxSign = cLeft ? -1 : 1;
@@ -948,25 +1033,46 @@ function buildInnerSiding(W, D, rH, ceilY){
   const covTop = (S.floor && S.floorType!=='board') ? 0.01 : 0; // покрытие 10мм
   const baseY = floorTop + covTop;
 
-  // Обшивка ограждения — только в режиме с обшивкой
-  if(S.mode === 'cladding'){
+  // Обшивка ограждения — в режиме с обшивкой, или лоджия без обшивки (парапет есть)
+  if(S.mode === 'cladding' || (S.type.startsWith('loggia') && S.mode === 'no-cladding')){
     const panelH = rH - baseY;
-    // Фасад (Side A) — внутренняя сторона ограждения
-    addM(bx(W-0.02, panelH, t, 0, baseY+panelH/2, D-t/2, mat.clone()));
-    // Бок (Side B) — внутренняя сторона ограждения
-    addM(bx(t, panelH, D-0.02, bxSign*(W/2-t/2), baseY+panelH/2, D/2, mat.clone()));
+    // Фасад (Side A) — внутренняя сторона ограждения (отступ на глубину профиля)
+    addM(bx(W-0.02, panelH, t, 0, baseY+panelH/2, D-fp-t/2, mat.clone()));
+    // Бок(и) — внутренняя сторона ограждения (отступ на глубину профиля)
+    if(S.type === 'p-shape'){
+      addM(bx(t, panelH, D-0.02,  W/2-fp-t/2, baseY+panelH/2, D/2, mat.clone()));
+      addM(bx(t, panelH, D-0.02, -W/2+fp+t/2, baseY+panelH/2, D/2, mat.clone()));
+    } else {
+      addM(bx(t, panelH, D-0.02, bxSign*(W/2-fp-t/2), baseY+panelH/2, D/2, mat.clone()));
+    }
 
     // Подоконник 100мм из-под рамы
     const sillD = 0.10, sillH = 0.02;
     const sillY = rH - sillH/2;
     addM(bx(W-0.02, sillH, sillD, 0, sillY, D-sillD/2, mat.clone()));
-    addM(bx(sillD, sillH, D-0.02, bxSign*(W/2-sillD/2), sillY, D/2, mat.clone()));
+    if(!S.type.startsWith('loggia')){
+      if(S.type === 'p-shape'){
+        addM(bx(sillD, sillH, D-0.02,  W/2-sillD/2, sillY, D/2, mat.clone()));
+        addM(bx(sillD, sillH, D-0.02, -W/2+sillD/2, sillY, D/2, mat.clone()));
+      } else {
+        addM(bx(sillD, sillH, D-0.02, bxSign*(W/2-sillD/2), sillY, D/2, mat.clone()));
+      }
+    }
   }
 
-  // Боковая кирпичная стена — только для Г-образного (у П нет боковых стен)
-  if(S.type !== 'p-shape'){
+  // Боковые стены
+  if(S.type.startsWith('loggia')){
+    // Лоджия: обшивка обеих боковых стен (отступ на глубину профиля)
     const wallPanelH = ceilY - baseY;
-    const wallX = cLeft ? W/2 - t/2 : -W/2 + t/2;
+    addM(bx(t, wallPanelH, D,  W/2 - fp - t/2, baseY + wallPanelH/2, D/2, mat.clone()));
+    addM(bx(t, wallPanelH, D, -W/2 + fp + t/2, baseY + wallPanelH/2, D/2, mat.clone()));
+  } else if(S.type === 'p-shape'){
+    // П-образный: боковые стены стеклянные — стеновые панели не рисуем
+    // (рейлинг-панели ограждения уже добавлены выше в секции cladding)
+  } else {
+    // Г-образный: одна боковая стена (отступ на глубину профиля)
+    const wallPanelH = ceilY - baseY;
+    const wallX = cLeft ? W/2 - fp - t/2 : -W/2 + fp + t/2;
     addM(bx(t, wallPanelH, D, wallX, baseY + wallPanelH/2, D/2, mat.clone()));
   }
 
@@ -976,15 +1082,26 @@ function buildInnerSiding(W, D, rH, ceilY){
     const pT = 0.015; // толщина 15мм
     const matP = new THREE.MeshStandardMaterial({color:S.plinthColor, roughness:0.4});
 
-    if(S.mode === 'cladding'){
+    if(S.mode === 'cladding' || (S.type.startsWith('loggia') && S.mode === 'no-cladding')){
       // По ограждению (фасад)
       addM(bx(W-0.02, pH, pT, 0, baseY+pH/2, D-t-pT/2, matP.clone()));
-      // По ограждению (бок)
-      addM(bx(pT, pH, D-0.02, bxSign*(W/2-t-pT/2), baseY+pH/2, D/2, matP.clone()));
+      // По ограждению (бок) — только не для лоджии (там кирпичные боки)
+      if(!S.type.startsWith('loggia')){
+        if(S.type === 'p-shape'){
+          addM(bx(pT, pH, D-0.02,  W/2-t-pT/2, baseY+pH/2, D/2, matP.clone()));
+          addM(bx(pT, pH, D-0.02, -W/2+t+pT/2, baseY+pH/2, D/2, matP.clone()));
+        } else {
+          addM(bx(pT, pH, D-0.02, bxSign*(W/2-t-pT/2), baseY+pH/2, D/2, matP.clone()));
+        }
+      }
     }
-    // По кирпичной стене — только для Г-образного
-    if(S.type !== 'p-shape'){
-      addM(bx(pT, pH, D, wallX+(cLeft?-1:1)*pT/2, baseY+pH/2, D/2, matP.clone()));
+    // По кирпичным стенам
+    if(S.type.startsWith('loggia')){
+      addM(bx(pT, pH, D,  W/2 - t - pT/2, baseY+pH/2, D/2, matP.clone()));
+      addM(bx(pT, pH, D, -W/2 + t + pT/2, baseY+pH/2, D/2, matP.clone()));
+    } else if(S.type !== 'p-shape'){
+      const wX = cLeft ? W/2 - t/2 : -W/2 + t/2;
+      addM(bx(pT, pH, D, wX+(cLeft?-1:1)*pT/2, baseY+pH/2, D/2, matP.clone()));
     }
   }
 }
@@ -1069,6 +1186,11 @@ function selectSide(side){
 function changeType(val){
   S.type=val;
   // Default frames per type
+  // Сброс ширины при переходе с лоджии на другой тип
+  if(!val.startsWith('loggia')){
+    S.width = 3000;
+    S.depth = 1100;
+  }
   if(val==='p-shape'){
     S.sides={
       A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}],
@@ -1077,7 +1199,12 @@ function changeType(val){
     };
   } else if(val.startsWith('loggia')){
     S.width = val==='loggia-3500' ? 3500 : 6100;
-    S.sides={A:[{sashes:['fixed']},{sashes:['sliding','sliding']},{sashes:['fixed']}]};
+    if(val==='loggia-6100'){
+      S.sides={A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}]};
+    } else {
+      S.sides={A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}]};
+    }
+    S.mode = 'no-cladding'; // по умолчанию — без обшивки (кирпичный парапет)
   } else if(val==='veranda'){
     S.sides={
       A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}],
@@ -1093,13 +1220,31 @@ function changeType(val){
   // Sync lower panels for all sides
   Object.keys(S.sides).forEach(syncLower);
   if(S.activeSide && !S.sides[S.activeSide]) S.activeSide='A';
+  // Для не-лоджии сбросить режим если был no-cladding
+  if(!val.startsWith('loggia') && S.mode==='no-cladding') S.mode='cladding';
+  updateModeToggle();
   rebuild();
+}
+
+function updateModeToggle(){
+  const isLoggia = S.type.startsWith('loggia');
+  const wrap = document.querySelector('.mode-toggle');
+  if(isLoggia){
+    wrap.innerHTML =
+      `<button class="mode-btn${S.mode==='no-cladding'?' active':''}" data-mode="no-cladding" onclick="changeMode('no-cladding')">Без обшивки</button>`+
+      `<button class="mode-btn${S.mode==='cladding'?' active':''}" data-mode="cladding" onclick="changeMode('cladding')">С обшивкой</button>`+
+      `<button class="mode-btn${S.mode==='panoramic'?' active':''}" data-mode="panoramic" onclick="changeMode('panoramic')">Панорамный</button>`;
+  } else {
+    wrap.innerHTML =
+      `<button class="mode-btn${S.mode==='cladding'?' active':''}" data-mode="cladding" onclick="changeMode('cladding')">С обшивкой</button>`+
+      `<button class="mode-btn${S.mode==='panoramic'?' active':''}" data-mode="panoramic" onclick="changeMode('panoramic')">Панорамный</button>`;
+  }
+  document.getElementById('sidingWrap').style.display = S.mode==='cladding' ? 'block' : 'none';
 }
 
 function changeMode(m){
   S.mode=m;
-  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
-  document.getElementById('sidingWrap').style.display = m==='cladding' ? 'block' : 'none';
+  updateModeToggle();
   rebuild();
 }
 
@@ -1145,7 +1290,7 @@ function rebuild(){buildBalcony();updateSidePanel();updateSchematic()}
 
 /* ========== SIDE PANEL ========== */
 function getPresets(side){
-  if(side==='A') return SIDE_A_PRESETS;
+  if(side==='A') return S.type==='loggia-6100' ? SIDE_A_PRESETS_6100 : SIDE_A_PRESETS;
   return SIDE_B_PRESETS;
 }
 
@@ -1312,11 +1457,19 @@ function updateSchematic(){
   let h='';
 
   const isP = S.type==='p-shape';
+  const isLoggia = S.type.startsWith('loggia');
 
   // Building walls
   h+=`<rect x="${ox}" y="${oy}" width="${w}" height="6" fill="#999" rx="1"/>`;
-  if(!isP && S.type!=='g-left') h+=`<rect x="${ox}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
-  if(!isP && S.type==='g-left') h+=`<rect x="${ox+w-6}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  if(isLoggia){
+    // Лоджия: обе боковые стены кирпичные
+    h+=`<rect x="${ox}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+    h+=`<rect x="${ox+w-6}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  } else if(!isP && S.type!=='g-left'){
+    h+=`<rect x="${ox}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  } else if(!isP && S.type==='g-left'){
+    h+=`<rect x="${ox+w-6}" y="${oy}" width="6" height="${d+6}" fill="#999" rx="1"/>`;
+  }
 
   // Plate
   h+=`<rect x="${ox+6}" y="${oy+6}" width="${w-12}" height="${d-6}" fill="#ddd" stroke="#bbb" stroke-width="1" rx="2"/>`;
@@ -1362,11 +1515,102 @@ function onResize(){
 function init(){
   init3D();initOrbit();initClick();
   updateFloorTexButtons();
+  updateModeToggle();
   buildBalcony();updateSidePanel();
   animate();
   window.addEventListener('resize',onResize);
 }
 init();
+
+/* ========== QUOTE MODAL ========== */
+function openQuoteModal(){
+  document.getElementById('quoteModal').style.display='flex';
+  document.getElementById('quoteName').value='';
+  document.getElementById('quotePhone').value='';
+  document.getElementById('quoteStatus').style.display='none';
+  document.getElementById('quoteSubmitBtn').disabled=false;
+  document.getElementById('quoteSubmitBtn').textContent='Отправить заявку';
+}
+
+function closeQuoteModal(){
+  document.getElementById('quoteModal').style.display='none';
+}
+
+function getConfigSummary(){
+  const typeNames={
+    'g-right':'Балкон Г-образный (угол слева)',
+    'g-left':'Балкон Г-образный (угол справа)',
+    'p-shape':'Балкон П-образный',
+    'loggia-3500':'Лоджия до 3500',
+    'loggia-6100':'Лоджия до 6100'
+  };
+  const modeNames={'cladding':'С обшивкой','no-cladding':'Без обшивки','panoramic':'Панорамный'};
+  const colorNames={'white':'Белый','brown':'Коричневый'};
+  const lines=[
+    'Тип: ' + (typeNames[S.type]||S.type),
+    'Размер: ' + S.width + ' × ' + S.depth + ' мм',
+    'Вариант: ' + (modeNames[S.mode]||S.mode),
+    'Профиль: ' + colorNames[S.color],
+    'Отлив: ' + (S.otliv?'Да':'Нет'),
+    'Козырёк: ' + (S.kozyrek?'Да':'Нет'),
+    'Пол: ' + (S.floor?S.floorType:'Нет'),
+    'Потолок: ' + (S.ceiling?'Да':'Нет'),
+    'Обшивка изнутри: ' + (S.innerSiding?'Да':'Нет'),
+    'Жалюзи: ' + (S.blinds?'Да':'Нет'),
+  ];
+  return lines.join('\n');
+}
+
+function submitQuote(){
+  const name = document.getElementById('quoteName').value.trim();
+  const phone = document.getElementById('quotePhone').value.trim();
+  const status = document.getElementById('quoteStatus');
+
+  if(!name || !phone){
+    status.style.display='block';
+    status.style.background='#fff3cd';
+    status.style.color='#856404';
+    status.textContent='Пожалуйста, заполните имя и телефон';
+    return;
+  }
+
+  const btn = document.getElementById('quoteSubmitBtn');
+  btn.disabled=true;
+  btn.textContent='Отправляю...';
+
+  const data = new FormData();
+  data.append('name', name);
+  data.append('phone', phone);
+  data.append('config', getConfigSummary());
+
+  fetch('send.php', {method:'POST', body:data})
+    .then(r=>r.json())
+    .then(r=>{
+      if(r.ok){
+        status.style.display='block';
+        status.style.background='#d4edda';
+        status.style.color='#155724';
+        status.textContent='✓ Заявка отправлена! Мы свяжемся с вами.';
+        btn.textContent='Отправлено';
+        setTimeout(closeQuoteModal, 2000);
+      } else {
+        throw new Error(r.error||'Ошибка');
+      }
+    })
+    .catch(e=>{
+      status.style.display='block';
+      status.style.background='#f8d7da';
+      status.style.color='#721c24';
+      status.textContent='Ошибка отправки. Позвоните нам: 8 (910) 602-07-84';
+      btn.disabled=false;
+      btn.textContent='Повторить';
+    });
+}
+
+// Закрыть модал по клику на фон
+document.getElementById('quoteModal').addEventListener('click', function(e){
+  if(e.target===this) closeQuoteModal();
+});
 </script>
 </body>
 </html>
