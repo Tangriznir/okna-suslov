@@ -14,7 +14,7 @@ echo "Репозитории приватные. Нужен GitHub Personal Acce
 echo "Создать токен: https://github.com/settings/tokens/new"
 echo "Нужны права: repo (полный доступ к приватным репо)"
 echo ""
-read -rsp "Вставь токен (ввод скрыт): " GH_TOKEN
+read -rsp "Вставь токен (ввод скрыт): " GH_TOKEN < /dev/tty
 echo ""
 
 if [ -z "$GH_TOKEN" ]; then
