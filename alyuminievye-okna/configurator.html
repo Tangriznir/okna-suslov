@@ -483,6 +483,7 @@ function _buildBalcony(){
       buildSideGlazing('A', W, D, rH, upperH, 'front');
       buildSideGlazing('B', W, D, rH, upperH, 'right');
       buildSideGlazing('C', W, D, rH, upperH, 'left');
+      buildNaschelnikP(W, D, rH, 'cladding');
       buildCornerP(W, D, fp, rH, upperH);
     } else {
       buildSideGlazing('A', W, D, 0, lowerH, 'front', 'lower');
@@ -491,6 +492,7 @@ function _buildBalcony(){
       buildSideGlazing('A', W, D, lowerH, upperH, 'front');
       buildSideGlazing('B', W, D, lowerH, upperH, 'right');
       buildSideGlazing('C', W, D, lowerH, upperH, 'left');
+      buildNaschelnikP(W, D, 0, 'panorama', lowerH + upperH);
       buildCornerP(W, D, fp, 0, lowerH + upperH);
     }
   } else if(S.type.startsWith('loggia')){
@@ -884,20 +886,42 @@ function buildNaschelnik(W, D, rH){
   addM(bx(t, h, sz, ex - bxSign*t/2, rH/2, ez - sz/2, mFrame.clone()));
 }
 
-function buildNaschelnikFrame(W, D, startY, height){
-  // Нащельник на стыке фасадной и боковой рамы (панорамный режим и простой без обшивки)
+function buildNaschelnikP(W, D, startY, mode, height){
+  // Два L-нащельника П-образного. Внешний угол корнера: X=±(W/2+thick/2), Z=D+thick/2
   const sz = 0.04;
-  const t = 0.002;
+  const t  = 0.002;
   const fp = FRAME_P * SC;
-  const cLeft = S.type==='g-left';
+  const thick = fp * 0.7;
+  const cy = mode === 'cladding' ? startY / 2 : startY + height / 2;
+  const h  = mode === 'cladding' ? startY - 0.04 : height;
+  // ребро уголка чуть снаружи внешней грани корнера
+  const ribZ = D + thick / 2 + t / 2;
+
+  // Правый угол
+  const ribXR = W / 2 + thick / 2;
+  addM(bx(sz, h, t, ribXR - sz / 2,  cy, ribZ,           mFrame.clone())); // полка вдоль фасада
+  addM(bx(t,  h, sz, ribXR + t / 2,  cy, ribZ - sz / 2,  mFrame.clone())); // полка вдоль бока
+
+  // Левый угол
+  const ribXL = -W / 2 - thick / 2;
+  addM(bx(sz, h, t, ribXL + sz / 2,  cy, ribZ,           mFrame.clone())); // полка вдоль фасада
+  addM(bx(t,  h, sz, ribXL - t / 2,  cy, ribZ - sz / 2,  mFrame.clone())); // полка вдоль бока
+}
+
+function buildNaschelnikFrame(W, D, startY, height){
+  // L-нащельник Г-образного без обшивки. Внешний угол корнера: X=±(W/2+thick/2), Z=D+thick/2
+  const sz = 0.04;
+  const t  = 0.002;
+  const fp = FRAME_P * SC;
+  const thick = fp * 0.7;
+  const cLeft = S.type === 'g-left';
   const bxSign = cLeft ? -1 : 1;
-  const cx = bxSign * W/2;
-  const gap = 0.002;
-  const ex = cx + bxSign * (fp + gap);
-  const ez = D + fp + gap;
-  const cy = startY + height/2;
-  addM(bx(sz, height, t, ex - bxSign*sz/2, cy, ez - t/2, mFrame.clone()));
-  addM(bx(t, height, sz, ex - bxSign*t/2, cy, ez - sz/2, mFrame.clone()));
+  const cy = startY + height / 2;
+  const ribX = bxSign * (W / 2 + thick / 2);
+  const ribZ = D + thick / 2 + t / 2;
+
+  addM(bx(sz, height, t, ribX - bxSign * sz / 2, cy, ribZ,           mFrame.clone())); // вдоль фасада
+  addM(bx(t,  height, sz, ribX + bxSign * t / 2,  cy, ribZ - sz / 2, mFrame.clone())); // вдоль бока
 }
 
 /* ========== ОТЛИВ (drip tray) ========== */
@@ -1212,8 +1236,8 @@ function changeType(val){
   if(val==='p-shape'){
     S.sides={
       A:[{sashes:['sliding','sliding']},{sashes:['sliding','sliding']}],
-      B:[{sashes:['sandwich']}],
-      C:[{sashes:['sandwich']}]
+      B:[{sashes:['fixed']}],
+      C:[{sashes:['fixed']}]
     };
   } else if(val.startsWith('loggia')){
     S.width = val==='loggia-3500' ? 3500 : 6100;
