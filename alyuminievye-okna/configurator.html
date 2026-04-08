@@ -532,6 +532,7 @@ function _buildBalcony(){
       buildSideGlazing('B', W, D, 0, lowerH, 'front_b', 'lower');
       buildSideGlazing('A', W, D, lowerH, upperH, 'front');
       buildSideGlazing('B', W, D, lowerH, upperH, 'front_b');
+      buildNaschelnikFrame(W, D, 0, lowerH + upperH);
       buildCorner(W, D, fp, 0, lowerH + upperH);
     }
   }
@@ -883,6 +884,22 @@ function buildNaschelnik(W, D, rH){
   addM(bx(t, h, sz, ex - bxSign*t/2, rH/2, ez - sz/2, mFrame.clone()));
 }
 
+function buildNaschelnikFrame(W, D, startY, height){
+  // Нащельник на стыке фасадной и боковой рамы (панорамный режим и простой без обшивки)
+  const sz = 0.04;
+  const t = 0.002;
+  const fp = FRAME_P * SC;
+  const cLeft = S.type==='g-left';
+  const bxSign = cLeft ? -1 : 1;
+  const cx = bxSign * W/2;
+  const gap = 0.002;
+  const ex = cx + bxSign * (fp + gap);
+  const ez = D + fp + gap;
+  const cy = startY + height/2;
+  addM(bx(sz, height, t, ex - bxSign*sz/2, cy, ez - t/2, mFrame.clone()));
+  addM(bx(t, height, sz, ex - bxSign*t/2, cy, ez - sz/2, mFrame.clone()));
+}
+
 /* ========== ОТЛИВ (drip tray) ========== */
 function buildOtliv(W, D, startY){
   const oh = 0.06, thick = 0.005, drop = 0.04;
@@ -1082,25 +1099,26 @@ function buildInnerSiding(W, D, rH, ceilY){
     const pT = 0.015; // толщина 15мм
     const matP = new THREE.MeshStandardMaterial({color:S.plinthColor, roughness:0.4});
 
+    const fp = FRAME_P * SC;
     if(S.mode === 'cladding' || (S.type.startsWith('loggia') && S.mode === 'no-cladding')){
-      // По ограждению (фасад)
-      addM(bx(W-0.02, pH, pT, 0, baseY+pH/2, D-t-pT/2, matP.clone()));
+      // По ограждению (фасад) — плинтус перед панелью обшивки (fp+t = отступ обшивки)
+      addM(bx(W-0.02, pH, pT, 0, baseY+pH/2, D-fp-t-pT/2, matP.clone()));
       // По ограждению (бок) — только не для лоджии (там кирпичные боки)
       if(!S.type.startsWith('loggia')){
         if(S.type === 'p-shape'){
-          addM(bx(pT, pH, D-0.02,  W/2-t-pT/2, baseY+pH/2, D/2, matP.clone()));
-          addM(bx(pT, pH, D-0.02, -W/2+t+pT/2, baseY+pH/2, D/2, matP.clone()));
+          addM(bx(pT, pH, D-0.02,  W/2-fp-t-pT/2, baseY+pH/2, D/2, matP.clone()));
+          addM(bx(pT, pH, D-0.02, -W/2+fp+t+pT/2, baseY+pH/2, D/2, matP.clone()));
         } else {
-          addM(bx(pT, pH, D-0.02, bxSign*(W/2-t-pT/2), baseY+pH/2, D/2, matP.clone()));
+          addM(bx(pT, pH, D-0.02, bxSign*(W/2-fp-t-pT/2), baseY+pH/2, D/2, matP.clone()));
         }
       }
     }
-    // По кирпичным стенам
+    // По кирпичным стенам (лоджия) — плинтус перед панелью обшивки боковых стен
     if(S.type.startsWith('loggia')){
-      addM(bx(pT, pH, D,  W/2 - t - pT/2, baseY+pH/2, D/2, matP.clone()));
-      addM(bx(pT, pH, D, -W/2 + t + pT/2, baseY+pH/2, D/2, matP.clone()));
+      addM(bx(pT, pH, D,  W/2 - fp - t - pT/2, baseY+pH/2, D/2, matP.clone()));
+      addM(bx(pT, pH, D, -W/2 + fp + t + pT/2, baseY+pH/2, D/2, matP.clone()));
     } else if(S.type !== 'p-shape'){
-      const wX = cLeft ? W/2 - t/2 : -W/2 + t/2;
+      const wX = cLeft ? W/2 - fp - t/2 : -W/2 + fp + t/2;
       addM(bx(pT, pH, D, wX+(cLeft?-1:1)*pT/2, baseY+pH/2, D/2, matP.clone()));
     }
   }
